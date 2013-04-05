@@ -402,7 +402,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         Shopware()->Db()->query($sql, array(
             $result['TRANSACTIONID'],
             isset($details['EMAIL']) ? "{$details['EMAIL']} ({$details['PAYERSTATUS']})\r\n" : null,
-            isset($details['NOTE']) ? $details['NOTE'] : null,
+            isset($details['NOTE']) ? $details['NOTE'] : '',
             $params['CUSTOM'],
             isset($params['TOKEN']) ? $params['TOKEN'] : $params['REFERENCEID']
         ));

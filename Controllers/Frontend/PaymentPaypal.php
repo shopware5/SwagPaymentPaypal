@@ -493,6 +493,8 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             if ($hasPasswordEncoder) {
                 $data["auth"]["encoderName"] = $encoderName;
                 $data["auth"]["password"] = Shopware()->PasswordEncoder()->encodePassword($data["auth"]["password"], $encoderName);
+            } else {
+                $data['auth']['password'] = md5($data['auth']['password']);
             }
 
             $session->sRegisterFinished = false;

@@ -426,6 +426,13 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $module = Shopware()->Modules()->Admin();
         $session = Shopware()->Session();
 
+        $version = Shopware()->Config()->version;
+        $hasPasswordEncoder = version_compare($version, '4.1.0', '>=');
+
+        if ($hasPasswordEncoder) {
+            $encoderName =  Shopware()->PasswordEncoder()->getDefaultPasswordEncoderName();
+        }
+
         $data['auth']['email'] = $details['EMAIL'];
         $data['auth']['password'] = $details['PAYERID'];
         $data['auth']['accountmode'] = '1';
@@ -483,7 +490,11 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             $module->sSYSTEM->_POST = array('sPayment' => $paymentId);
             $module->sUpdatePayment();
         } else {
-            $data['auth']['password'] = md5($data['auth']['password']);
+            if ($hasPasswordEncoder) {
+                $data["auth"]["encoderName"] = $encoderName;
+                $data["auth"]["password"] = Shopware()->PasswordEncoder()->encodePassword($data["auth"]["password"], $encoderName);
+            }
+
             $session->sRegisterFinished = false;
             $session->sRegister = new ArrayObject($data, ArrayObject::ARRAY_AS_PROPS);
             $module->sSaveRegister();

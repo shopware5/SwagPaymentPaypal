@@ -410,6 +410,19 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
                 $elementModel->addTranslation($translationModel);
             }
         }
+
+        /**
+         * Frontend translations
+         */
+        $sql = 'INSERT IGNORE INTO s_core_snippets (`namespace`, `shopID`, `localeID`, `name`, `value`)
+        VALUES
+        ("frontend/payment_paypal", 1, 1, "error_10412", "Sie nutzen einen Nummernkreis, der für diesen Händler-Account bereits genutzt wurde. Erhöhen Sie den Nummernkreis für die Bestellnummern in den Grundeinstellungen."),
+        ("frontend/payment_paypal", 1, 1, "error_10624", "Sie nutzen einen Nummernkreis, der für diesen Händler-Account bereits genutzt wurde. Erhöhen Sie den Nummernkreis für die Bestellnummern in den Grundeinstellungen."),
+        ("frontend/payment_paypal", 1, 1, "error_10002", "Die Accountdaten des Händler-Accounts scheinen nicht korrekt zu sein."),
+        ("frontend/payment_paypal", 1, 1, "error_10008", "Die Accountdaten des Händler-Accounts scheinen nicht korrekt zu sein. Eventuell nutzen Sie Daten für den Sandbox-Modul im Live-Betrieb oder umgekehrt.");
+        ';
+        Shopware()->Db()->query($sql);
+
     }
 
     /**

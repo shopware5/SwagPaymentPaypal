@@ -242,21 +242,26 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
         // API settings
         $form->setElement('text', 'paypalUsername', array(
             'label' => 'API-Benutzername',
-            'required' => true
+            'required' => true,
+            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
         ));
         $form->setElement('text', 'paypalPassword', array(
             'label' => 'API-Passwort',
-            'required' => true
+            'required' => true,
+            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
         ));
         $form->setElement('text', 'paypalSignature', array(
             'label' => 'API-Unterschrift',
-            'required' => true
+            'required' => true,
+            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+
         ));
         $form->setElement('text', 'paypalVersion', array(
             'label' => 'API-Version',
             'value' => '93.0',
             'required' => true,
-            'readOnly' => true
+            'readOnly' => true,
+            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
         ));
         $form->setElement('button', 'paypalButtonApi', array(
             'label' => '<strong>Jetzt API-Signatur erhalten</strong>',
@@ -268,10 +273,12 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
             }"
         ));
         $form->setElement('boolean', 'paypalSandbox', array(
-            'label' => 'Sandbox-Modus aktivieren'
+            'label' => 'Sandbox-Modus aktivieren',
+            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
         ));
         $form->setElement('boolean', 'paypalErrorMode', array(
-            'label' => 'Fehlermeldungen ausgeben'
+            'label' => 'Fehlermeldungen ausgeben',
+            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
         ));
 
         // Payment page settings

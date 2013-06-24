@@ -46,6 +46,14 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
     {
         $limit = $this->Request()->getParam('limit', 20);
         $start = $this->Request()->getParam('start', 0);
+        $subShopFilter = $this->Request()->getParam('filter', false);
+
+        if ($subShopFilter && !empty($subShopFilter)) {
+            $subShopFilter = array_pop($subShopFilter);
+            if ($subShopFilter['property'] == 'shopId') {
+                $subShopFilter = (int) $subShopFilter['value'];
+            }
+        }
 
         if ($sort = $this->Request()->getParam('sort')) {
             //$sort = Zend_Json::decode($sort);
@@ -72,7 +80,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             'clearedId' => 'cleared',
             'statusId' => 'status',
             'amount' => 'invoice_amount', 'currency',
-            'orderDate' => 'ordertime', 'orderNumber' => 'ordernumber',
+            'orderDate' => 'ordertime', 'orderNumber' => 'ordernumber', 'shopId' => 'subshopID',
             'transactionId',
             'comment' => 'customercomment',
             'clearedDate' => 'cleareddate',
@@ -91,6 +99,13 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
                 ->order('docID DESC')
                 ->limit(1) . ')')
         ))
+            ->joinLeft(
+                array('shops' => 's_core_shops'),
+                'shops.id =  o.subshopID',
+                array(
+                    'shopName' => 'shops.name'
+                )
+        )
             ->join(
             array('p' => 's_core_paymentmeans'),
             'p.id =  o.paymentID',
@@ -150,8 +165,12 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
                 . ' OR u.lastname LIKE ' . $search
                 . ' OR b.company LIKE ' . $search
                 . ' OR u.company LIKE ' . $search);
+
         }
 
+        if($subShopFilter) {
+            $select->where('o.subshopID = ' .  $subShopFilter);
+        }
 
         $rows = Shopware()->Db()->fetchAll($select);
         $total = Shopware()->Db()->fetchOne('SELECT FOUND_ROWS()');

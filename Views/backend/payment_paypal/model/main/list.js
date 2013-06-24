@@ -51,6 +51,8 @@ Ext.define('Shopware.apps.PaymentPaypal.model.main.List', {
 		{ name: 'orderDate', type: 'date' },
 		{ name: 'clearedDate', type: 'date' },
 		{ name: 'orderNumber', type: 'string' },
+		{ name: 'shopId', type: 'int' },
+		{ name: 'shopName', type: 'string' },
 		{ name: 'paymentDescription', type: 'string' },
 		{ name: 'paymentKey', type: 'string' },
 		{ name: 'comment', type: 'string' },

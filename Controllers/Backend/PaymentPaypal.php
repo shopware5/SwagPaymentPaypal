@@ -88,15 +88,15 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             'customerId' => 'u.userID',
             'invoiceId' => new Zend_Db_Expr('(' . Shopware()->Db()
                 ->select()
-                ->from(array('s_order_documents'), array('id'))
+                ->from(array('s_order_documents'), array('ID'))
                 ->where('orderID=o.id')
-                ->order('id DESC')
+                ->order('ID DESC')
                 ->limit(1) . ')'),
             'invoiceHash' => new Zend_Db_Expr('(' . Shopware()->Db()
                 ->select()
                 ->from(array('s_order_documents'), array('hash'))
                 ->where('orderID=o.id')
-                ->order('id DESC')
+                ->order('ID DESC')
                 ->limit(1) . ')')
         ))
             ->joinLeft(

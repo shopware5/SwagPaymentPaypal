@@ -148,7 +148,7 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.List', {
                     });
                 }
             }, {
-                iconCls: 'sprite-blueprint',
+                iconCls: 'sprite-document-invoice',
                 tooltip: '{s name=list/actioncolumn/invoice_tooltip}Open invoice{/s}',
                 getClass: function(value, metadata, record) {
                     if(!record.get('invoiceId')) {

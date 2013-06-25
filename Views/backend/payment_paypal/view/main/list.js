@@ -148,10 +148,10 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.List', {
                     });
                 }
             }, {
-                iconCls: 'sprite-receipt-invoice',
+                iconCls: 'sprite-blueprint',
                 tooltip: '{s name=list/actioncolumn/invoice_tooltip}Open invoice{/s}',
                 getClass: function(value, metadata, record) {
-                    if(!record.get('invoiceNumber')) {
+                    if(!record.get('invoiceId')) {
                         return 'x-hidden';
                     }
                 },

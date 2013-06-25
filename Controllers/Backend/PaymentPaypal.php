@@ -86,17 +86,17 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             'clearedDate' => 'cleareddate',
             'trackingId' => 'trackingcode',
             'customerId' => 'u.userID',
-            'invoiceNumber' => new Zend_Db_Expr('(' . Shopware()->Db()
+            'invoiceId' => new Zend_Db_Expr('(' . Shopware()->Db()
                 ->select()
-                ->from(array('s_order_documents'), array('docID'))
+                ->from(array('s_order_documents'), array('id'))
                 ->where('orderID=o.id')
-                ->order('docID DESC')
+                ->order('id DESC')
                 ->limit(1) . ')'),
             'invoiceHash' => new Zend_Db_Expr('(' . Shopware()->Db()
                 ->select()
                 ->from(array('s_order_documents'), array('hash'))
                 ->where('orderID=o.id')
-                ->order('docID DESC')
+                ->order('id DESC')
                 ->limit(1) . ')')
         ))
             ->joinLeft(
@@ -171,7 +171,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         if($subShopFilter) {
             $select->where('o.subshopID = ' .  $subShopFilter);
         }
-
+error_log(print_r($select->assemble(), true)."\n", 3, '/srv/http/error.log');
         $rows = Shopware()->Db()->fetchAll($select);
         $total = Shopware()->Db()->fetchOne('SELECT FOUND_ROWS()');
 

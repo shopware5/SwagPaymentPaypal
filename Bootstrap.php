@@ -137,6 +137,9 @@ EOD;
 EOD;
             Shopware()->Db()->query($sql);
         }
+        //Update form
+        $this->createMyForm();
+        return true;
     }
 
     /**

@@ -171,7 +171,6 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         if($subShopFilter) {
             $select->where('o.subshopID = ' .  $subShopFilter);
         }
-error_log(print_r($select->assemble(), true)."\n", 3, '/srv/http/error.log');
         $rows = Shopware()->Db()->fetchAll($select);
         $total = Shopware()->Db()->fetchOne('SELECT FOUND_ROWS()');
 
@@ -200,7 +199,9 @@ error_log(print_r($select->assemble(), true)."\n", 3, '/srv/http/error.log');
         $repository = Shopware()->Models()->getRepository('Shopware\Models\Shop\Shop');
 
         if (empty($shopId)) {
-            $shopId = $repository->getActiveDefault()->getId();
+            $shop = $repository->getActiveDefault();
+            return $shop->registerResources(Shopware()->Bootstrap());
+
         }
 
         $shop = $repository->getActiveById($shopId);
@@ -258,7 +259,6 @@ error_log(print_r($select->assemble(), true)."\n", 3, '/srv/http/error.log');
         if ($element) {
             foreach ($element->getValues() as $value) {
                 if ($value->getValue() == $result['swag_paypal_api_user']) {
-                    error_log(print_r($value->getValue(), true)."\n", 3, '/srv/http/error.log');
                     $this->registerShopByShopId($value->getShop()->getId());
                     return;
                 }

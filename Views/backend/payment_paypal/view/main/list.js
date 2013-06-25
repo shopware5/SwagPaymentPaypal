@@ -53,6 +53,11 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.List', {
             ],
             columns: me.getColumns()
         });
+
+
+        me.addEvents('shopSelectionChanged');
+
+
         this.callParent();
         me.store.clearFilter(true);
         me.store.load();
@@ -82,6 +87,10 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.List', {
             text: '{s name=list/columns/customer_text}Customer{/s}',
             flex: 3,
             dataIndex: 'customer'
+        }, {
+            header: '{s name=list/columns/shop_text}Shop{/s}',
+            dataIndex: 'shopName',
+            flex:2
         },{
             text: '{s name=list/columns/currency_text}Currency{/s}',
             flex: 2,
@@ -127,7 +136,7 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.List', {
                     });
                 }
             }, {
-                iconCls: 'sprite-receipt-sticky-note',
+                iconCls: 'sprite-sticky-notes-pin',
                 tooltip: '{s name=list/actioncolumn/order_tooltip}Open order details{/s}',
                 handler: function(grid, rowIndex, colIndex) {
                     var record = grid.getStore().getAt(rowIndex);
@@ -178,19 +187,40 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.List', {
     },
 
     getTopBar:function () {
-        var me = this;
-        var items = [];
+        var me = this,
+            items = [],
+            shopStore = Ext.create('Shopware.apps.Base.store.Shop');
+
+        shopStore.clearFilter();
+
         items.push({
             fieldLabel: '{s name=list/balance/label}Your PayPal balance{/s}',
             labelWidth: 150,
             xtype: 'textfield',
+            flex: 3,
             readOnly: true,
             name: 'balance'
+        }, {
+            xtype: 'combo',
+            fieldLabel: '{s name=list/shop/label}Select shop{/s}',
+            store: shopStore,
+            checkChangeBuffer: 100,
+            allowEmpty: true,
+            emptyText: '{s name=list/showAll}Show all{/s}',
+            displayField: 'name',
+            valueField: 'id',
+            flex: 2,
+            name: 'shopId',
+            listeners: {
+                change: function(combo, newValue, oldValue, eOpts) {
+                    me.fireEvent('shopSelectionChanged', newValue);
+                }
+            }
         }, '->', {
             xtype: 'textfield',
             name:'searchfield',
             cls:'searchfield',
-            width:100,
+            width: 100,
             emptyText:'{s name=list/search/text}Search...{/s}',
             enableKeyEvents:true,
             checkChangeBuffer:500

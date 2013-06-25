@@ -80,7 +80,8 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
         // Register events
         me.control({
             'paypal-main-list': {
-                selectionchange: me.onSelectionChange
+                selectionchange: me.onSelectionChange,
+                shopSelectionChanged: me.onShopSelectionChanged
             },
             'paypal-main-detail button': {
                 click: me.onClickDetailButton
@@ -89,6 +90,16 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
                 change: me.onSearchForm
             }
         });
+    },
+
+    onShopSelectionChanged: function(shopId) {
+        var me = this,
+            grid = me.getList(),
+            store = grid.store;
+
+        store.clearFilter(true);
+        store.filter('shopId', shopId);
+
     },
 
     onSearchForm: function(field, value) {

@@ -242,21 +242,26 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
         // API settings
         $form->setElement('text', 'paypalUsername', array(
             'label' => 'API-Benutzername',
-            'required' => true
+            'required' => true,
+            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
         ));
         $form->setElement('text', 'paypalPassword', array(
             'label' => 'API-Passwort',
-            'required' => true
+            'required' => true,
+            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
         ));
         $form->setElement('text', 'paypalSignature', array(
             'label' => 'API-Unterschrift',
-            'required' => true
+            'required' => true,
+            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+
         ));
         $form->setElement('text', 'paypalVersion', array(
             'label' => 'API-Version',
             'value' => '93.0',
             'required' => true,
-            'readOnly' => true
+            'readOnly' => true,
+            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
         ));
         $form->setElement('button', 'paypalButtonApi', array(
             'label' => '<strong>Jetzt API-Signatur erhalten</strong>',
@@ -268,10 +273,12 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
             }"
         ));
         $form->setElement('boolean', 'paypalSandbox', array(
-            'label' => 'Sandbox-Modus aktivieren'
+            'label' => 'Sandbox-Modus aktivieren',
+            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
         ));
         $form->setElement('boolean', 'paypalErrorMode', array(
-            'label' => 'Fehlermeldungen ausgeben'
+            'label' => 'Fehlermeldungen ausgeben',
+            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
         ));
 
         // Payment page settings
@@ -403,6 +410,19 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
                 $elementModel->addTranslation($translationModel);
             }
         }
+
+        /**
+         * Frontend translations
+         */
+        $sql = 'INSERT IGNORE INTO s_core_snippets (`namespace`, `shopID`, `localeID`, `name`, `value`)
+        VALUES
+        ("frontend/payment_paypal", 1, 1, "error_10412", "Sie nutzen einen Nummernkreis, der für diesen Händler-Account bereits genutzt wurde. Erhöhen Sie den Nummernkreis für die Bestellnummern in den Grundeinstellungen."),
+        ("frontend/payment_paypal", 1, 1, "error_10624", "Sie nutzen einen Nummernkreis, der für diesen Händler-Account bereits genutzt wurde. Erhöhen Sie den Nummernkreis für die Bestellnummern in den Grundeinstellungen."),
+        ("frontend/payment_paypal", 1, 1, "error_10002", "Die Accountdaten des Händler-Accounts scheinen nicht korrekt zu sein."),
+        ("frontend/payment_paypal", 1, 1, "error_10008", "Die Accountdaten des Händler-Accounts scheinen nicht korrekt zu sein. Eventuell nutzen Sie Daten für den Sandbox-Modul im Live-Betrieb oder umgekehrt.");
+        ';
+        Shopware()->Db()->query($sql);
+
     }
 
     /**
@@ -605,7 +625,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
      */
     public function getVersion()
     {
-        return '2.1.5';
+        return '2.1.6';
     }
 
     /**

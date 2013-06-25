@@ -15,10 +15,6 @@
     {$i=0}{while isset($PaypalResponse["L_LONGMESSAGE{$i}"])}
         <h3>[{$PaypalResponse["L_ERRORCODE{$i}"]}] - {$PaypalResponse["L_SHORTMESSAGE{$i}"]|escape|nl2br}. {$PaypalResponse["L_LONGMESSAGE{$i}"]|escape|nl2br}</h3>
     {$i=$i+1}{/while}
-    {if !empty($ExplainedError)}
-        <p>{$ExplainedError}</p>
-    {/if}
-
 {else}
     <h2>{se name=PaymentErrorMessage}Es ist ein Problem aufgetreten und die Bestellung konnte nicht abgeschlossen werden.{/se}</h2>
     <br />

@@ -254,11 +254,6 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                     if($response['ACK'] != 'Success') {
                         $this->View()->PaypalConfig = $config;
                         $this->View()->PaypalResponse = $response;
-
-                        $additionalErrorInfo = $this->getAdditionalErrorInfo($response);
-                        if ($additionalErrorInfo) {
-                            $this->View()->ExplainedError = $additionalErrorInfo;
-                        }
                     } elseif ($response['REDIRECTREQUIRED'] === 'true') {
                         if(!empty($config->paypalSandbox)) {
                             $redirectUrl = 'https://www.sandbox.paypal.com/';
@@ -371,7 +366,19 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             isset($params['TOKEN']) ? $params['TOKEN'] : $params['REFERENCEID'],
             $params['CUSTOM']
         );
-        $params['INVNUM'] = $orderNumber;
+
+        if ($config->get('paypalSendInvoiceId') === true) {
+            $prefix = $config->get('paypalPrefixInvoiceId');
+            if (!empty($prefix)) {
+                // Set prefixed invoice id - Remove special chars and spaces
+                $prefix = str_replace(' ', '', $prefix);
+                $prefix = preg_replace('/[^A-Za-z0-9\-]/', '', $prefix);
+                $params['INVNUM'] = $prefix.$orderNumber;
+            } else {
+                $params['INVNUM'] = $orderNumber;
+            }
+        }
+
         //$params['SOFTDESCRIPTOR'] = $orderNumber;
 
         if(!empty($params['REFERENCEID'])) {
@@ -621,41 +628,5 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
     public function Plugin()
     {
         return Shopware()->Plugins()->Frontend()->SwagPaymentPaypal();
-    }
-
-    /**
-     * Helper which looks up PayPal error codes and prints some additional info for the shop owner. Will only be shown
-     * in sandbox mode or if ErrorMode is enabled.
-     *
-     * @param $response
-     * @return bool|string
-     */
-    public function getAdditionalErrorInfo($response)
-    {
-        $namespace = Shopware()->Snippets()->getNamespace('frontend/payment_paypal');
-
-        $errorDescription = array(
-            '10002' => 'Your merchant account data do not seem to be valid.',
-            '10008' => 'Your merchant account data do not seem to be valid. Perhaps you use your sandbox account for live mode or vice versa',
-            '10412' => 'You are using a number range which has already been used for this merchant account. Increase your number range for orders in the basic settings.',
-            '10624' => 'You are using a number range which has already been used for this merchant account. Increase your number range for orders in the basic settings.',
-            '10419' => 'This error usually occurs when you\'ve enabled the "payment agreement" option but did not enable it for the merchant\'s account.',
-        );
-
-        $i = 0;
-        $errorMessages = array();
-
-        while (!empty($response['L_ERRORCODE'.$i])) {
-            if(array_key_exists($response['L_ERRORCODE'.$i], $errorDescription)) {
-                $errorMessages[] = $namespace->get('error_'.$response['L_ERRORCODE'.$i], $errorDescription[$response['L_ERRORCODE'.$i]], true);
-            }
-            $i++;
-        }
-
-        if (!empty($errorMessages)) {
-            return implode("<br>\n", $errorMessages);
-        }
-
-        return false;
     }
 }

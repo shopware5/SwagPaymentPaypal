@@ -73,7 +73,7 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.Detail', {
     },
 
     /**
-     * @return array
+     * @return Array
      */
     getButtons: function() {
         var me = this;
@@ -104,7 +104,7 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.Detail', {
     },
 
     /**
-     * @return array
+     * @return Array
      */
     getItems: function() {
         var me = this;

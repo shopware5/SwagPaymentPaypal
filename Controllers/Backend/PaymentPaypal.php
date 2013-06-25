@@ -190,14 +190,98 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
     }
 
     /**
+     * Helper which registers a shop in order to use the PayPal API client within the context of the given shop
+     *
+     * @param $shopId
+     * @throws Exception
+     */
+    public function registerShopByShopId($shopId)
+    {
+        $repository = Shopware()->Models()->getRepository('Shopware\Models\Shop\Shop');
+
+        if (empty($shopId)) {
+            $shopId = $repository->getActiveDefault()->getId();
+        }
+
+        $shop = $repository->getActiveById($shopId);
+        if (!$shop) {
+            throw new \Exception("Shop {$shopId} not found");
+
+        }
+        $shop->registerResources(Shopware()->Bootstrap());
+    }
+
+    /**
+     * Will register the correct shop for a given transactionId.
+     * As of SwagPayPal >= 2.1.6 any order has an api-user associated, so we are able to look up the correct
+     * credentials any time.
+     *
+     * For older orders the shopId will be used to load the correct credentials - they might fail if the shop's
+     * credentials where changed meanwhile
+     *
+     * @param $transactionId
+     */
+    public function registerShopByTransactionId($transactionId)
+    {
+        // Query shopId and api-user if available
+        $sql = '
+            SELECT s_order.`subshopID`, s_order_attributes.`swag_paypal_api_user`
+            FROM s_order
+            LEFT JOIN s_order_attributes
+              ON s_order_attributes.orderID = s_order.id
+            WHERE s_order.transactionID = ?
+        ';
+        $result = Shopware()->Db()->fetchRow($sql, array($transactionId));
+
+        // If no result was found, we just return. So the default credentials will be used
+        if (empty($result)) {
+            return;
+        }
+
+        // If no api_user is set, probably an old entry is being queried.
+        if (empty($result['swag_paypal_api_user'])) {
+            if (!empty($result['subshopID'])) {
+                $this->registerShopByShopId($result['subshopID']);
+            }
+            // If neither api-user nor shop are available, just return and use the default credentials
+            return;
+        }
+
+        /**
+         * Default case: Determine which setting as the api-user of the order configured.
+         * Get the corresponding shop and load it.
+         */
+        /** @var \Shopware\Models\Config\Form $form */
+        $form = Shopware()->Plugins()->Frontend()->SwagPaymentPaypal()->Form();
+        /** @var \Shopware\Models\Config\Element $element */
+        $element = $form->getElement('paypalUsername');
+        if ($element) {
+            foreach ($element->getValues() as $value) {
+                if ($value->getValue() == $result['swag_paypal_api_user']) {
+                    error_log(print_r($value->getValue(), true)."\n", 3, '/srv/http/error.log');
+                    $this->registerShopByShopId($value->getShop()->getId());
+                    return;
+                }
+            }
+        }
+
+        // If not config value fits the api-user of the order, the credentials are not in the system any more
+        return;
+    }
+
+    /**
      * Get paypal account balance
      */
     public function getBalanceAction()
     {
+        $shopId = (int) $this->Request()->getParam('shopId', null);
+        $this->registerShopByShopId($shopId);
+
         $client = $this->Plugin()->Client();
         $balance = $client->getBalance(array(
             'RETURNALLCURRENCIES' => 0
         ));
+
         if ($balance['ACK'] == 'Success') {
             $rows = array();
             for ($i = 0; isset($balance['L_AMT' . $i]); $i++) {
@@ -213,7 +297,8 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             }
             $this->View()->assign(array('success' => true, 'data' => $rows));
         } else {
-            $this->View()->assign(array('success' => false));
+            $error = sprintf("An error occured: %s: %s - %s", $balance['L_ERRORCODE0'], $balance['L_SHORTMESSAGE0'], $balance['L_LONGMESSAGE0']);
+            $this->View()->assign(array('success' => false, 'error' => $error, 'errorCode' => $balance['L_ERRORCODE0']));
         }
     }
 
@@ -227,15 +312,26 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             $this->Request()->setParam('transactionId', $filter[0]['value']);
         }
         $transactionId = $this->Request()->getParam('transactionId');
+
+        // Load the correct shop in order to use the correct api credentials
+        $this->registerShopByTransactionId($transactionId);
+
+
         $client = $this->Plugin()->Client();
         $details = $client->getTransactionDetails(array(
             'TRANSACTIONID' => $transactionId
         ));
-
         if (empty($details)) {
-            $this->View()->assign(array('success' => false));
+            $this->View()->assign(array('success' => false, 'message' => 'No details found for this transaction'));
             return;
         }
+
+        if ($details['ACK'] != 'Success') {
+            $error = sprintf("An error occured: %s: %s - %s", $details['L_ERRORCODE0'], $details['L_SHORTMESSAGE0'], $details['L_LONGMESSAGE0']);
+            $this->View()->assign(array('success' => false, 'message' => $error, 'errorCode' => $details['L_ERRORCODE0']));
+            return;
+        }
+
 
         $row = array(
             'accountEmail' => $details['EMAIL'],
@@ -275,6 +371,13 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             'TRANSACTIONID' => $transactionId
             //'INVNUM' => $details['INVNUM']
         ));
+
+        if ($transactionsData['ACK'] != 'Success') {
+            $error = sprintf("An error occured: %s: %s - %s", $transactionsData['L_ERRORCODE0'], $transactionsData['L_SHORTMESSAGE0'], $transactionsData['L_LONGMESSAGE0']);
+            $this->View()->assign(array('success' => false, 'message' => $error, 'errorCode' => $transactionsData['L_ERRORCODE0']));
+            return;
+        }
+
         $row['transactions'] = array();
         for ($i = 0; isset($transactionsData['L_AMT' . $i]); $i++) {
             $transaction = array(
@@ -302,10 +405,15 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
      */
     public function doActionAction()
     {
+        $transactionId = $this->Request()->getParam('transactionId');
+
+        // Load the correct shop in order to use the correct api credentials
+        $this->registerShopByTransactionId($transactionId);
+
+
         $client = $this->Plugin()->Client();
 
         $action = $this->Request()->getParam('paymentAction');
-        $transactionId = $this->Request()->getParam('transactionId');
         $amount = $this->Request()->getParam('paymentAmount');
         $amount = str_replace(',', '.', $amount);
         $currency = $this->Request()->getParam('paymentCurrency');

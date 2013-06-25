@@ -383,6 +383,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $result['INVNUM'] = $params['INVNUM'];
         $result['CUSTOM'] = $params['CUSTOM'];
 
+        // Set billing agreement id
         if(!empty($result['BILLINGAGREEMENTID'])) {
             try {
                 $sql = '
@@ -397,6 +398,20 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                 ));
             } catch(Exception $e) { }
         }
+
+        // Save, which merchant paypal account this order is associated to
+        try {
+            $sql = '
+                INSERT INTO s_order_attributes (orderID, swag_paypal_api_user)
+                SELECT id, ? FROM s_order WHERE ordernumber = ?
+                ON DUPLICATE KEY
+                UPDATE swag_paypal_api_user = VALUES(swag_paypal_api_user)
+            ';
+            Shopware()->Db()->query($sql, array(
+                $config->get('paypalUsername'),
+                $orderNumber
+            ));
+        } catch(Exception $e) { }
 
         $sql = '
             UPDATE `s_order`

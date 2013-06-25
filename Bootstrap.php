@@ -60,6 +60,10 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
                 's_order_attributes', 'swag_payal',
                 'billing_agreement_id', 'VARCHAR(255)'
             );
+            $this->Application()->Models()->addAttribute(
+                's_order_attributes', 'swag_payal',
+                'api_user', 'VARCHAR(255)'
+            );
         } catch(Exception $e) { }
 
         $this->Application()->Models()->generateAttributeModels(array(
@@ -117,6 +121,18 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
             $element = $this->Form()->getElement('paypalAllowGuestCheckout');
             $this->Form()->getElements()->removeElement($element);
         }
+
+        if (version_compare($version, '2.1.5', '<=')) {
+            $this->Application()->Models()->addAttribute(
+                's_order_attributes', 'swag_paypal',
+                'api_user', 'VARCHAR(255)'
+            );
+            $this->Application()->Models()->generateAttributeModels(array(
+                's_order_attributes',
+            ));
+        }
+
+
         //Update form
         $this->createMyForm();
         return true;

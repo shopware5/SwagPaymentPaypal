@@ -33,6 +33,7 @@
  *
  * todo@all: Documentation
  */
+//{namespace name=backend/payment_paypal/view/main}
 //{block name="backend/payment_paypal/controller/main"}
 Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
     extend: 'Enlight.app.Controller',
@@ -41,6 +42,7 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
         { ref: 'window', selector: 'paypal-main-window' },
         { ref: 'detail', selector: 'paypal-main-detail' },
         { ref: 'list', selector: 'paypal-main-list' },
+        { ref: 'shopCombo', selector: 'paypal-main-list [name=shopId]' },
         { ref: 'balance', selector: 'paypal-main-list field[name=balance]' },
         { ref: 'transactions', selector: 'paypal-main-detail grid' }
     ],
@@ -54,6 +56,16 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
     views: [
         'main.Window', 'main.List', 'main.Detail', 'main.Action'
     ],
+
+    snippets:  {
+        error: {
+            title: '{s name="balanceErrorTitle"}Error{/s}',
+            general: '{s name="errorMessageGeneral"}<b>Possible cause:</b><br>[0]<br><br><b>Actual error message:</b><br>[1]{/s}',
+            10011: '{s name="invalidTransaction"}The transactionId you passed is not valid or not known to PayPal{/s}',
+            10007: '{s name="permissionDenied"}The PayPal credentials you configured are not valid for this Transaction{/s}',
+            10002: '{s name="securityError"}Your PayPal credentials are not valid.{/s}'
+        }
+    },
 
     /**
      * The main window instance
@@ -92,13 +104,47 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
         });
     },
 
+    /**
+     * Returns the currently selected shop.
+     *
+     * If there is no vaild shop selected, the first shop is returned, if that fails, 0 is returned.
+     * In the later case, the controller should select the shop via getActiveDefault()
+     *
+     * @returns int
+     */
+    getSelectedShop: function() {
+        var me = this,
+            shopCombo = me.getShopCombo(),
+            shopId = shopCombo.getValue(),
+            first = shopCombo.store.first();
+        
+        if (typeof(shopId) != "number") {
+            if (first && first.get('id')) {
+                return first.get('id');
+            }
+            return 0;
+        }
+
+        return shopId;
+
+    },
+
     onShopSelectionChanged: function(shopId) {
         var me = this,
             grid = me.getList(),
             store = grid.store;
 
+        if (typeof(shopId) != "number" && shopId != '' && shopId != null) {
+            return;
+        }
         store.clearFilter(true);
         store.filter('shopId', shopId);
+
+        me.getStore('main.Balance').getProxy().extraParams['shopId'] = shopId;
+        me.getStore('main.Balance').load({
+            callback: me.onLoadBalance,
+            scope: this
+        });
 
     },
 
@@ -138,10 +184,17 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
         var me = this,
             formPanel = me.getDetail(),
             record = records.length ? records[0] : null;
+
+        var shopId = me.getSelectedShop();
+
+
         if(record) {
             formPanel.setLoading(true);
             formPanel.loadRecord(record);
             me.detailStore.load({
+                extraParams: {
+                    'shopId': shopId
+                },
                 filters : [{
                     property: 'transactionId',
                     value: record.get('transactionId')
@@ -155,20 +208,69 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
         }
     },
 
-    onLoadBalance: function(records) {
+    /**
+     * Displays a sticky notification if available. Else the default growlmessage is shown
+     *
+     * @param title
+     * @param message
+     */
+    showGrowlMessage: function(title, message) {
         var me = this;
-        if(records.length) {
+
+        if (typeof Shopware.Notification.createStickyGrowlMessage == 'function') {
+            Shopware.Notification.createStickyGrowlMessage({
+                title: title,
+                text:  message
+            });
+        } else {
+            Shopware.Notification.createGrowlMessage(title, message);
+        }
+    },
+
+    showPayPalErrorMessage: function(title, error, code) {
+        var me = this,
+            message;
+
+        if (!code || !me.snippets.error[code]) {
+            message = error;
+        } else {
+            message = Ext.String.format(me.snippets.error.general, me.snippets.error[code], error);
+        }
+
+        me.showGrowlMessage(title, message);
+    },
+
+    onLoadBalance: function(records, operation, success) {
+        var me = this,
+            error, errorCode;
+
+        if (!success) {
+            error = operation.request.proxy.reader.rawData.error;
+            errorCode = operation.request.proxy.reader.rawData.errorCode;
+
+            me.showPayPalErrorMessage(me.snippets.error.title, error, errorCode);
+        }else if(records.length) {
             var record = records[0];
             me.getBalance().setValue(record.get('balanceFormat'));
         }
     },
 
-    onLoadDetail: function(records) {
+    onLoadDetail: function(records, operation, success) {
         var me = this,
             formPanel = me.getDetail(),
-            detail = records.length ? records[0] : null,
-            status, fields;
+            detail = (records && records.length) ? records[0] : null,
+            status, fields,
+            error, errorCode;
+
+
         if(!detail) {
+            formPanel.disable();
+            formPanel.setLoading(false);
+            if (!success) {
+                error = operation.request.proxy.reader.rawData.message
+                errorCode = operation.request.proxy.reader.rawData.errorCode
+                me.showPayPalErrorMessage(me.snippets.error.title, error, errorCode);
+            }
             return;
         }
         formPanel.loadRecord(detail);

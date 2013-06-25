@@ -60,7 +60,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
             UPDATE  `s_core_config_mails`
             SET
                 content=REPLACE(content, '{$additional.payment.additionaldescription}', '{include file="string:`$additional.payment.additionaldescription`"}'),
-                contentHTML=REPLACE(content, '{$additional.payment.additionaldescription}', '{include file="string:`$additional.payment.additionaldescription`"}')
+                contentHTML=REPLACE(contentHTML, '{$additional.payment.additionaldescription}', '{include file="string:`$additional.payment.additionaldescription`"}')
             WHERE name='sORDER';
 EOD;
         Shopware()->Db()->query($sql);

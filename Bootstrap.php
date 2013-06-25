@@ -361,6 +361,19 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
             'value' => false,
             'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
         ));
+        $form->setElement('boolean', 'paypalSendInvoiceId', array(
+            'label' => 'Bestellnummer an PayPal übertragen',
+            'description' => 'Ist ggf. für einige Warenwirtschaften erforderlich. Stellen Sie in diesem Fall sicher, dass ihr Nummernkreis für Bestellnummern sich nicht mit anderen/vorherigen Shops überschneidet, die Sie ebenfalls über ihren PayPal-Account betreiben.',
+            'value' => false,
+            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+        ));
+        $form->setElement('text', 'paypalPrefixInvoiceId', array(
+            'label' => 'Bestellnummer für PayPal mit einem Shop-Prefix versehen',
+            'description' => 'Wenn Sie Ihren PayPal-Account für mehrere Shops nutzen, können Sie vermeiden, dass es Überschneidungen bei den Bestellnummern gibt, indem Sie hier ein eindeutiges Prefix definieren.',
+            'value' => 'MeinShop_',
+            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+            'vtype' => 'alphanum'
+        ));
     }
 
     /**
@@ -388,7 +401,9 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
                 'paypalExpressButtonLayer' => 'Show express-purchase button in modal box',
                 'paypalStatusId' => 'Payment state after completing the payment',
                 'paypalPendingStatusId' => 'Payment state after being authorized',
-                'paypalStatusMail' => 'Send mail on payment state change'
+                'paypalStatusMail' => 'Send mail on payment state change',
+                'paypalSendInvoiceId' => 'Transfer invoice id to paypal',
+                'paypalPrefixInvoiceId' => 'Add shop prefix to the invoice id'
             )
         );
         $shopRepository = Shopware()->Models()->getRepository('\Shopware\Models\Shop\Locale');

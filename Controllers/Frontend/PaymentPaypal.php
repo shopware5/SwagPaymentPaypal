@@ -366,7 +366,19 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             isset($params['TOKEN']) ? $params['TOKEN'] : $params['REFERENCEID'],
             $params['CUSTOM']
         );
-        $params['INVNUM'] = $orderNumber;
+
+        if ($config->get('paypalSendInvoiceId') === true) {
+            $prefix = $config->get('paypalPrefixInvoiceId');
+            if (!empty($prefix)) {
+                // Set prefixed invoice id - Remove special chars and spaces
+                $prefix = str_replace(' ', '', $prefix);
+                $prefix = preg_replace('/[^A-Za-z0-9\-]/', '', $prefix);
+                $params['INVNUM'] = $prefix.$orderNumber;
+            } else {
+                $params['INVNUM'] = $orderNumber;
+            }
+        }
+
         //$params['SOFTDESCRIPTOR'] = $orderNumber;
 
         if(!empty($params['REFERENCEID'])) {

@@ -129,6 +129,11 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
 
     },
 
+    /**
+     * Callback function called when the user changed the shop selection combo
+     *
+     * @param shopId
+     */
     onShopSelectionChanged: function(shopId) {
         var me = this,
             grid = me.getList(),
@@ -148,6 +153,12 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
 
     },
 
+    /**
+     * Callback function triggered when the user enters something into the search field
+     *
+     * @param field
+     * @param value
+     */
     onSearchForm: function(field, value) {
         var me = this;
         var store = me.getStore('main.List');
@@ -163,6 +174,11 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
         }
     },
 
+    /**
+     * Callback function triggered when the user clicks one of the action buttons in the detail form
+     *
+     * @param button
+     */
     onClickDetailButton: function(button) {
         var me = this,
             detail = me.getDetail(),
@@ -180,6 +196,12 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
         })
     },
 
+    /**
+     * Callback function triggered when the user clicks on an entry in the list
+     *
+     * @param table
+     * @param records
+     */
     onSelectionChange: function(table, records) {
         var me = this,
             formPanel = me.getDetail(),
@@ -227,6 +249,14 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
         }
     },
 
+    /**
+     * Convenience function which will look up any given error code in order to give the user some more
+     * info about what happened and what he can do about it.
+     *
+     * @param title
+     * @param error
+     * @param code
+     */
     showPayPalErrorMessage: function(title, error, code) {
         var me = this,
             message;
@@ -240,6 +270,13 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
         me.showGrowlMessage(title, message);
     },
 
+    /**
+     * Callback function for the "load paypal balance" ajax request
+     *
+     * @param records
+     * @param operation
+     * @param success
+     */
     onLoadBalance: function(records, operation, success) {
         var me = this,
             error, errorCode;
@@ -255,6 +292,13 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
         }
     },
 
+    /**
+     * Callback function for the "load details" ajax request
+     *
+     * @param records
+     * @param operation
+     * @param success
+     */
     onLoadDetail: function(records, operation, success) {
         var me = this,
             formPanel = me.getDetail(),

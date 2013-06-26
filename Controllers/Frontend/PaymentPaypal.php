@@ -305,11 +305,13 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
      */
     public function notifyAction()
     {
+        $transactionId = $this->Request()->get('txn_id');
+
         $this->View()->setTemplate();
         $client = $this->Plugin()->Client();
 
         $details = $client->getTransactionDetails(array(
-            'TRANSACTIONID' => $this->Request()->get('txn_id')
+            'TRANSACTIONID' => $transactionId
         ));
 
         if(empty($details['PAYMENTSTATUS']) || empty($details['ACK']) || $details['ACK'] != 'Success') {
@@ -332,11 +334,12 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $client = $this->Plugin()->Client();
         $config = $this->Plugin()->Config();
 
+        $router = $this->Front()->Router();
+        $notifyUrl = $router->assemble(array(
+            'action' => 'notify', 'forceSecure' => true, 'appendSession' => true
+        ));
+
         if(!empty($details['REFERENCEID'])) {
-            $router = $this->Front()->Router();
-            $notifyUrl = $router->assemble(array(
-                'action' => 'notify', 'forceSecure' => true, 'appendSession' => true
-            ));
             $params = array(
                 'REFERENCEID' => $details['REFERENCEID'],
                 'IPADDRESS' => $this->Request()->getClientIp(false),
@@ -348,6 +351,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             $params = array(
                 'TOKEN' => $details['TOKEN'],
                 'PAYERID' => $details['PAYERID'],
+                'NOTIFYURL' => $notifyUrl,
                 'CUSTOM' => $details['CUSTOM'],
                 'BUTTONSOURCE' => 'Shopware_Cart_ECS'
             );

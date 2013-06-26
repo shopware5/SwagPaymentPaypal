@@ -417,6 +417,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $result['INVNUM'] = $params['INVNUM'];
         $result['CUSTOM'] = $params['CUSTOM'];
 
+        // Set billing agreement id
         if(!empty($result['BILLINGAGREEMENTID'])) {
             try {
                 $sql = '

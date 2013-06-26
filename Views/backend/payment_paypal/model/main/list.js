@@ -57,7 +57,7 @@ Ext.define('Shopware.apps.PaymentPaypal.model.main.List', {
 		{ name: 'paymentKey', type: 'string' },
 		{ name: 'comment', type: 'string' },
 		
-		{ name: 'invoiceNumber', type: 'string' },
+		{ name: 'invoiceId', type: 'string' },
 		{ name: 'invoiceHash', type: 'string' },
 		{ name: 'trackingId', type: 'string' },
 		{ name: 'dispatchId', type: 'int' },

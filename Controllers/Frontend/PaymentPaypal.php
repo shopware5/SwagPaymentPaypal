@@ -305,13 +305,11 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
      */
     public function notifyAction()
     {
-        $transactionId = $this->Request()->get('txn_id');
-
         $this->View()->setTemplate();
         $client = $this->Plugin()->Client();
 
         $details = $client->getTransactionDetails(array(
-            'TRANSACTIONID' => $transactionId
+            'TRANSACTIONID' => $this->Request()->get('txn_id')
         ));
 
         if(empty($details['PAYMENTSTATUS']) || empty($details['ACK']) || $details['ACK'] != 'Success') {

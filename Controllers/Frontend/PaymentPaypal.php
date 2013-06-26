@@ -46,6 +46,16 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
     }
 
     /**
+     * Returns if the current user is logged in
+     *
+     * @return bool
+     */
+    public function isUserLoggedIn()
+    {
+        return (isset(Shopware()->Session()->sUserId) && !empty(Shopware()->Session()->sUserId));
+    }
+
+    /**
      * Index action method.
      *
      * Forwards to correct the action.
@@ -247,8 +257,13 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                 ));
                 break;
             case 'PaymentActionNotInitiated':
-                // If user exits and order not finished
-                if($this->getUser() !== null && $this->getOrderNumber() === null) {
+                /**
+                 * If the user exists and the order is not finished.
+                 *
+                 * Will ony be triggered during normal checkout as Shopware()->Session()->sOrderVariables is
+                 * filled during the checkout and not available during the express checkout
+                 */
+                if($this->getUser() && $this->getOrderNumber() === null) {
                     unset(Shopware()->Session()->PaypalResponse);
                     $response = $this->finishCheckout($details);
                     if($response['ACK'] != 'Success') {
@@ -270,6 +285,16 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                             'sUniqueID' => $response['CUSTOM']
                         ));
                     }
+                /**
+                 * If the user is logged in but using the express checkout, this condition will be run
+                 */
+                } elseif($this->isUserLoggedIn() && $this->getOrderNumber() === null){
+                    $this->redirect(array(
+                        'controller' => 'checkout'
+                    ));
+                /**
+                 * If the user is not logged in at all, he will be registered
+                 */
                 } else {
                     if(!empty($details['PAYERID']) && !empty($details['SHIPTONAME'])) {
                         $this->createAccount($details);

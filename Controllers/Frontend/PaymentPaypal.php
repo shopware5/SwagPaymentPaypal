@@ -117,7 +117,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             'CARTBORDERCOLOR' => $borderColor,
             'CUSTOM' => $this->createPaymentUniqueId(),
 //            'SOLUTIONTYPE' => $config->get('paypalAllowGuestCheckout') ? 'Sole' : 'Mark',
-            'TOTALTYPE' => $this->getUser() !== null ? 'Total' : 'EstimatedTotal',
+            'TOTALTYPE' => $this->getUser() !== null ? 'Total' : 'EstimatedTotal'
         );
         if($config->get('paypalBillingAgreement') && $this->getUser() !== null) {
             $params['BILLINGTYPE'] = 'MerchantInitiatedBilling';
@@ -594,7 +594,9 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
     {
         $user = $this->getUser();
         if(empty($user)) {
-            return array();
+            return array(
+                'LOCALECODE' => Shopware()->Shop()->getLocale()->getLocale(),
+            );
         }
         $shipping = $user['shippingaddress'];
         $name = $shipping['firstname'] . ' ' . $shipping['lastname'];

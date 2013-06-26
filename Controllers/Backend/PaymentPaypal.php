@@ -214,11 +214,6 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
 
     /**
      * Will register the correct shop for a given transactionId.
-     * As of SwagPayPal >= 2.1.6 any order has an api-user associated, so we are able to look up the correct
-     * credentials any time.
-     *
-     * For older orders the shopId will be used to load the correct credentials - they might fail if the shop's
-     * credentials where changed meanwhile
      *
      * @param $transactionId
      */
@@ -226,47 +221,17 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
     {
         // Query shopId and api-user if available
         $sql = '
-            SELECT s_order.`subshopID`, s_order_attributes.`swag_paypal_api_user`
+            SELECT s_order.`subshopID`
             FROM s_order
             LEFT JOIN s_order_attributes
               ON s_order_attributes.orderID = s_order.id
             WHERE s_order.transactionID = ?
         ';
-        $result = Shopware()->Db()->fetchRow($sql, array($transactionId));
+        $result = Shopware()->Db()->fetchOne($sql, array($transactionId));
 
-        // If no result was found, we just return. So the default credentials will be used
-        if (empty($result)) {
-            return;
+        if (!empty($result)) {
+            $this->registerShopByShopId($result);
         }
-
-        // If no api_user is set, probably an old entry is being queried.
-        if (empty($result['swag_paypal_api_user'])) {
-            if (!empty($result['subshopID'])) {
-                $this->registerShopByShopId($result['subshopID']);
-            }
-            // If neither api-user nor shop are available, just return and use the default credentials
-            return;
-        }
-
-        /**
-         * Default case: Determine which setting as the api-user of the order configured.
-         * Get the corresponding shop and load it.
-         */
-        /** @var \Shopware\Models\Config\Form $form */
-        $form = Shopware()->Plugins()->Frontend()->SwagPaymentPaypal()->Form();
-        /** @var \Shopware\Models\Config\Element $element */
-        $element = $form->getElement('paypalUsername');
-        if ($element) {
-            foreach ($element->getValues() as $value) {
-                if ($value->getValue() == $result['swag_paypal_api_user']) {
-                    $this->registerShopByShopId($value->getShop()->getId());
-                    return;
-                }
-            }
-        }
-
-        // If not config value fits the api-user of the order, the credentials are not in the system any more
-        return;
     }
 
     /**

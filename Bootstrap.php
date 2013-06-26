@@ -126,13 +126,13 @@ EOD;
             //Remove old element
             $element = $this->Form()->getElement('paypalAllowGuestCheckout');
             $this->Form()->getElements()->removeElement($element);
-        } elseif(version_compare($version, '2.1.5', '<')) {
+        } elseif(version_compare($version, '2.1.5', '<=')) {
             // Make sure, that the additionadescription field is evaluated by smarty
             $sql = <<<'EOD'
                 UPDATE  `s_core_config_mails`
                 SET
                     content=REPLACE(content, '{$additional.payment.additionaldescription}', '{include file="string:`$additional.payment.additionaldescription`"}'),
-                    contentHTML=REPLACE(content, '{$additional.payment.additionaldescription}', '{include file="string:`$additional.payment.additionaldescription`"}')
+                    contentHTML=REPLACE(contentHTML, '{$additional.payment.additionaldescription}', '{include file="string:`$additional.payment.additionaldescription`"}')
                 WHERE name='sORDER';
 EOD;
             Shopware()->Db()->query($sql);

@@ -55,6 +55,16 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
         $this->createMyForm();
         $this->createMyTranslations();
 
+        // Make sure, that the additionadescription field is evaluated by smarty
+        $sql = <<<'EOD'
+            UPDATE  `s_core_config_mails`
+            SET
+                content=REPLACE(content, '{$additional.payment.additionaldescription}', '{include file="string:`$additional.payment.additionaldescription`"}'),
+                contentHTML=REPLACE(contentHTML, '{$additional.payment.additionaldescription}', '{include file="string:`$additional.payment.additionaldescription`"}')
+            WHERE name='sORDER';
+EOD;
+        Shopware()->Db()->query($sql);
+
         try {
             $this->Application()->Models()->addAttribute(
                 's_order_attributes', 'swag_payal',
@@ -116,6 +126,16 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
             //Remove old element
             $element = $this->Form()->getElement('paypalAllowGuestCheckout');
             $this->Form()->getElements()->removeElement($element);
+        } elseif(version_compare($version, '2.1.5', '<')) {
+            // Make sure, that the additionadescription field is evaluated by smarty
+            $sql = <<<'EOD'
+                UPDATE  `s_core_config_mails`
+                SET
+                    content=REPLACE(content, '{$additional.payment.additionaldescription}', '{include file="string:`$additional.payment.additionaldescription`"}'),
+                    contentHTML=REPLACE(content, '{$additional.payment.additionaldescription}', '{include file="string:`$additional.payment.additionaldescription`"}')
+                WHERE name='sORDER';
+EOD;
+            Shopware()->Db()->query($sql);
         }
         //Update form
         $this->createMyForm();
@@ -210,7 +230,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
             'additionalDescription' => '<!-- PayPal Logo -->' .
                 '<a onclick="window.open(this.href, \'olcwhatispaypal\',\'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=yes, width=400, height=500\'); return false;"' .
                 '    href="https://www.paypal.com/de/cgi-bin/webscr?cmd=xpt/cps/popup/OLCWhatIsPayPal-outside" target="_blank">' .
-                '<img src="{link file="frontend/_resources/images/paypal/pp-corporate-Logo-small.png"}" alt="Logo \'PayPal empfohlen\'">' .
+                '<img src="{link file="engine/Shopware/Plugins/Default/Frontend/SwagPaymentPaypal/Views/frontend/_resources/images/paypal/pp-corporate-Logo-small.png" "fullPath"}" alt="Logo \'PayPal empfohlen\'">' .
                 '</a>' . '<!-- PayPal Logo --><p>PayPal. <em>Sicherererer.</em></p>' .
                 'Bezahlung per PayPal - einfach, schnell und sicher.'
         ));

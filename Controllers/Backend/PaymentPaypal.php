@@ -375,6 +375,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         // Load the correct shop in order to use the correct api credentials
         $this->registerShopByTransactionId($transactionId);
 
+        $config = Shopware()->Config();
 
         $client = $this->Plugin()->Client();
 
@@ -387,17 +388,34 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         $last = $this->Request()->getParam('paymentLast') === 'true';
         $note = $this->Request()->getParam('note');
 
+        $invoiceId = null;
+        if ($config->get('paypalSendInvoiceId') === true) {
+            $prefix = $config->get('paypalPrefixInvoiceId');
+            if (!empty($prefix)) {
+                // Set prefixed invoice id - Remove special chars and spaces
+                $prefix = str_replace(' ', '', $prefix);
+                $prefix = preg_replace('/[^A-Za-z0-9\-]/', '', $prefix);
+                $invoiceId = $prefix.$orderNumber;
+            } else {
+                $invoiceId = $orderNumber;
+            }
+        }
+
+
         try {
             switch ($action) {
                 case 'refund':
-                    $result = $client->RefundTransaction(array(
+                    $data = array(
                         'TRANSACTIONID' => $transactionId,
-                        'INVOICEID' => $orderNumber,
                         'REFUNDTYPE' => $full ? 'Full' : 'Partial',
                         'AMT' => $full ? '' : $amount,
                         'CURRENCYCODE' => $full ? '' : $currency,
                         'NOTE' => $note
-                    ));
+                    );
+                    if ($invoiceId) {
+                        $data['INVOICEID'] = $invoiceId;
+                    }
+                    $result = $client->RefundTransaction($data);
                     break;
                 case 'auth':
                     $result = $client->doReAuthorization(array(
@@ -407,14 +425,17 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
                     ));
                     break;
                 case 'capture':
-                    $result = $client->doCapture(array(
+                    $data = array(
                         'AUTHORIZATIONID' => $transactionId,
                         'AMT' => $amount,
                         'CURRENCYCODE' => $currency,
                         'COMPLETETYPE' => $last ? 'Complete' : 'NotComplete',
-                        'INVOICEID' => $orderNumber,
                         'NOTE' => $note
-                    ));
+                    );
+                    if ($invoiceId) {
+                        $data['INVOICEID'] = $invoiceId;
+                    }
+                    $result = $client->doCapture($data);
                     break;
                 case 'void':
                     $result = $client->doVoid(array(
@@ -429,14 +450,17 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
                         'CURRENCYCODE' => $currency
                     ));
                     if ($result['ACK'] == 'Success') {
-                        $result = $client->doCapture(array(
+                        $data = array(
                             'AUTHORIZATIONID' => $result['TRANSACTIONID'],
                             'AMT' => $amount,
                             'CURRENCYCODE' => $currency,
                             'COMPLETETYPE' => $last ? 'Complete' : 'NotComplete',
-                            'INVOICEID' => $orderNumber,
                             'NOTE' => $note
-                        ));
+                        );
+                        if ($invoiceId) {
+                            $data['INVOICEID'] = $invoiceId;
+                        }
+                        $result = $client->doCapture($data);
                     }
                     break;
                 default:

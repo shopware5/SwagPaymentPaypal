@@ -341,10 +341,6 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             return;
         }
 
-        $paymentStatusId = $this->Plugin()->getPaymentStatusId($details['PAYMENTSTATUS']);
-        if ($paymentStatusId == 12 || $paymentStatusId == 18) {
-            $this->saveOrder($details['TRANSACTIONID'], $details['CUSTOM']);
-        }
         $this->Plugin()->setPaymentStatus($details['TRANSACTIONID'], $details['PAYMENTSTATUS']);
     }
 

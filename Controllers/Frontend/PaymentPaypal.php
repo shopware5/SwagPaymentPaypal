@@ -334,7 +334,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $client = $this->Plugin()->Client();
 
         $details = $client->getTransactionDetails(array(
-            'TRANSACTIONID' => $this->Request()->get('txn_id')
+            'TRANSACTIONID' => $this->Request()->get('parent_txn_id') ? $this->Request()->get('parent_txn_id') : $this->Request()->get('txn_id')
         ));
 
         if(empty($details['PAYMENTSTATUS']) || empty($details['ACK']) || $details['ACK'] != 'Success') {

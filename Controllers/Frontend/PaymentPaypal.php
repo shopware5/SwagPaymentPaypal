@@ -79,6 +79,12 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
     public function expressAction()
     {
         unset(Shopware()->Session()->sOrderVariables);
+
+        $payPalModel = Shopware()->Models()->getRepository('Shopware\Models\Payment\Payment')->findOneBy(array('name' => 'paypal'));
+        if ($payPalModel) {
+            Shopware()->Session()->sPaymentID = $payPalModel->getId();
+        }
+
         $this->forward('gateway');
     }
 

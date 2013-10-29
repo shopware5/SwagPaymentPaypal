@@ -129,6 +129,11 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.Detail', {
             }, {
                 name: 'amountFormat',
                 fieldLabel: '{s name=detail/order_data/amount}Amount{/s}'
+            }, {
+                name: 'express',
+                fieldLabel: 'Express-Bestellung',
+                editable: false,
+                xtype: 'checkbox'
             }]
         },{
             title: '{s name=detail/payment_data/title}Payment data{/s}',

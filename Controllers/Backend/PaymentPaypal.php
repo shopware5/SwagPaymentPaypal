@@ -121,6 +121,13 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             )
         )
             ->joinLeft(
+            array('oa' => 's_order_attributes'),
+            'o.id =  oa.orderID',
+            array(
+                'express' => 'oa.swag_payal_express'
+            )
+        )
+            ->joinLeft(
             array('sc' => 's_core_states'),
             'sc.id =  o.cleared',
             array(

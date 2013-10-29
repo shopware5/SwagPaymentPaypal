@@ -64,11 +64,14 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
     {
         // PayPal Express > Sale
         if(!empty(Shopware()->Session()->PaypalResponse['TOKEN'])) {
+            Shopware()->Session()->expressCheckout = true;
             $this->forward('return');
             // Paypal Basis || PayPal Express
         } elseif($this->getPaymentShortName() == 'paypal') {
+            unset(Shopware()->Session()->expressCheckout);
             $this->forward('gateway');
         } else {
+            unset(Shopware()->Session()->expressCheckout);
             $this->redirect(array('controller' => 'checkout'));
         }
     }

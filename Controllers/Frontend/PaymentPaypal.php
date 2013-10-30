@@ -451,7 +451,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
 
         $sql = '
             UPDATE `s_order`
-            SET transactionID = ?, comment = CONCAT(comment, ?),
+            SET transactionID = ?, internalcomment = CONCAT(internalcomment, ?),
               customercomment = CONCAT(customercomment, ?)
             WHERE temporaryID = ? AND transactionID = ?
         ';

@@ -240,12 +240,12 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $token = $this->Request()->getParam('token');
         $config = $this->Plugin()->Config();
         $client = $this->Plugin()->Client();
-        $response = Shopware()->Session()->PaypalResponse;
+        $initialResponse = Shopware()->Session()->PaypalResponse;
 
         if($token !== null) {
             $details = $client->getExpressCheckoutDetails(array('token' => $token));
-        } elseif(!empty($response['TOKEN'])) {
-            $details = $client->getExpressCheckoutDetails(array('token' => $response['TOKEN']));
+        } elseif(!empty($initialResponse['TOKEN'])) {
+            $details = $client->getExpressCheckoutDetails(array('token' => $initialResponse['TOKEN']));
         } else {
             $details = array();
         }
@@ -276,8 +276,19 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                     unset(Shopware()->Session()->PaypalResponse);
                     $response = $this->finishCheckout($details);
                     if($response['ACK'] != 'Success') {
-                        $this->View()->PaypalConfig = $config;
-                        $this->View()->PaypalResponse = $response;
+                        if($response['L_ERRORCODE0'] == 10486){
+                            if(!empty($config->paypalSandbox)) {
+                                $redirectUrl = 'https://www.sandbox.paypal.com/';
+                            } else {
+                                $redirectUrl = 'https://www.paypal.com/';
+                            }
+                            $redirectUrl .= 'webscr?cmd=_express-checkout';
+                            $redirectUrl .= '&token=' . urlencode($details['TOKEN']);
+                            $this->redirect($redirectUrl);
+                        }else{
+                            $this->View()->PaypalConfig = $config;
+                            $this->View()->PaypalResponse = $response;
+                        }
                     } elseif ($response['REDIRECTREQUIRED'] === 'true') {
                         if(!empty($config->paypalSandbox)) {
                             $redirectUrl = 'https://www.sandbox.paypal.com/';
@@ -317,7 +328,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             case 'PaymentActionFailed':
             default:
                 $this->View()->PaypalConfig = $config;
-                $this->View()->PaypalResponse = $response;
+                $this->View()->PaypalResponse = $initialResponse;
                 $this->View()->PaypalDetails = $details;
                 unset(Shopware()->Session()->PaypalResponse);
                 break;

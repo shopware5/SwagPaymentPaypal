@@ -8,6 +8,7 @@
 <li>· Der Bezahlprozess ist für mobile Geräte optimiert.</li>
 <li>· Keine Einrichtungskosten oder monatlichen Grundgebühren.</li>
 <li>· Sobald Sie Geld empfangen, erheben wir eine Gebühr von 1,9% plus 0,35 Euro.</li>
+<li>· Weitere Informationen zu den internationalen Gebühren erhalten Sie hier: https://www.paypal.com/de/webapps/mpp/gebuehren</li>
 </ul>
 <a href="https://www.paypal-deutschland.de/haendler/was-ist-PayPal/das-kostet-PayPal.html" target="_blank">Weitere Information zu PayPal und entstehenden Kosten</a>
 </p>

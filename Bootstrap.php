@@ -593,8 +593,9 @@ EOD;
             $view->PaypalShowButton = $showButton;
         }
 
-        if ($request->getControllerName() == 'checkout' && $request->getActionName() == 'confirm') {
-            if(!empty(Shopware()->Session()->PaypalResponse)) {
+        if ($request->getControllerName() == 'checkout') {
+	        $view->extendsTemplate('frontend/payment_paypal/header.tpl');
+            if($request->getActionName() == 'confirm' && !empty(Shopware()->Session()->PaypalResponse)) {
                 $view->sRegisterFinished = false;
             }
         }

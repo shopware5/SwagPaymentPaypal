@@ -46,12 +46,12 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
     {
         $limit = $this->Request()->getParam('limit', 20);
         $start = $this->Request()->getParam('start', 0);
-        $subShopFilter = $this->Request()->getParam('filter', false);
-
-        if ($subShopFilter && !empty($subShopFilter)) {
-            $subShopFilter = array_pop($subShopFilter);
-            if ($subShopFilter['property'] == 'shopId') {
-                $subShopFilter = (int) $subShopFilter['value'];
+        $filter = $this->Request()->getParam('filter', false);
+	    
+        if ($filter && !empty($filter)) {
+	        $filter = array_pop($filter);
+            if ($filter['property'] == 'shopId') {
+	            $subShopFilter = (int) $filter['value'];
             }
         }
 
@@ -62,14 +62,9 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         $direction = empty($sort['direction']) || $sort['direction'] == 'DESC' ? 'DESC' : 'ASC';
         $property = empty($sort['property']) ? 'orderDate' : $sort['property'];
 
-        if ($filter = $this->Request()->getParam('filter')) {
-            foreach ($filter as $value) {
-                if (empty($value['property']) || empty($value['value'])) {
-                    continue;
-                }
-                if ($value['property'] == 'search') {
-                    $this->Request()->setParam('search', $value['value']);
-                }
+        if ($filter) {
+            if ($filter['property'] == 'search') {
+                $this->Request()->setParam('search', $filter['value']);
             }
         }
 
@@ -163,13 +158,14 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
 
         if ($search = $this->Request()->getParam('search')) {
             $search = trim($search);
-            $search = '%' . $search . '%';
             $search = Shopware()->Db()->quote($search);
 
             $select->where('o.transactionID LIKE ' . $search
                 . ' OR o.ordernumber LIKE ' . $search
-                . ' OR b.lastname LIKE ' . $search
+                . ' OR u.firstname LIKE ' . $search
                 . ' OR u.lastname LIKE ' . $search
+		        . ' OR b.firstname LIKE ' . $search
+                . ' OR b.lastname LIKE ' . $search
                 . ' OR b.company LIKE ' . $search
                 . ' OR u.company LIKE ' . $search);
 

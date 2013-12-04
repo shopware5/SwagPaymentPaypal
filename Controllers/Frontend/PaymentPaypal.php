@@ -64,11 +64,14 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
     {
         // PayPal Express > Sale
         if(!empty(Shopware()->Session()->PaypalResponse['TOKEN'])) {
+            Shopware()->Session()->expressCheckout = true;
             $this->forward('return');
             // Paypal Basis || PayPal Express
         } elseif($this->getPaymentShortName() == 'paypal') {
+            unset(Shopware()->Session()->expressCheckout);
             $this->forward('gateway');
         } else {
+            unset(Shopware()->Session()->expressCheckout);
             $this->redirect(array('controller' => 'checkout'));
         }
     }
@@ -79,6 +82,12 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
     public function expressAction()
     {
         unset(Shopware()->Session()->sOrderVariables);
+
+        $payPalModel = Shopware()->Models()->getRepository('Shopware\Models\Payment\Payment')->findOneBy(array('name' => 'paypal'));
+        if ($payPalModel) {
+            Shopware()->Session()->sPaymentID = $payPalModel->getId();
+        }
+
         $this->forward('gateway');
     }
 
@@ -231,12 +240,12 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $token = $this->Request()->getParam('token');
         $config = $this->Plugin()->Config();
         $client = $this->Plugin()->Client();
-        $response = Shopware()->Session()->PaypalResponse;
+        $initialResponse = Shopware()->Session()->PaypalResponse;
 
         if($token !== null) {
             $details = $client->getExpressCheckoutDetails(array('token' => $token));
-        } elseif(!empty($response['TOKEN'])) {
-            $details = $client->getExpressCheckoutDetails(array('token' => $response['TOKEN']));
+        } elseif(!empty($initialResponse['TOKEN'])) {
+            $details = $client->getExpressCheckoutDetails(array('token' => $initialResponse['TOKEN']));
         } else {
             $details = array();
         }
@@ -267,8 +276,19 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                     unset(Shopware()->Session()->PaypalResponse);
                     $response = $this->finishCheckout($details);
                     if($response['ACK'] != 'Success') {
-                        $this->View()->PaypalConfig = $config;
-                        $this->View()->PaypalResponse = $response;
+                        if($response['L_ERRORCODE0'] == 10486){
+                            if(!empty($config->paypalSandbox)) {
+                                $redirectUrl = 'https://www.sandbox.paypal.com/';
+                            } else {
+                                $redirectUrl = 'https://www.paypal.com/';
+                            }
+                            $redirectUrl .= 'webscr?cmd=_express-checkout';
+                            $redirectUrl .= '&token=' . urlencode($details['TOKEN']);
+                            $this->redirect($redirectUrl);
+                        }else{
+                            $this->View()->PaypalConfig = $config;
+                            $this->View()->PaypalResponse = $response;
+                        }
                     } elseif ($response['REDIRECTREQUIRED'] === 'true') {
                         if(!empty($config->paypalSandbox)) {
                             $redirectUrl = 'https://www.sandbox.paypal.com/';
@@ -308,7 +328,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             case 'PaymentActionFailed':
             default:
                 $this->View()->PaypalConfig = $config;
-                $this->View()->PaypalResponse = $response;
+                $this->View()->PaypalResponse = $initialResponse;
                 $this->View()->PaypalDetails = $details;
                 unset(Shopware()->Session()->PaypalResponse);
                 break;
@@ -334,17 +354,13 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $client = $this->Plugin()->Client();
 
         $details = $client->getTransactionDetails(array(
-            'TRANSACTIONID' => $this->Request()->get('txn_id')
+            'TRANSACTIONID' => $this->Request()->get('parent_txn_id') ? $this->Request()->get('parent_txn_id') : $this->Request()->get('txn_id')
         ));
 
         if(empty($details['PAYMENTSTATUS']) || empty($details['ACK']) || $details['ACK'] != 'Success') {
             return;
         }
 
-        $paymentStatusId = $this->Plugin()->getPaymentStatusId($details['PAYMENTSTATUS']);
-        if ($paymentStatusId == 12 || $paymentStatusId == 18) {
-            $this->saveOrder($details['TRANSACTIONID'], $details['CUSTOM']);
-        }
         $this->Plugin()->setPaymentStatus($details['TRANSACTIONID'], $details['PAYMENTSTATUS']);
     }
 
@@ -435,7 +451,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
 
         $sql = '
             UPDATE `s_order`
-            SET transactionID = ?, comment = CONCAT(comment, ?),
+            SET transactionID = ?, internalcomment = CONCAT(internalcomment, ?),
               customercomment = CONCAT(customercomment, ?)
             WHERE temporaryID = ? AND transactionID = ?
         ';

@@ -70,6 +70,12 @@ EOD;
                 's_order_attributes', 'swag_payal',
                 'billing_agreement_id', 'VARCHAR(255)'
             );
+            $this->Application()->Models()->addAttribute(
+                's_order_attributes',
+                'swag_payal',
+                'express',
+                'boolean'
+            );
         } catch(Exception $e) { }
 
         $this->Application()->Models()->generateAttributeModels(array(
@@ -89,6 +95,11 @@ EOD;
                 's_order_attributes',
                 'swag_payal',
                 'billing_agreement_id'
+            );
+            $this->Application()->Models()->removeAttribute(
+                's_order_attributes',
+                'swag_payal',
+                'express'
             );
             $this->Application()->Models()->generateAttributeModels(array(
                 's_order_attributes'
@@ -136,6 +147,17 @@ EOD;
                 WHERE name='sORDER';
 EOD;
             Shopware()->Db()->query($sql);
+        } elseif(version_compare($version, '2.1.6', '<=')) {
+            try {
+                $this->Application()->Models()->addAttribute(
+                    's_order_attributes', 'swag_payal',
+                    'express', 'boolean'
+                );
+            } catch(Exception $e) { }
+
+            $this->Application()->Models()->generateAttributeModels(array(
+                's_order_attributes'
+            ));
         }
 
         //Update form
@@ -214,6 +236,11 @@ EOD;
         $this->subscribeEvent(
             'Enlight_Bootstrap_InitResource_PaypalClient',
             'onInitResourcePaypalClient'
+        );
+
+        $this->subscribeEvent(
+            'sOrder::sSaveOrder::after',
+            'afterSaveOrder'
         );
     }
 
@@ -566,8 +593,9 @@ EOD;
             $view->PaypalShowButton = $showButton;
         }
 
-        if ($request->getControllerName() == 'checkout' && $request->getActionName() == 'confirm') {
-            if(!empty(Shopware()->Session()->PaypalResponse)) {
+        if ($request->getControllerName() == 'checkout') {
+	        $view->extendsTemplate('frontend/payment_paypal/header.tpl');
+            if($request->getActionName() == 'confirm' && !empty(Shopware()->Session()->PaypalResponse)) {
                 $view->sRegisterFinished = false;
             }
         }
@@ -648,7 +676,7 @@ EOD;
      */
     public function getVersion()
     {
-        return '2.1.6';
+        return '2.1.7';
     }
 
     /**
@@ -677,5 +705,18 @@ EOD;
         );
         $client = new Shopware_Components_Paypal_Client($this->Config());
         return $client;
+    }
+
+    public function afterSaveOrder(Enlight_Hook_HookArgs $args){
+        $orderNumber = $args->getReturn();
+
+        if(Shopware()->Session()->expressCheckout){
+            $sql= "UPDATE s_order_attributes
+                    SET swag_payal_express = ?
+                    WHERE orderID = (SELECT id FROM s_order WHERE ordernumber = ?)";
+            Shopware()->Db()->query($sql, array(true, $orderNumber));
+        }
+
+        $args->setReturn($orderNumber);
     }
 }

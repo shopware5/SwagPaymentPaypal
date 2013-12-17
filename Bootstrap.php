@@ -721,6 +721,7 @@ EOD;
             Shopware()->Db()->query($sql, array(true, $orderNumber));
         }
 
+	    unset(Shopware()->Session()->expressCheckout);
         $args->setReturn($orderNumber);
     }
 }

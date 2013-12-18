@@ -162,6 +162,7 @@ EOD;
 
         //Update form
         $this->createMyForm();
+        $this->createMyEvents();
         return true;
     }
 

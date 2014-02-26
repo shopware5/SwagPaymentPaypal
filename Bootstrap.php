@@ -653,6 +653,13 @@ EOD;
         ));
         $order = Shopware()->Modules()->Order();
         $order->setPaymentStatus($orderId, $paymentStatusId, false, $note);
+        if($paymentStatusId == 21) {
+            $sql = 'UPDATE  `s_order` SET internalcomment = CONCAT( internalcomment, :pStatus) WHERE transactionID = :transactionId';
+            Shopware()->Db()->query($sql, array(
+                'pStatus' => "\nPayPal Status: " . $paymentStatus,
+                'transactionId' => $transactionId
+            ));
+        }
         if ($paymentStatus == 'Completed') {
             $sql  = '
                 UPDATE s_order SET cleareddate=NOW()

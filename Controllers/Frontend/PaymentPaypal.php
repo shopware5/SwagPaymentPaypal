@@ -463,7 +463,9 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
 
         if($result['ACK'] == 'Success') {
             $paymentStatus = $result['PAYMENTSTATUS'];
-            if($this->getAmount() > (float)$result['AMT']) {
+            $ppAmount = floatval($result['AMT']);
+            $swAmount = $this->getAmount();
+            if(abs($swAmount - $ppAmount) >= 0.01) {
                 $paymentStatus = 'AmountMissMatch'; //Überprüfung notwendig
             }
             $this->Plugin()->setPaymentStatus($result['TRANSACTIONID'], $paymentStatus);

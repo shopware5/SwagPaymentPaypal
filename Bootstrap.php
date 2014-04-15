@@ -688,7 +688,7 @@ EOD;
      */
     public function getVersion()
     {
-        return '2.1.8';
+        return '2.1.9';
     }
 
     /**

@@ -270,7 +270,7 @@ EOD;
      */
     protected function createMyMenu()
     {
-        $parent = $this->Menu()->findOneBy('label', 'Zahlungen');
+        $parent = $this->Menu()->findOneBy(array('label' => 'Zahlungen'));
         $this->createMenuItem(array(
             'label' => 'PayPal',
             'controller' => 'PaymentPaypal',
@@ -688,7 +688,7 @@ EOD;
      */
     public function getVersion()
     {
-        return '2.1.8';
+        return '2.1.9';
     }
 
     /**

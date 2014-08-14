@@ -661,7 +661,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $params['TAXAMT'] = number_format(0, 2, '.', '');
 
         $config = $this->Plugin()->Config();
-        if($config->get('paypalTransferCart') && $params['ITEMAMT'] != '0.00') {
+        if($config->get('paypalTransferCart') && $params['ITEMAMT'] != '0.00' && count($basket['content']) < 25) {
             foreach ($basket['content'] as $key => $item) {
                 if (!empty($user['additional']['charge_vat']) && !empty($item['amountWithTax'])) {
                     $amount = round($item['amountWithTax'], 2);

@@ -346,6 +346,11 @@ EOD;
             'label' => 'Sandbox-Modus aktivieren',
             'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
         ));
+        $form->setElement('number', 'paypalTimeout', array(
+            'label' => 'API-Timeout in Sekunden',
+            'value' => 5,
+            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+        ));
         $form->setElement('boolean', 'paypalErrorMode', array(
             'label' => 'Fehlermeldungen ausgeben',
             'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP

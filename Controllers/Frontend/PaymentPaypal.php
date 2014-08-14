@@ -661,7 +661,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $params['TAXAMT'] = number_format(0, 2, '.', '');
 
         $config = $this->Plugin()->Config();
-        if($config->get('paypalTransferCart')) {
+        if($config->get('paypalTransferCart') && $params['ITEMAMT'] != '0.00') {
             foreach ($basket['content'] as $key => $item) {
                 if (!empty($user['additional']['charge_vat']) && !empty($item['amountWithTax'])) {
                     $amount = round($item['amountWithTax'], 2);
@@ -680,6 +680,11 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                 );
                 $params = array_merge($params, $article);
             }
+        }
+
+        if($params['ITEMAMT'] == '0.00') {
+            $params['ITEMAMT'] = $params['SHIPPINGAMT'];
+            $params['SHIPPINGAMT'] = '0.00';
         }
 
         return $params;

@@ -110,10 +110,8 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
 
         if($this->getUser() === null) {
             $paymentAction = 'Authorization';
-        } elseif($config->get('paypalPaymentActionPending', true)) {
-            $paymentAction = 'Order';
         } else {
-            $paymentAction = 'Sale';
+            $paymentAction = $config->get('paypalPaymentAction', 'Sale');
         }
 
         $params = array(
@@ -127,7 +125,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
 //            'NOSHIPPING' => 0, //todo@hl
 //            'REQCONFIRMSHIPPING' => 0,
             'ALLOWNOTE' => 1, //todo@hl
-            'ADDROVERRIDE' => $paymentAction == 'Authorization' ? 0 : 1,
+            'ADDROVERRIDE' => $this->getUser() === null ? 0 : 1,
             'BRANDNAME' => $shopName,
             'LOGOIMG' => $logoImage,
             'CARTBORDERCOLOR' => $borderColor,
@@ -396,7 +394,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         curl_close($curl);
         $auth = json_decode($response, true);
 
-        if(!empty($auth)) {
+        if(!empty($auth) && !empty($auth['access_token'])) {
             Shopware()->Session()->PaypalAuth = $auth;
         } else {
             $auth = Shopware()->Session()->PaypalAuth;
@@ -468,11 +466,10 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                 'BUTTONSOURCE' => 'Shopware_Cart_ECS'
             );
         }
-
-        if($config->get('paypalPaymentActionPending', true)) {
-            $params['PAYMENTACTION'] = empty($params['TOKEN']) ? 'Authorization' : 'Order';
+        if(empty($params['TOKEN'])) {
+            $params['PAYMENTACTION'] = 'Authorization';
         } else {
-            $params['PAYMENTACTION'] = 'Sale';
+            $params['PAYMENTACTION'] = $config->get('paypalPaymentAction', 'Sale');
         }
 
         $params = array_merge($params, $this->getBasketParameter());
@@ -640,6 +637,12 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                 $data["auth"]["password"] = Shopware()->PasswordEncoder()->encodePassword($data["auth"]["password"], $encoderName);
             } else {
                 $data['auth']['password'] = md5($data['auth']['password']);
+            }
+            if(!$finish) {
+                unset($data['shipping']);
+                if(!empty($data['billing']['stateID'])) {
+                    $data['billing']['country_state_' . $data['billing']['country']] = $data['billing']['stateID'];
+                }
             }
             $session->sRegisterFinished = false;
             $session->sRegister = new ArrayObject($data, ArrayObject::ARRAY_AS_PROPS);

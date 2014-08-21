@@ -387,9 +387,14 @@ EOD;
         ));
 
         // Payment settings
-        $form->setElement('boolean', 'paypalPaymentActionPending', array(
-            'label' => 'Zeitverzögerter Zahlungseinzug (Order-Auth-Capture)',
-            'value' => false,
+        $form->setElement('select', 'paypalPaymentAction', array(
+            'label' => 'Zahlungsabschluss',
+            'value' => 'Sale',
+            'store' => array(
+                array('Sale', 'Zahlung sofort abschließen (Sale)'),
+                array('Authorization', 'Zeitverzögerter Zahlungseinzug (Auth-Capture)'),
+                array('Order', 'Zeitverzögerter Zahlungseinzug (Order-Auth-Capture)')
+            ),
             'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
         ));
         $form->setElement('boolean', 'paypalBillingAgreement', array(
@@ -405,12 +410,12 @@ EOD;
         ));
         $form->setElement('boolean', 'paypalFinishRegister', array(
             'label' => 'Nach dem ersten „Login mit PayPal“ auf die Registrierung umleiten',
-            'value' => false,
+            'value' => true,
             'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
         ));
         $form->setElement('boolean', 'paypalSeamlessCheckout', array(
             'label' => '„Seamless Checkout“ beim „Login mit PayPal“ aktivieren',
-            'value' => false,
+            'value' => true,
             'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
         ));
         $form->setElement('boolean', 'paypalTransferCart', array(
@@ -467,6 +472,8 @@ EOD;
             'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
             'vtype' => 'alphanum'
         ));
+
+        $form->removeElement('paypalPaymentActionPending');
     }
 
     /**
@@ -487,7 +494,6 @@ EOD;
                 'paypalCartBorderColor' => 'Color of the basket on PayPal',
                 'paypalFrontendLogo' => 'Show payment logo on frontend',
                 'paypalFrontendLogoBlock' => 'Template block for the frontend logo',
-                'paypalPaymentActionPending' => 'Only authorize payments (Auth-Capture)',
                 'paypalBillingAgreement' => 'Billing agreement / Activate "Buy it now"',
                 'paypalTransferCart' => 'Transfer basket to PayPal',
                 'paypalExpressButton' => 'Show express-purchase button in basket',
@@ -669,7 +675,8 @@ EOD;
             case 'Completed':
                 $paymentStatusId = $this->Config()->get('paypalStatusId', 12); break;
             case 'Pending':
-                $paymentStatusId = $this->Config()->get('paypalPendingStatusId', 18); break; //Reserviert
+            case 'In-Progress':
+                 $paymentStatusId = $this->Config()->get('paypalPendingStatusId', 18); break; //Reserviert
             case 'Processed':
                 $paymentStatusId = 18; break; //In Bearbeitung > Reserviert
             case 'Refunded':
@@ -741,7 +748,7 @@ EOD;
      */
     public function getVersion()
     {
-        return '2.1.13';
+        return '2.1.14';
     }
 
     /**

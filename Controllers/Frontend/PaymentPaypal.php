@@ -78,7 +78,6 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
      */
     public function expressAction()
     {
-	    Shopware()->Session()->expressCheckout = true;
         unset(Shopware()->Session()->sOrderVariables);
 
         $payment = $this->Plugin()->Payment();
@@ -371,9 +370,16 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
     public function loginAction()
     {
         $request = $this->Request();
+        $view = $this->View();
         $config = $this->Plugin()->Config();
 
-        $curl = curl_init('https://api.sandbox.paypal.com/v1/identity/openidconnect/tokenservice');
+        if($config->get('paypalSandbox')) {
+            $apiUrl = 'https://api.sandbox.paypal.com/v1/identity/openidconnect/';
+        } else {
+            $apiUrl = 'https://api.paypal.com/v1/identity/openidconnect/';
+        }
+
+        $curl = curl_init($apiUrl. 'tokenservice');
         $params = array(
             'grant_type' => 'authorization_code',
             'code' => $request->getParam('code'),
@@ -396,7 +402,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             $auth = Shopware()->Session()->PaypalAuth;
         }
 
-        $curl = curl_init('https://api.sandbox.paypal.com/v1/identity/openidconnect/userinfo/?schema=openid');
+        $curl = curl_init($apiUrl . 'userinfo/?schema=openid');
         $headers = array(
             'Content-Type: application/json',
             "Authorization: {$auth['token_type']} {$auth['access_token']}"
@@ -423,8 +429,12 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                 'SHIPTOSTATE' => $identity['address']['region'],
                 'SHIPTONAME' => $identity['name'],
                 'SHIPTOPHONENUM' => $identity['phone_number'],
-            ));
+            ), $config->get('paypalFinishRegister', false));
         }
+
+        $view->PaypalIdentity = !empty($identity);
+        $view->PaypalUserLoggedIn = $this->isUserLoggedIn();
+        $view->PaypalFinishRegister = $config->get('paypalFinishRegister');
     }
 
     /**
@@ -502,12 +512,25 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                 $sql = '
                     INSERT INTO s_order_attributes (orderID, swag_payal_billing_agreement_id)
                     SELECT id, ? FROM s_order WHERE ordernumber = ?
-                    ON DUPLICATE KEY
-                    UPDATE swag_payal_billing_agreement_id = VALUES(swag_payal_billing_agreement_id)
+                    ON DUPLICATE KEY UPDATE
+                       swag_payal_billing_agreement_id = VALUES(swag_payal_billing_agreement_id)
                 ';
                 Shopware()->Db()->query($sql, array(
                     $result['BILLINGAGREEMENTID'],
                     $orderNumber
+                ));
+            } catch(Exception $e) { }
+        }
+        // Set express flag
+        if(!empty($params['TOKEN'])) {
+            try {
+                $sql = '
+                    INSERT INTO s_order_attributes (orderID, swag_payal_express)
+                    SELECT id, 1 FROM s_order WHERE ordernumber = ?
+                    ON DUPLICATE KEY UPDATE swag_payal_express = 1
+                ';
+                Shopware()->Db()->query($sql, array(
+                    $orderNumber,
                 ));
             } catch(Exception $e) { }
         }
@@ -541,8 +564,9 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
 
     /**
      * @param $details
+     * @param bool $finish
      */
-    protected function createAccount($details)
+    protected function createAccount($details, $finish = true)
     {
         $module = Shopware()->Modules()->Admin();
         $session = Shopware()->Session();
@@ -617,10 +641,11 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             } else {
                 $data['auth']['password'] = md5($data['auth']['password']);
             }
-
             $session->sRegisterFinished = false;
             $session->sRegister = new ArrayObject($data, ArrayObject::ARRAY_AS_PROPS);
-            $module->sSaveRegister();
+            if($finish) {
+                $module->sSaveRegister();
+            }
         }
     }
 

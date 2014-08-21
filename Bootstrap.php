@@ -250,11 +250,6 @@ EOD;
             'Enlight_Bootstrap_InitResource_PaypalClient',
             'onInitResourcePaypalClient'
         );
-
-        $this->subscribeEvent(
-            'sOrder::sSaveOrder::after',
-            'afterSaveOrder'
-        );
     }
 
     /**
@@ -341,6 +336,13 @@ EOD;
             'label' => 'REST-API Secret',
             'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
         ));
+        $form->setElement('button', 'paypalButtonRestApi', array(
+            'label' => '<strong>Jetzt Daten für REST-API erhalten</strong>',
+            'handler' => "function(btn) {
+                var link = 'https://developer.paypal.com/';
+                window.open(link, '');
+            }"
+        ));
 
         $form->setElement('boolean', 'paypalSandbox', array(
             'label' => 'Sandbox-Modus aktivieren',
@@ -386,7 +388,7 @@ EOD;
 
         // Payment settings
         $form->setElement('boolean', 'paypalPaymentActionPending', array(
-            'label' => 'Zahlungen nur autorisieren (Auth-Capture)',
+            'label' => 'Zeitverzögerter Zahlungseinzug (Order-Auth-Capture)',
             'value' => false,
             'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
         ));
@@ -395,9 +397,20 @@ EOD;
             'description' => 'Achtung: Diese Funktion muss erst für Ihren PayPal-Account von PayPal aktiviert werden.',
             'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
         ));
+        $form->setElement('boolean', 'paypalLogIn', array(
+            'label' => '„Login mit PayPal“ aktivieren',
+            'description' => 'Achtung: Für diese Funktion müssen Sie erst die Daten für die REST-API hinterlegen.',
+            'value' => false,
+            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+        ));
+        $form->setElement('boolean', 'paypalFinishRegister', array(
+            'label' => 'Nach dem ersten „Login mit PayPal“ auf die Registrierung umleiten',
+            'value' => false,
+            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+        ));
         $form->setElement('boolean', 'paypalSeamlessCheckout', array(
-            'label' => '„Seamless Checkout“ aktivieren',
-            'value' => true,
+            'label' => '„Seamless Checkout“ beim „Login mit PayPal“ aktivieren',
+            'value' => false,
             'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
         ));
         $form->setElement('boolean', 'paypalTransferCart', array(
@@ -728,7 +741,7 @@ EOD;
      */
     public function getVersion()
     {
-        return '2.1.12';
+        return '2.1.13';
     }
 
     /**
@@ -757,19 +770,5 @@ EOD;
         );
         $client = new Shopware_Components_Paypal_Client($this->Config());
         return $client;
-    }
-
-    public function afterSaveOrder(Enlight_Hook_HookArgs $args){
-        $orderNumber = $args->getReturn();
-
-        if(Shopware()->Session()->expressCheckout){
-            $sql= "UPDATE s_order_attributes
-                    SET swag_payal_express = ?
-                    WHERE orderID = (SELECT id FROM s_order WHERE ordernumber = ?)";
-            Shopware()->Db()->query($sql, array(true, $orderNumber));
-        }
-
-	    unset(Shopware()->Session()->expressCheckout);
-        $args->setReturn($orderNumber);
     }
 }

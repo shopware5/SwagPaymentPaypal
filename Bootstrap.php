@@ -142,9 +142,10 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
             $this->Application()->Models()->generateAttributeModels(array(
                 's_order_attributes'
             ));
+        } if(version_compare($version, '3.0.0', '<=')) {
+            $this->Form()->removeElement('paypalPaymentActionPending');
+            $this->fixPluginDescription();
         }
-
-        $this->fixPluginDescription();
 
         //Update form
         $this->createMyForm();
@@ -472,8 +473,6 @@ EOD;
             'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
             'vtype' => 'alphanum'
         ));
-
-        $form->removeElement('paypalPaymentActionPending');
     }
 
     /**
@@ -748,7 +747,7 @@ EOD;
      */
     public function getVersion()
     {
-        return '2.1.14';
+        return '3.0.0';
     }
 
     /**

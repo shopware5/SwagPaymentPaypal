@@ -1,5 +1,5 @@
 {if $PaypalShowButton}
-<div class="modal_paypal_button right" style=" margin-right: 228px;">
+<div class="right modal_paypal_button{if !$PaypalLocale || $PaypalLocale == 'de_DE'}_de{/if}">
     <a href="{url controller=payment_paypal action=express forceSecure}">
         {if !$PaypalLocale || $PaypalLocale == 'de_DE'}
             <img src="{link file="frontend/_resources/images/paypal_expresscheckout.png"}">

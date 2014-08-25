@@ -656,12 +656,14 @@ EOD;
 		    $view->PaypalShowButton = false;
 	    }
 
-        //if ($request->getControllerName() == 'checkout') {
-	        $view->extendsTemplate('frontend/payment_paypal/header.tpl');
-            if($request->getActionName() == 'confirm' && !empty(Shopware()->Session()->PaypalResponse)) {
-                $view->sRegisterFinished = false;
-            }
-        //}
+        if($view->hasTemplate()) {
+            $view->extendsTemplate('frontend/payment_paypal/header.tpl');
+        }
+
+        if($request->getControllerName() == 'checkout' && $request->getActionName() == 'confirm'
+          && !empty(Shopware()->Session()->PaypalResponse)) {
+            $view->sRegisterFinished = false;
+        }
     }
 
     /**

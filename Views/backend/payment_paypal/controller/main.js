@@ -126,7 +126,6 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
         }
 
         return shopId;
-
     },
 
     /**
@@ -150,7 +149,6 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
             callback: me.onLoadBalance,
             scope: this
         });
-
     },
 
     /**
@@ -237,8 +235,6 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
      * @param message
      */
     showGrowlMessage: function(title, message) {
-        var me = this;
-
         if (typeof Shopware.Notification.createStickyGrowlMessage == 'function') {
             Shopware.Notification.createStickyGrowlMessage({
                 title: title,
@@ -303,7 +299,7 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
         var me = this,
             formPanel = me.getDetail(),
             detail = (records && records.length) ? records[0] : null,
-            status, fields,
+            status, pending, fields,
             error, errorCode;
 
 
@@ -311,8 +307,8 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
             formPanel.disable();
             formPanel.setLoading(false);
             if (!success) {
-                error = operation.request.proxy.reader.rawData.message
-                errorCode = operation.request.proxy.reader.rawData.errorCode
+                error = operation.request.proxy.reader.rawData.message;
+                errorCode = operation.request.proxy.reader.rawData.errorCode;
                 me.showPayPalErrorMessage(me.snippets.error.title, error, errorCode);
             }
             return;
@@ -337,6 +333,7 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
                 formPanel.down('[action=refund]').show();
                 break;
             case 'Pending':
+            case 'In-Progress':
                 if(pending == 'order') {
                     formPanel.down('[action=book]').show();
                 } else {

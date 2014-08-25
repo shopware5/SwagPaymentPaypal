@@ -478,7 +478,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             }
 
             // Switch transaction id
-            if ($action !== 'book' && (isset($result['TRANSACTIONID']) || isset($result['AUTHORIZATIONID']))) {
+            if ($action !== 'book' && $action !== 'capture' && (isset($result['TRANSACTIONID']) || isset($result['AUTHORIZATIONID']))) {
                 $sql = '
                     UPDATE s_order SET transactionID=?
                     WHERE transactionID=? LIMIT 1

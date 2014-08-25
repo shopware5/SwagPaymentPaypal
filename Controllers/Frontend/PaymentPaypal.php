@@ -78,12 +78,11 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
      */
     public function expressAction()
     {
-	    Shopware()->Session()->expressCheckout = true;
         unset(Shopware()->Session()->sOrderVariables);
 
-        $payPalModel = Shopware()->Models()->getRepository('Shopware\Models\Payment\Payment')->findOneBy(array('name' => 'paypal'));
-        if ($payPalModel) {
-            Shopware()->Session()->sPaymentID = $payPalModel->getId();
+        $payment = $this->Plugin()->Payment();
+        if ($payment !== null) {
+            Shopware()->Session()->sPaymentID = $payment->getId();
         }
 
         $this->forward('gateway');
@@ -111,10 +110,8 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
 
         if($this->getUser() === null) {
             $paymentAction = 'Authorization';
-        } elseif($config->get('paypalPaymentActionPending', true)) {
-            $paymentAction = 'Order';
         } else {
-            $paymentAction = 'Sale';
+            $paymentAction = $config->get('paypalPaymentAction', 'Sale');
         }
 
         $params = array(
@@ -128,7 +125,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
 //            'NOSHIPPING' => 0, //todo@hl
 //            'REQCONFIRMSHIPPING' => 0,
             'ALLOWNOTE' => 1, //todo@hl
-            'ADDROVERRIDE' => $paymentAction == 'Authorization' ? 0 : 1,
+            'ADDROVERRIDE' => $this->getUser() === null ? 0 : 1,
             'BRANDNAME' => $shopName,
             'LOGOIMG' => $logoImage,
             'CARTBORDERCOLOR' => $borderColor,
@@ -138,6 +135,9 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         );
         if($config->get('paypalBillingAgreement') && $this->getUser() !== null) {
             $params['BILLINGTYPE'] = 'MerchantInitiatedBilling';
+        }
+        if($config->get('paypalSeamlessCheckout') && !empty(Shopware()->Session()->PaypalAuth)) {
+            $params['IDENTITYACCESSTOKEN'] = Shopware()->Session()->PaypalAuth['access_token'];
         }
 
         $params = array_merge($params, $this->getBasketParameter());
@@ -334,7 +334,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
     }
 
     /**
-     * Return action method
+     * Cancel action method
      */
     public function cancelAction()
     {
@@ -360,6 +360,79 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         }
 
         $this->Plugin()->setPaymentStatus($details['TRANSACTIONID'], $details['PAYMENTSTATUS']);
+    }
+
+    /**
+     * Login action method
+     */
+    public function loginAction()
+    {
+        $request = $this->Request();
+        $view = $this->View();
+        $config = $this->Plugin()->Config();
+
+        if($config->get('paypalSandbox')) {
+            $apiUrl = 'https://api.sandbox.paypal.com/v1/identity/openidconnect/';
+        } else {
+            $apiUrl = 'https://api.paypal.com/v1/identity/openidconnect/';
+        }
+
+        $curl = curl_init($apiUrl. 'tokenservice');
+        $params = array(
+            'grant_type' => 'authorization_code',
+            'code' => $request->getParam('code'),
+            'redirect_uri' => $request->getParam('redirect_uri'),
+        );
+        curl_setopt($curl, CURLOPT_POST, true);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($params));
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_USERPWD, $config->get('paypalClientId') . ':' . $config->get('paypalSecret'));
+        if($config->get('paypalSandbox')) {
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+        }
+        $response = curl_exec($curl);
+        curl_close($curl);
+        $auth = json_decode($response, true);
+
+        if(!empty($auth) && !empty($auth['access_token'])) {
+            Shopware()->Session()->PaypalAuth = $auth;
+        } else {
+            $auth = Shopware()->Session()->PaypalAuth;
+        }
+
+        $curl = curl_init($apiUrl . 'userinfo/?schema=openid');
+        $headers = array(
+            'Content-Type: application/json',
+            "Authorization: {$auth['token_type']} {$auth['access_token']}"
+        );
+        curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        if($config->get('paypalSandbox')) {
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+        }
+        $response = curl_exec($curl);
+        curl_close($curl);
+        $identity = json_decode($response, true);
+
+        if(!empty($identity)) {
+            $this->createAccount(array(
+                'EMAIL' => $identity['email'],
+                'PAYERID' => $identity['user_id'],
+                'FIRSTNAME' => $identity['given_name'],
+                'LASTNAME' => $identity['family_name'],
+                'SHIPTOSTREET' => $identity['address']['street_address'],
+                'SHIPTOZIP' => $identity['address']['postal_code'],
+                'SHIPTOCITY' => $identity['address']['locality'],
+                'SHIPTOCOUNTRYCODE' => $identity['address']['country'],
+                'SHIPTOSTATE' => $identity['address']['region'],
+                'SHIPTONAME' => $identity['name'],
+                'SHIPTOPHONENUM' => $identity['phone_number'],
+            ), $config->get('paypalFinishRegister', false));
+        }
+
+        $view->PaypalIdentity = !empty($identity);
+        $view->PaypalUserLoggedIn = $this->isUserLoggedIn();
+        $view->PaypalFinishRegister = $config->get('paypalFinishRegister');
     }
 
     /**
@@ -394,10 +467,14 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             );
         }
 
-        if($config->get('paypalPaymentActionPending', true)) {
-            $params['PAYMENTACTION'] = empty($params['TOKEN']) ? 'Authorization' : 'Order';
+        if (Shopware::VERSION == '___VERSION___' || version_compare(Shopware::VERSION, '5.0.0') >= 0) {
+            $params['BUTTONSOURCE'] = 'Shopware_Cart_5';
+        }
+
+        if(empty($params['TOKEN'])) {
+            $params['PAYMENTACTION'] = 'Authorization';
         } else {
-            $params['PAYMENTACTION'] = 'Sale';
+            $params['PAYMENTACTION'] = $config->get('paypalPaymentAction', 'Sale');
         }
 
         $params = array_merge($params, $this->getBasketParameter());
@@ -437,12 +514,25 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                 $sql = '
                     INSERT INTO s_order_attributes (orderID, swag_payal_billing_agreement_id)
                     SELECT id, ? FROM s_order WHERE ordernumber = ?
-                    ON DUPLICATE KEY
-                    UPDATE swag_payal_billing_agreement_id = VALUES(swag_payal_billing_agreement_id)
+                    ON DUPLICATE KEY UPDATE
+                       swag_payal_billing_agreement_id = VALUES(swag_payal_billing_agreement_id)
                 ';
                 Shopware()->Db()->query($sql, array(
                     $result['BILLINGAGREEMENTID'],
                     $orderNumber
+                ));
+            } catch(Exception $e) { }
+        }
+        // Set express flag
+        if(!empty($params['TOKEN'])) {
+            try {
+                $sql = '
+                    INSERT INTO s_order_attributes (orderID, swag_payal_express)
+                    SELECT id, 1 FROM s_order WHERE ordernumber = ?
+                    ON DUPLICATE KEY UPDATE swag_payal_express = 1
+                ';
+                Shopware()->Db()->query($sql, array(
+                    $orderNumber,
                 ));
             } catch(Exception $e) { }
         }
@@ -476,8 +566,9 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
 
     /**
      * @param $details
+     * @param bool $finish
      */
-    protected function createAccount($details)
+    protected function createAccount($details, $finish = true)
     {
         $module = Shopware()->Modules()->Admin();
         $session = Shopware()->Session();
@@ -552,10 +643,17 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             } else {
                 $data['auth']['password'] = md5($data['auth']['password']);
             }
-
+            if(!$finish) {
+                unset($data['shipping']);
+                if(!empty($data['billing']['stateID'])) {
+                    $data['billing']['country_state_' . $data['billing']['country']] = $data['billing']['stateID'];
+                }
+            }
             $session->sRegisterFinished = false;
             $session->sRegister = new ArrayObject($data, ArrayObject::ARRAY_AS_PROPS);
-            $module->sSaveRegister();
+            if($finish) {
+                $module->sSaveRegister();
+            }
         }
     }
 
@@ -596,7 +694,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $params['TAXAMT'] = number_format(0, 2, '.', '');
 
         $config = $this->Plugin()->Config();
-        if($config->get('paypalTransferCart')) {
+        if($config->get('paypalTransferCart') && $params['ITEMAMT'] != '0.00' && count($basket['content']) < 25) {
             foreach ($basket['content'] as $key => $item) {
                 if (!empty($user['additional']['charge_vat']) && !empty($item['amountWithTax'])) {
                     $amount = round($item['amountWithTax'], 2);
@@ -607,23 +705,19 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                     $amount = $amount / $item['quantity'];
                 }
                 $amount = round($amount, 2);
-                // Tax amount calculation / Not needed anymore
-//                if(empty($amount) || empty($user['additional']['charge_vat'])) {
-//                    $tax = 0;
-//                } elseif(!empty($item['tax'])) {
-//                    $tax = str_replace(',', '.', $item['tax']);
-//                } else {
-//                    $tax = $amount - str_replace(',', '.', $item['amountnet']);
-//                }
                 $article = array(
                     'L_NUMBER' . $key   => $item['ordernumber'],
                     'L_NAME' . $key     => $item['articlename'],
                     'L_AMT' . $key      => $amount,
-                    'L_QTY' . $key      => $quantity,
-//                    'L_TAXAMT' . $key   => $tax
+                    'L_QTY' . $key      => $quantity
                 );
                 $params = array_merge($params, $article);
             }
+        }
+
+        if($params['ITEMAMT'] == '0.00') {
+            $params['ITEMAMT'] = $params['SHIPPINGAMT'];
+            $params['SHIPPINGAMT'] = '0.00';
         }
 
         return $params;

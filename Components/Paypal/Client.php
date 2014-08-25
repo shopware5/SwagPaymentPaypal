@@ -100,15 +100,19 @@ class Shopware_Components_Paypal_Client extends Zend_Http_Client
         $this->apiUsername = $config->get('paypalUsername');
         $this->apiPassword = $config->get('paypalPassword');
         $this->apiSignature = $config->get('paypalSignature');
+        $timeout = $config->get('paypalTimeout', 20);
         $this->apiVersion = $config->get('paypalVersion');
         parent::__construct($url, array(
-            'useragent' => 'Shopware/' . Shopware()->Config()->Version,
-            'timeout' => 5,
+            'useragent' => 'Shopware/' . Shopware()->Config()->version,
+            'timeout' => $timeout,
         ));
         if (extension_loaded('curl')) {
             $adapter = new Zend_Http_Client_Adapter_Curl();
-            $adapter->setCurlOption(CURLOPT_SSL_VERIFYPEER, false);
-            $adapter->setCurlOption(CURLOPT_SSL_VERIFYHOST, false);
+            if(!empty($config->paypalSandbox)) {
+                $adapter->setCurlOption(CURLOPT_SSL_VERIFYPEER, false);
+                $adapter->setCurlOption(CURLOPT_SSL_VERIFYHOST, false);
+            }
+            $adapter->setCurlOption(CURLOPT_TIMEOUT, $timeout);
             $this->setAdapter($adapter);
         }
     }

@@ -283,7 +283,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                             $redirectUrl .= 'webscr?cmd=_express-checkout';
                             $redirectUrl .= '&token=' . urlencode($details['TOKEN']);
                             $this->redirect($redirectUrl);
-                        }else{
+                        } else{
                             $this->View()->PaypalConfig = $config;
                             $this->View()->PaypalResponse = $response;
                         }
@@ -480,12 +480,11 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $params = array_merge($params, $this->getBasketParameter());
         $params = array_merge($params, $this->getCustomerParameter());
 
-        $orderNumber = $this->saveOrder(
-            isset($params['TOKEN']) ? $params['TOKEN'] : $params['REFERENCEID'],
-            $params['CUSTOM']
-        );
-
-        if ($config->get('paypalSendInvoiceId') === true) {
+        if ($config->get('paypalSendInvoiceId')) {
+            $orderNumber = $this->saveOrder(
+                isset($params['TOKEN']) ? $params['TOKEN'] : $params['REFERENCEID'],
+                $params['CUSTOM']
+            );
             $prefix = $config->get('paypalPrefixInvoiceId');
             if (!empty($prefix)) {
                 // Set prefixed invoice id - Remove special chars and spaces
@@ -504,11 +503,20 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         } else {
             $result = $client->doExpressCheckoutPayment($params);
         }
-
-        $result['INVNUM'] = $params['INVNUM'];
         $result['CUSTOM'] = $params['CUSTOM'];
 
-        // Set billing agreement id
+        if($result['ACK'] != 'Success') {
+            return $result;
+        }
+
+        if (!$config->get('paypalSendInvoiceId')) {
+            $orderNumber = $this->saveOrder(
+                $result['TRANSACTIONID'],
+                $result['CUSTOM']
+            );
+        }
+
+        // Sets billing agreement id
         if(!empty($result['BILLINGAGREEMENTID'])) {
             try {
                 $sql = '
@@ -523,7 +531,8 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                 ));
             } catch(Exception $e) { }
         }
-        // Set express flag
+
+        // Sets express flag
         if(!empty($params['TOKEN'])) {
             try {
                 $sql = '
@@ -537,29 +546,30 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             } catch(Exception $e) { }
         }
 
+        // Stets transaction details
         $sql = '
             UPDATE `s_order`
             SET transactionID = ?, internalcomment = CONCAT(internalcomment, ?),
               customercomment = CONCAT(customercomment, ?)
-            WHERE temporaryID = ? AND transactionID = ?
+            WHERE ordernumber = ?
         ';
         Shopware()->Db()->query($sql, array(
             $result['TRANSACTIONID'],
             isset($details['EMAIL']) ? "{$details['EMAIL']} ({$details['PAYERSTATUS']})\r\n" : null,
             isset($details['NOTE']) ? $details['NOTE'] : '',
-            $params['CUSTOM'],
-            isset($params['TOKEN']) ? $params['TOKEN'] : $params['REFERENCEID']
+            $orderNumber
         ));
 
-        if($result['ACK'] == 'Success') {
-            $paymentStatus = $result['PAYMENTSTATUS'];
-            $ppAmount = floatval($result['AMT']);
-            $swAmount = $this->getAmount();
-            if(abs($swAmount - $ppAmount) >= 0.01) {
-                $paymentStatus = 'AmountMissMatch'; //Überprüfung notwendig
-            }
-            $this->Plugin()->setPaymentStatus($result['TRANSACTIONID'], $paymentStatus);
+        // Sets payment status
+        $paymentStatus = $result['PAYMENTSTATUS'];
+        $ppAmount = floatval($result['AMT']);
+        $swAmount = $this->getAmount();
+        if(abs($swAmount - $ppAmount) >= 0.01) {
+            $paymentStatus = 'AmountMissMatch'; //Überprüfung notwendig
         }
+        $this->Plugin()->setPaymentStatus($result['TRANSACTIONID'], $paymentStatus);
+
+        $result['INVNUM'] = $orderNumber;
 
         return $result;
     }

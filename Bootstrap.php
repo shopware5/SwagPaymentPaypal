@@ -630,7 +630,8 @@ EOD;
             );
         }
 
-        if ($request->getControllerName() == 'account' && $request->getActionName() == 'ajax_login') {
+        if (!empty($config->paypalLogIn)
+          && $request->getControllerName() == 'account' && $request->getActionName() == 'ajax_login') {
             $view->PaypalShowButton = true;
             $view->PaypalLocale = $this->getLocale();
             $view->PaypalClientId = $this->Config()->get('paypalClientId');

@@ -427,12 +427,12 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                 'SHIPTOSTATE' => $identity['address']['region'],
                 'SHIPTONAME' => $identity['name'],
                 'SHIPTOPHONENUM' => $identity['phone_number'],
-            ), $config->get('paypalFinishRegister', false));
+            ), !$config->get('paypalFinishRegister', true));
         }
 
         $view->PaypalIdentity = !empty($identity);
         $view->PaypalUserLoggedIn = $this->isUserLoggedIn();
-        $view->PaypalFinishRegister = $config->get('paypalFinishRegister');
+        $view->PaypalFinishRegister = !$config->get('paypalFinishRegister');
     }
 
     /**

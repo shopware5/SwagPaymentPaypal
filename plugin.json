@@ -1,0 +1,14 @@
+{
+    "currentVersion": "3.0.0",
+
+    "changelogs": {
+        "3.0.0": "Fixed first install"
+    },
+
+    "compatibility": {
+        "minimumVersion": "4.0.6",
+        "maximumVersion": null,
+        "blacklist": [
+        ]
+    }
+}

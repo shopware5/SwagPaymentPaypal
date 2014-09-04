@@ -467,7 +467,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             );
         }
 
-        if (Shopware::VERSION == '___VERSION___' || version_compare(Shopware::VERSION, '5.0.0') >= 0) {
+        if (Shopware::VERSION == '___VERSION___' || version_compare(Shopware::VERSION, '4.4.0') >= 0) {
             $params['BUTTONSOURCE'] = 'Shopware_Cart_5';
         }
 
@@ -643,6 +643,14 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $paymentId = Shopware()->Db()->fetchOne($sql, array('paypal'));
         $data['payment']['object'] = $module->sGetPaymentMeanById($paymentId);
 
+        if(!$finish) {
+            $shop = Shopware()->Shop()->getMain() ?: Shopware()->Shop();
+            $sql = 'SELECT `password` FROM `s_user` WHERE `email` LIKE ? AND `active` = 1';
+            if($shop->getCustomerScope()) {
+                $sql .= ' AND `subshopID` = ' . $shop->getId();
+            }
+            $data['auth']['passwordMD5'] = Shopware()->Db()->fetchOne($sql, array($data['auth']['email']));
+        }
         // First try login / Reuse paypal account
         $module->sSYSTEM->_POST = $data['auth'];
         $module->sLogin(true);

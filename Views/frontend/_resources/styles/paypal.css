@@ -1,7 +1,8 @@
-.basket_bottom_paypal {
+.basket_button_paypal {
     margin-right: 225px;
+    float: right;
 }
-.basket_bottom_paypal_de {
+.basket_button_paypal_de {
     margin-right: 225px;
     margin-top: 4px;
     float: right;
@@ -20,4 +21,10 @@
     position: absolute;
     top: 158px;
     left: 164px;
+}
+
+.paypal_button_delimiter {
+    font-weight: bold;
+    line-height: 40px;
+    padding-left: 18px;
 }

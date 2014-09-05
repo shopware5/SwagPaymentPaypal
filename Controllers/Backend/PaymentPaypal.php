@@ -334,11 +334,17 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             $row['paymentAmount'], array('currency' => $row['paymentCurrency'])
         );
 
-        $transactionsData = $client->TransactionSearch(array(
-            'STARTDATE' => $details['ORDERTIME'],
-            'TRANSACTIONID' => $transactionId
-            //'INVNUM' => $details['INVNUM']
-        ));
+        if(strpos($transactionId, 'O-') === 0) {
+            $transactionsData = $client->TransactionSearch(array(
+                'STARTDATE' => $details['ORDERTIME'],
+                'INVNUM' => $details['INVNUM']
+            ));
+        } else {
+            $transactionsData = $client->TransactionSearch(array(
+                'STARTDATE' => $details['ORDERTIME'],
+                'TRANSACTIONID' => $transactionId
+            ));
+        }
 
         if ($transactionsData['ACK'] != 'Success') {
             $error = sprintf("An error occured: %s: %s - %s", $transactionsData['L_ERRORCODE0'], $transactionsData['L_SHORTMESSAGE0'], $transactionsData['L_LONGMESSAGE0']);
@@ -518,5 +524,13 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
     public function Plugin()
     {
         return Shopware()->Plugins()->Frontend()->SwagPaymentPaypal();
+    }
+
+    public function downloadRestDocumentAction()
+    {
+        $document = 'How to create an REST app for Log in with PayPal.pdf';
+        $document = "string:{link file='backend/_resources/$document' fullPath}";
+        $document = $this->View()->fetch($document);
+        $this->redirect($document);
     }
 }

@@ -467,7 +467,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             );
         }
 
-        if (Shopware::VERSION == '___VERSION___' || version_compare(Shopware::VERSION, '5.0.0') >= 0) {
+        if (Shopware::VERSION == '___VERSION___' || version_compare(Shopware::VERSION, '4.4.0') >= 0) {
             $params['BUTTONSOURCE'] = 'Shopware_Cart_5';
         }
 
@@ -584,9 +584,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $session = Shopware()->Session();
 
         $version = Shopware()->Config()->version;
-        $hasPasswordEncoder = version_compare($version, '4.1.0', '>=');
-
-        if ($hasPasswordEncoder) {
+        if (version_compare($version, '4.1.0', '>=') || $version == '___VERSION___') {
             $encoderName =  Shopware()->PasswordEncoder()->getDefaultPasswordEncoderName();
         }
 
@@ -597,16 +595,25 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $data['billing']['salutation'] = 'mr';
         $data['billing']['firstname'] = $details['FIRSTNAME'];
         $data['billing']['lastname'] = $details['LASTNAME'];
-        $street = explode(' ', $details['SHIPTOSTREET']);
-        $data['billing']['street'] = $street[0];
-        $data['billing']['streetnumber'] = implode(' ', array_slice($street, 1));
-        if(strlen($data['billing']['streetnumber']) > 4) {
-            $data['billing']['street'] .= ' ' . $data['billing']['streetnumber'];
-            $data['billing']['streetnumber'] = '';
+
+        if (version_compare($version, '4.4.0', '>=') || $version == '___VERSION___') {
+            $data['billing']['street'] = $details['SHIPTOSTREET'];
+            if(!empty($details['SHIPTOSTREET2'])) {
+                $data['billing']['additional_address_line1'] = $details['SHIPTOSTREET2'];
+            }
+        } else {
+            $street = explode(' ', $details['SHIPTOSTREET']);
+            $data['billing']['street'] = $street[0];
+            $data['billing']['streetnumber'] = implode(' ', array_slice($street, 1));
+            if(strlen($data['billing']['streetnumber']) > 4) {
+                $data['billing']['street'] .= ' ' . $data['billing']['streetnumber'];
+                $data['billing']['streetnumber'] = '';
+            }
+            if(empty($data['billing']['streetnumber'])) {
+                $data['billing']['streetnumber'] = ' ';
+            }
         }
-        if(empty($data['billing']['streetnumber'])) {
-            $data['billing']['streetnumber'] = ' ';
-        }
+
         $data['billing']['zipcode'] = $details['SHIPTOZIP'];
         $data['billing']['city'] = $details['SHIPTOCITY'];
         $sql = 'SELECT id FROM s_core_countries WHERE countryiso=?';
@@ -636,6 +643,14 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $paymentId = Shopware()->Db()->fetchOne($sql, array('paypal'));
         $data['payment']['object'] = $module->sGetPaymentMeanById($paymentId);
 
+        if(!$finish) {
+            $shop = Shopware()->Shop()->getMain() ?: Shopware()->Shop();
+            $sql = 'SELECT `password` FROM `s_user` WHERE `email` LIKE ? AND `active` = 1';
+            if($shop->getCustomerScope()) {
+                $sql .= ' AND `subshopID` = ' . $shop->getId();
+            }
+            $data['auth']['passwordMD5'] = Shopware()->Db()->fetchOne($sql, array($data['auth']['email']));
+        }
         // First try login / Reuse paypal account
         $module->sSYSTEM->_POST = $data['auth'];
         $module->sLogin(true);
@@ -647,7 +662,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             $module->sSYSTEM->_POST = array('sPayment' => $paymentId);
             $module->sUpdatePayment();
         } else {
-            if ($hasPasswordEncoder) {
+            if (isset($encoderName)) {
                 $data["auth"]["encoderName"] = $encoderName;
                 $data["auth"]["password"] = Shopware()->PasswordEncoder()->encodePassword($data["auth"]["password"], $encoderName);
             } else {
@@ -751,12 +766,23 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         if(!empty($shipping['company'])) {
             $name = $shipping['company'] . ' - ' . $name;
         }
+        if(!empty($shipping['street'])) {
+            $shipping['street'] .= ' ' . $shipping['streetnumber'];
+        }
+        if(!empty($shipping['additional_address_line1'])) {
+            $shipping['street2'] = $shipping['additional_address_line1'];
+            if(!empty($shipping['additional_address_line2'])) {
+                $shipping['street2'] .= ' ' . $shipping['additional_address_line2'];
+            }
+        } else {
+            $shipping['street2'] = '';
+        }
         $customer = array(
             'CUSTOMERSERVICENUMBER' => $user['billingaddress']['customernumber'],
             //'gender' => $shipping['salutation'] == 'ms' ? 'f' : 'm',
             'SHIPTONAME' => $name,
-            'SHIPTOSTREET' => $shipping['street'] . ' ' .$shipping['streetnumber'],
-            'SHIPTOSTREET2' => '',
+            'SHIPTOSTREET' => $shipping['street'],
+            'SHIPTOSTREET2' => $shipping['street2'],
             'SHIPTOZIP' => $shipping['zipcode'],
             'SHIPTOCITY' => $shipping['city'],
             'SHIPTOCOUNTRY' => $user['additional']['countryShipping']['countryiso'],

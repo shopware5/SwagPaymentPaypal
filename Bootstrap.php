@@ -54,26 +54,8 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
         $this->createMyMenu();
         $this->createMyForm();
         $this->createMyTranslations();
-
         $this->fixOrderMail();
-
-        try {
-            $this->Application()->Models()->addAttribute(
-                's_order_attributes', 'swag_payal',
-                'billing_agreement_id', 'VARCHAR(255)'
-            );
-            $this->Application()->Models()->addAttribute(
-                's_order_attributes',
-                'swag_payal',
-                'express',
-                'boolean'
-            );
-        } catch(Exception $e) { }
-
-        $this->Application()->Models()->generateAttributeModels(array(
-            's_order_attributes'
-        ));
-
+        $this->createMyAttributes();
         return true;
     }
 
@@ -125,23 +107,11 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
             $this->Application()->Models()->generateAttributeModels(array(
                 's_order_attributes', 's_user_attributes'
             ));
-
-            //Remove old element
-            $element = $this->Form()->getElement('paypalAllowGuestCheckout');
-            $this->Form()->getElements()->removeElement($element);
-        } elseif(version_compare($version, '2.1.5', '<=')) {
+            $this->Form()->removeElement('paypalAllowGuestCheckout');
+        } if(version_compare($version, '2.1.5', '<=')) {
             $this->fixOrderMail();
-        } elseif(version_compare($version, '2.1.6', '<=')) {
-            try {
-                $this->Application()->Models()->addAttribute(
-                    's_order_attributes', 'swag_payal',
-                    'express', 'boolean'
-                );
-            } catch(Exception $e) { }
-
-            $this->Application()->Models()->generateAttributeModels(array(
-                's_order_attributes'
-            ));
+        } if(version_compare($version, '2.1.6', '<=')) {
+            $this->createMyAttributes();
         } if(version_compare($version, '3.0.0', '<=')) {
             $this->Form()->removeElement('paypalPaymentActionPending');
             $this->fixPluginDescription();
@@ -211,7 +181,9 @@ EOD;
     public function enable()
     {
         $payment = $this->Payment();
-        $payment->setActive(true);
+        if ($payment !== null) {
+            $payment->setActive(true);
+        }
         return true;
     }
 
@@ -326,9 +298,13 @@ EOD;
         $form->setElement('button', 'paypalButtonApi', array(
             'label' => '<strong>Jetzt API-Signatur erhalten</strong>',
             'handler' => "function(btn) {
-                //var sandbox = btn.up('form').down('[elementName=paypalSandbox]').getValue();
-                //'https://www.sandbox.paypal.com/de/cgi-bin/webscr?cmd=_get-api-signature&generic-flow=true'
-                var link = 'https://www.paypal.com/de/cgi-bin/webscr?cmd=_get-api-signature&generic-flow=true';
+                var sandbox = btn.up('panel').down('[elementName=paypalSandbox]').getValue();
+                if(sandbox) {
+                    var link = 'https://www.sandbox.paypal.com/';
+                } else {
+                    var link = 'https://www.paypal.com/';
+                }
+                link += 'de/cgi-bin/webscr?cmd=_get-api-signature&generic-flow=true';
                 window.open(link, '', 'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=yes, width=400, height=540');
             }"
         ));
@@ -343,7 +319,7 @@ EOD;
         $form->setElement('button', 'paypalButtonRestApi', array(
             'label' => '<strong>Jetzt Daten für REST-API erhalten</strong>',
             'handler' => "function(btn) {
-                var link = 'https://developer.paypal.com/';
+                var link = document.location.pathname + 'paymentPaypal/downloadRestDocument';
                 window.open(link, '');
             }"
         ));
@@ -367,9 +343,13 @@ EOD;
             'label' => 'Alternativer Shop-Name auf der PayPal-Seite',
             'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
         ));
-        $form->setElement('text', 'paypalLogoImage', array(
+        $form->setElement('media', 'paypalLogoImage', array(
             'label' => 'Shop-Logo auf der PayPal-Seite',
             'value' => 'frontend/_resources/images/logo.jpg',
+            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+        ));
+        $form->setElement('media', 'paypalHeaderImage', array(
+            'label' => 'Header-Logo auf der PayPal-Seite',
             'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
         ));
         $form->setElement('color', 'paypalCartBorderColor', array(
@@ -526,6 +506,29 @@ EOD;
                 $elementModel->addTranslation($translationModel);
             }
         }
+    }
+
+    /**
+     *
+     */
+    public function createMyAttributes()
+    {
+        try {
+            $this->Application()->Models()->addAttribute(
+                's_order_attributes', 'swag_payal',
+                'billing_agreement_id', 'VARCHAR(255)'
+            );
+        } catch(Exception $e) { }
+        try {
+            $this->Application()->Models()->addAttribute(
+                's_order_attributes', 'swag_payal',
+                'express', 'boolean'
+            );
+        } catch(Exception $e) { }
+
+        $this->Application()->Models()->generateAttributeModels(array(
+            's_order_attributes'
+        ));
     }
 
     /**
@@ -749,12 +752,12 @@ EOD;
     /**
      * Returns the version of plugin as string.
      *
+     * @throws Exception
      * @return string
      */
     public function getVersion()
     {
-        $info = json_decode(file_get_contents(__DIR__ . DIRECTORY_SEPARATOR .'plugin.json'), true);
-
+        $info = json_decode(file_get_contents($this->Path() . 'plugin.json'), true);
         if ($info) {
             return $info['currentVersion'];
         } else {

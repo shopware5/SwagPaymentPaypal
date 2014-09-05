@@ -757,7 +757,7 @@ EOD;
      */
     public function getVersion()
     {
-        $info = json_decode(file_get_contents($this->Path() . 'plugin.json'), true);
+        $info = json_decode(file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'plugin.json'), true);
         if ($info) {
             return $info['currentVersion'];
         } else {

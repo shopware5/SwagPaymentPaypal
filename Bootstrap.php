@@ -664,6 +664,7 @@ EOD;
 	    }
 
         if($view->hasTemplate()) {
+            $this->registerMyTemplateDir();
             $view->extendsTemplate('frontend/payment_paypal/header.tpl');
         }
 

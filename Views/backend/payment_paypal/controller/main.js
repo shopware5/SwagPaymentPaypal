@@ -98,6 +98,9 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
             'paypal-main-detail button': {
                 click: me.onClickDetailButton
             },
+            'paypal-main-detail': {
+                refund: me.onClickDetailButton
+            },
             'paypal-main-list [name=searchfield]': {
                 change: me.onSearchForm
             }
@@ -182,7 +185,8 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
             detail = me.getDetail(),
             detailData = detail.getForm().getFieldValues(),
             action;
-
+        detailData.transactionId = button.transactionId || detailData.transactionId;
+        detailData.paymentAmount = button.paymentAmount || detailData.paymentAmount;
         action = me.getView('main.Action').create({
             paymentAction: button.action,
             paymentActionName: button.text,

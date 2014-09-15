@@ -766,7 +766,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         if(!empty($shipping['company'])) {
             $name = $shipping['company'] . ' - ' . $name;
         }
-        if(!empty($shipping['street'])) {
+        if(!empty($shipping['streetnumber'])) {
             $shipping['street'] .= ' ' . $shipping['streetnumber'];
         }
         if(!empty($shipping['additional_address_line1'])) {

@@ -199,6 +199,11 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.Detail', {
             bodyPadding: 0,
             border: false,
             columns: [{
+                header: '{s name=detail/transactions/id}Id{/s}',
+                dataIndex: 'id',
+                hidden: true,
+                flex: 2
+            },{
                 xtype: 'datecolumn',
                 format: Ext.Date.defaultFormat + ' H:i:s',
                 header: '{s name=detail/transactions/date}Date{/s}',
@@ -207,11 +212,11 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.Detail', {
             },{
                 header: '{s name=detail/transactions/type}Type{/s}',
                 dataIndex: 'type',
-                flex: 2
+                flex: 1
             },{
                 header: '{s name=detail/transactions/status}Status{/s}',
                 dataIndex: 'status',
-                flex: 2
+                flex: 1
             }, {
                 header: '{s name=detail/transactions/currency}Currency{/s}',
                 dataIndex: 'currency',
@@ -220,7 +225,28 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.Detail', {
                 header: '{s name=detail/transactions/amount}Amount{/s}',
                 dataIndex: 'amountFormat',
                 align: 'right',
-                flex: 2
+                flex: 1
+            }, {
+                xtype:'actioncolumn',
+                width: 35,
+                sortable: false,
+                items: [{
+                    iconCls: 'sprite-minus-circle',
+                    tooltip: '{s name=detail/button/refund_text}Refund{/s}',
+                    getClass: function(value, metadata, record) {
+                        if(record.get('type') != 'Payment' || record.get('status') == 'Refunded') {
+                            return 'x-hidden';
+                        }
+                    },
+                    handler: function (view, rowIndex, colIndex, item, opts, record) {
+                        me.fireEvent('refund', {
+                            action: 'refund',
+                            text: this.items[0].tooltip,
+                            transactionId: record.get('id'),
+                            paymentAmount: record.get('amount')
+                        });
+                    }
+                }]
             }]
         }];
     }

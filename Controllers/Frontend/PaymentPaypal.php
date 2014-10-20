@@ -467,10 +467,6 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             );
         }
 
-        if (Shopware::VERSION == '___VERSION___' || version_compare(Shopware::VERSION, '4.4.0') >= 0) {
-            $params['BUTTONSOURCE'] = 'Shopware_Cart_5';
-        }
-
         if(empty($params['TOKEN'])) {
             $params['PAYMENTACTION'] = 'Authorization';
         } else {

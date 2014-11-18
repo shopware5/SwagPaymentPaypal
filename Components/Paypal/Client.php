@@ -49,14 +49,14 @@
  */
 class Shopware_Components_Paypal_Client extends Zend_Http_Client
 {
-	/**
+    /**
      * The sandbox url.
      *
      * @var string
      */
-	const URL_SANDBOX = 'https://api-3t.sandbox.paypal.com/nvp';
-	
-	/**
+    const URL_SANDBOX = 'https://api-3t.sandbox.paypal.com/nvp';
+    
+    /**
      * The live url.
      *
      * @var string
@@ -85,14 +85,14 @@ class Shopware_Components_Paypal_Client extends Zend_Http_Client
     
     /**
      * Constructor method
-     * 
+     *
      * Expects a configuration parameter.
      *
      * @param Enlight_Config $config
      */
     public function __construct($config)
     {
-        if(!empty($config->paypalSandbox)) {
+        if (!empty($config->paypalSandbox)) {
             $url = self::URL_SANDBOX;
         } else {
             $url = self::URL_LIVE;
@@ -108,7 +108,7 @@ class Shopware_Components_Paypal_Client extends Zend_Http_Client
         ));
         if (extension_loaded('curl')) {
             $adapter = new Zend_Http_Client_Adapter_Curl();
-            if(!empty($config->paypalSandbox)) {
+            if (!empty($config->paypalSandbox)) {
                 $adapter->setCurlOption(CURLOPT_SSL_VERIFYPEER, false);
                 $adapter->setCurlOption(CURLOPT_SSL_VERIFYHOST, false);
             }
@@ -133,7 +133,7 @@ class Shopware_Components_Paypal_Client extends Zend_Http_Client
             'USER' => $this->apiUsername,
             'SIGNATURE' => $this->apiSignature
         ));
-        if(!empty($args[0])) {
+        if (!empty($args[0])) {
             $this->setParameterGet($args[0]);
         }
         try {

@@ -78,7 +78,8 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
             $this->Application()->Models()->generateAttributeModels(array(
                 's_order_attributes'
             ));
-        } catch(Exception $e) { }
+        } catch (Exception $e) {
+        }
 
         return true;
     }
@@ -89,30 +90,35 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
      */
     public function update($version)
     {
-        if(strpos($version, '2.0.') === 0) {
+        if (strpos($version, '2.0.') === 0) {
             try {
                 $this->Application()->Models()->removeAttribute(
                     's_user_attributes',
                     'swag_payal',
                     'billing_agreement_id'
                 );
-            } catch(Exception $e) { }
+            } catch (Exception $e) {
+            }
             try {
                 $this->Application()->Models()->addAttribute(
                     's_order_attributes', 'swag_payal',
                     'billing_agreement_id', 'VARCHAR(255)'
                 );
-            } catch(Exception $e) { }
+            } catch (Exception $e) {
+            }
 
             $this->Application()->Models()->generateAttributeModels(array(
                 's_order_attributes', 's_user_attributes'
             ));
             $this->Form()->removeElement('paypalAllowGuestCheckout');
-        } if(version_compare($version, '2.1.5', '<=')) {
+        }
+        if (version_compare($version, '2.1.5', '<=')) {
             $this->fixOrderMail();
-        } if(version_compare($version, '2.1.6', '<=')) {
+        }
+        if (version_compare($version, '2.1.6', '<=')) {
             $this->createMyAttributes();
-        } if(version_compare($version, '3.0.0', '<=')) {
+        }
+        if (version_compare($version, '3.0.0', '<=')) {
             $this->Form()->removeElement('paypalPaymentActionPending');
             $this->fixPluginDescription();
         }
@@ -138,7 +144,7 @@ EOD;
 
     protected function fixPluginDescription()
     {
-        if($this->Payment() === null) {
+        if ($this->Payment() === null) {
             return;
         }
         $newLogo = '<!-- PayPal Logo -->' .
@@ -488,16 +494,16 @@ EOD;
             )
         );
         $shopRepository = Shopware()->Models()->getRepository('\Shopware\Models\Shop\Locale');
-        foreach($translations as $locale => $snippets) {
+        foreach ($translations as $locale => $snippets) {
             $localeModel = $shopRepository->findOneBy(array(
                 'locale' => $locale
             ));
-            foreach($snippets as $element => $snippet) {
-                if($localeModel === null){
+            foreach ($snippets as $element => $snippet) {
+                if ($localeModel === null) {
                     continue;
                 }
                 $elementModel = $form->getElement($element);
-                if($elementModel === null) {
+                if ($elementModel === null) {
                     continue;
                 }
                 $translationModel = new \Shopware\Models\Config\ElementTranslation();
@@ -518,13 +524,15 @@ EOD;
                 's_order_attributes', 'swag_payal',
                 'billing_agreement_id', 'VARCHAR(255)'
             );
-        } catch(Exception $e) { }
+        } catch (Exception $e) {
+        }
         try {
             $this->Application()->Models()->addAttribute(
                 's_order_attributes', 'swag_payal',
                 'express', 'boolean'
             );
-        } catch(Exception $e) { }
+        } catch (Exception $e) {
+        }
 
         $this->Application()->Models()->generateAttributeModels(array(
             's_order_attributes'
@@ -574,7 +582,7 @@ EOD;
     public function getLocale()
     {
         $locale = $this->Application()->Locale()->toString();
-        if(strpos($locale, 'de_') === 0) {
+        if (strpos($locale, 'de_') === 0) {
             $locale = 'de_DE';
         }
         return $locale;
@@ -646,12 +654,12 @@ EOD;
             $view->extendsTemplate('frontend/payment_paypal/ajax_login.tpl');
         }
 
-        if($view->hasTemplate() && isset($view->PaypalShowButton)) {
+        if ($view->hasTemplate() && isset($view->PaypalShowButton)) {
             $showButton = false;
             $admin = Shopware()->Modules()->Admin();
             $payments = isset($view->sPayments) ? $view->sPayments : $admin->sGetPaymentMeans();
-            foreach($payments as $payment) {
-                if($payment['name'] == 'paypal') {
+            foreach ($payments as $payment) {
+                if ($payment['name'] == 'paypal') {
                     $showButton = true;
                     break;
                 }
@@ -659,16 +667,16 @@ EOD;
             $view->PaypalShowButton = $showButton;
         }
 
-	    if(Shopware()->Modules()->Admin()->sCheckUser()){
-		    $view->PaypalShowButton = false;
-	    }
+        if (Shopware()->Modules()->Admin()->sCheckUser()) {
+            $view->PaypalShowButton = false;
+        }
 
-        if($view->hasTemplate()) {
+        if ($view->hasTemplate()) {
             $this->registerMyTemplateDir();
             $view->extendsTemplate('frontend/payment_paypal/header.tpl');
         }
 
-        if($request->getControllerName() == 'checkout' && $request->getActionName() == 'confirm'
+        if ($request->getControllerName() == 'checkout' && $request->getActionName() == 'confirm'
           && !empty(Shopware()->Session()->PaypalResponse)) {
             $view->sRegisterFinished = false;
         }
@@ -680,7 +688,7 @@ EOD;
      */
     public function getPaymentStatusId($paymentStatus)
     {
-        switch($paymentStatus) {
+        switch ($paymentStatus) {
             case 'Completed':
                 $paymentStatusId = $this->Config()->get('paypalStatusId', 12); break;
             case 'Pending':
@@ -722,7 +730,7 @@ EOD;
         ));
         $order = Shopware()->Modules()->Order();
         $order->setPaymentStatus($orderId, $paymentStatusId, false, $note);
-        if($paymentStatusId == 21) {
+        if ($paymentStatusId == 21) {
             $sql = 'UPDATE  `s_order` SET internalcomment = CONCAT( internalcomment, :pStatus) WHERE transactionID = :transactionId';
             Shopware()->Db()->query($sql, array(
                 'pStatus' => "\nPayPal Status: " . $paymentStatus,

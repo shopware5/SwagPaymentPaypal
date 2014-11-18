@@ -63,10 +63,10 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
     public function indexAction()
     {
         // PayPal Express > Sale
-        if(!empty(Shopware()->Session()->PaypalResponse['TOKEN'])) {
+        if (!empty(Shopware()->Session()->PaypalResponse['TOKEN'])) {
             $this->forward('return');
             // Paypal Basis || PayPal Express
-        } elseif($this->getPaymentShortName() == 'paypal') {
+        } elseif ($this->getPaymentShortName() == 'paypal') {
             $this->forward('gateway');
         } else {
             $this->redirect(array('controller' => 'checkout'));
@@ -108,7 +108,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
 
         $borderColor = ltrim($config->get('paypalCartBorderColor'), '#');
 
-        if($this->getUser() === null) {
+        if ($this->getUser() === null) {
             $paymentAction = 'Authorization';
         } else {
             $paymentAction = $config->get('paypalPaymentAction', 'Sale');
@@ -133,10 +133,10 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
 //            'SOLUTIONTYPE' => $config->get('paypalAllowGuestCheckout') ? 'Sole' : 'Mark',
             'TOTALTYPE' => $this->getUser() !== null ? 'Total' : 'EstimatedTotal'
         );
-        if($config->get('paypalBillingAgreement') && $this->getUser() !== null) {
+        if ($config->get('paypalBillingAgreement') && $this->getUser() !== null) {
             $params['BILLINGTYPE'] = 'MerchantInitiatedBilling';
         }
-        if($config->get('paypalSeamlessCheckout') && !empty(Shopware()->Session()->PaypalAuth)) {
+        if ($config->get('paypalSeamlessCheckout') && !empty(Shopware()->Session()->PaypalAuth)) {
             $params['IDENTITYACCESSTOKEN'] = Shopware()->Session()->PaypalAuth['access_token'];
         }
 
@@ -147,17 +147,17 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
 
         Shopware()->Session()->PaypalResponse = $response;
 
-        if($response['ACK'] == 'SuccessWithWarning') {
+        if ($response['ACK'] == 'SuccessWithWarning') {
             $response['ACK'] = 'Success';
         }
-        if(!empty($response['ACK']) && $response['ACK'] == 'Success') {
-            if(!empty($config->paypalSandbox)) {
+        if (!empty($response['ACK']) && $response['ACK'] == 'Success') {
+            if (!empty($config->paypalSandbox)) {
                 $gatewayUrl = 'https://www.sandbox.paypal.com/';
             } else {
                 $gatewayUrl = 'https://www.paypal.com/';
             }
             $gatewayUrl .= 'webscr&cmd=_express-checkout';
-            if($this->getUser() !== null) {
+            if ($this->getUser() !== null) {
                 $gatewayUrl .= '&useraction=commit';
             }
             $gatewayUrl .= '&token=' . urlencode($response['TOKEN']);
@@ -172,7 +172,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
      */
     public function recurringAction()
     {
-        if(!$this->getAmount() || $this->getOrderNumber()) {
+        if (!$this->getAmount() || $this->getOrderNumber()) {
             $this->redirect(array(
                 'controller' => 'checkout'
             ));
@@ -197,8 +197,8 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         );
         $response = $this->finishCheckout($details);
 
-        if($this->Request()->isXmlHttpRequest()) {
-            if($response['ACK'] != 'Success') {
+        if ($this->Request()->isXmlHttpRequest()) {
+            if ($response['ACK'] != 'Success') {
                 $data = array(
                     'success' => false,
                     'message' => "[{$response['L_ERRORCODE0']}] - {$response['L_SHORTMESSAGE0']}"
@@ -214,7 +214,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             }
             echo Zend_Json::encode($data);
         } else {
-            if($response['ACK'] != 'Success') {
+            if ($response['ACK'] != 'Success') {
                 $this->View()->loadTemplate('frontend/payment_paypal/return.tpl');
                 $this->View()->PaypalConfig = $this->Plugin()->Config();
                 $this->View()->PaypalResponse = $response;
@@ -240,21 +240,21 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $client = $this->Plugin()->Client();
         $initialResponse = Shopware()->Session()->PaypalResponse;
 
-        if($token !== null) {
+        if ($token !== null) {
             $details = $client->getExpressCheckoutDetails(array('token' => $token));
-        } elseif(!empty($initialResponse['TOKEN'])) {
+        } elseif (!empty($initialResponse['TOKEN'])) {
             $details = $client->getExpressCheckoutDetails(array('token' => $initialResponse['TOKEN']));
         } else {
             $details = array();
         }
 
         // Canceled payment
-        if(isset($details['CHECKOUTSTATUS']) && (!isset($details['PAYERID']) || !isset($details['ADDRESSSTATUS']))) {
+        if (isset($details['CHECKOUTSTATUS']) && (!isset($details['PAYERID']) || !isset($details['ADDRESSSTATUS']))) {
             unset(Shopware()->Session()->PaypalResponse);
             return $this->forward('gateway');
         }
 
-        switch(!empty($details['CHECKOUTSTATUS']) ? $details['CHECKOUTSTATUS'] : null) {
+        switch (!empty($details['CHECKOUTSTATUS']) ? $details['CHECKOUTSTATUS'] : null) {
             case 'PaymentActionCompleted':
             case 'PaymentCompleted':
                 $this->redirect(array(
@@ -270,12 +270,12 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                  * Will ony be triggered during normal checkout as Shopware()->Session()->sOrderVariables is
                  * filled during the checkout and not available during the express checkout
                  */
-                if($this->getUser() && $this->getOrderNumber() === null) {
+                if ($this->getUser() && $this->getOrderNumber() === null) {
                     unset(Shopware()->Session()->PaypalResponse);
                     $response = $this->finishCheckout($details);
-                    if($response['ACK'] != 'Success') {
-                        if($response['L_ERRORCODE0'] == 10486){
-                            if(!empty($config->paypalSandbox)) {
+                    if ($response['ACK'] != 'Success') {
+                        if ($response['L_ERRORCODE0'] == 10486) {
+                            if (!empty($config->paypalSandbox)) {
                                 $redirectUrl = 'https://www.sandbox.paypal.com/';
                             } else {
                                 $redirectUrl = 'https://www.paypal.com/';
@@ -283,12 +283,12 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                             $redirectUrl .= 'webscr?cmd=_express-checkout';
                             $redirectUrl .= '&token=' . urlencode($details['TOKEN']);
                             $this->redirect($redirectUrl);
-                        } else{
+                        } else {
                             $this->View()->PaypalConfig = $config;
                             $this->View()->PaypalResponse = $response;
                         }
                     } elseif ($response['REDIRECTREQUIRED'] === 'true') {
-                        if(!empty($config->paypalSandbox)) {
+                        if (!empty($config->paypalSandbox)) {
                             $redirectUrl = 'https://www.sandbox.paypal.com/';
                         } else {
                             $redirectUrl = 'https://www.paypal.com/';
@@ -306,7 +306,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                 /**
                  * If the user is logged in but using the express checkout, this condition will be run
                  */
-                } elseif($this->isUserLoggedIn() && $this->getOrderNumber() === null){
+                } elseif ($this->isUserLoggedIn() && $this->getOrderNumber() === null) {
                     $this->redirect(array(
                         'controller' => 'checkout'
                     ));
@@ -314,7 +314,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                  * If the user is not logged in at all, he will be registered
                  */
                 } else {
-                    if(!empty($details['PAYERID']) && !empty($details['SHIPTONAME'])) {
+                    if (!empty($details['PAYERID']) && !empty($details['SHIPTONAME'])) {
                         $this->createAccount($details);
                     }
                     $this->redirect(array(
@@ -355,7 +355,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             'TRANSACTIONID' => $this->Request()->get('parent_txn_id') ? $this->Request()->get('parent_txn_id') : $this->Request()->get('txn_id')
         ));
 
-        if(empty($details['PAYMENTSTATUS']) || empty($details['ACK']) || $details['ACK'] != 'Success') {
+        if (empty($details['PAYMENTSTATUS']) || empty($details['ACK']) || $details['ACK'] != 'Success') {
             return;
         }
 
@@ -371,7 +371,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $view = $this->View();
         $config = $this->Plugin()->Config();
 
-        if($config->get('paypalSandbox')) {
+        if ($config->get('paypalSandbox')) {
             $apiUrl = 'https://api.sandbox.paypal.com/v1/identity/openidconnect/';
         } else {
             $apiUrl = 'https://api.paypal.com/v1/identity/openidconnect/';
@@ -387,14 +387,14 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($params));
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_USERPWD, $config->get('paypalClientId') . ':' . $config->get('paypalSecret'));
-        if($config->get('paypalSandbox')) {
+        if ($config->get('paypalSandbox')) {
             curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
         }
         $response = curl_exec($curl);
         curl_close($curl);
         $auth = json_decode($response, true);
 
-        if(!empty($auth) && !empty($auth['access_token'])) {
+        if (!empty($auth) && !empty($auth['access_token'])) {
             Shopware()->Session()->PaypalAuth = $auth;
         } else {
             $auth = Shopware()->Session()->PaypalAuth;
@@ -407,14 +407,14 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         );
         curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        if($config->get('paypalSandbox')) {
+        if ($config->get('paypalSandbox')) {
             curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
         }
         $response = curl_exec($curl);
         curl_close($curl);
         $identity = json_decode($response, true);
 
-        if(!empty($identity)) {
+        if (!empty($identity)) {
             $this->createAccount(array(
                 'EMAIL' => $identity['email'],
                 'PAYERID' => $identity['user_id'],
@@ -449,7 +449,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             'action' => 'notify', 'forceSecure' => true, 'appendSession' => true
         ));
 
-        if(!empty($details['REFERENCEID'])) {
+        if (!empty($details['REFERENCEID'])) {
             $params = array(
                 'REFERENCEID' => $details['REFERENCEID'],
                 'IPADDRESS' => $this->Request()->getClientIp(false),
@@ -467,7 +467,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             );
         }
 
-        if(empty($params['TOKEN'])) {
+        if (empty($params['TOKEN'])) {
             $params['PAYMENTACTION'] = 'Authorization';
         } else {
             $params['PAYMENTACTION'] = $config->get('paypalPaymentAction', 'Sale');
@@ -494,14 +494,14 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
 
         //$params['SOFTDESCRIPTOR'] = $orderNumber;
 
-        if(!empty($params['REFERENCEID'])) {
+        if (!empty($params['REFERENCEID'])) {
             $result = $client->doReferenceTransaction($params);
         } else {
             $result = $client->doExpressCheckoutPayment($params);
         }
         $result['CUSTOM'] = $params['CUSTOM'];
 
-        if($result['ACK'] != 'Success') {
+        if ($result['ACK'] != 'Success') {
             return $result;
         }
 
@@ -513,7 +513,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         }
 
         // Sets billing agreement id
-        if(!empty($result['BILLINGAGREEMENTID'])) {
+        if (!empty($result['BILLINGAGREEMENTID'])) {
             try {
                 $sql = '
                     INSERT INTO s_order_attributes (orderID, swag_payal_billing_agreement_id)
@@ -525,11 +525,12 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                     $result['BILLINGAGREEMENTID'],
                     $orderNumber
                 ));
-            } catch(Exception $e) { }
+            } catch (Exception $e) {
+            }
         }
 
         // Sets express flag
-        if(!empty($params['TOKEN'])) {
+        if (!empty($params['TOKEN'])) {
             try {
                 $sql = '
                     INSERT INTO s_order_attributes (orderID, swag_payal_express)
@@ -539,7 +540,8 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                 Shopware()->Db()->query($sql, array(
                     $orderNumber,
                 ));
-            } catch(Exception $e) { }
+            } catch (Exception $e) {
+            }
         }
 
         // Stets transaction details
@@ -560,7 +562,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $paymentStatus = $result['PAYMENTSTATUS'];
         $ppAmount = floatval($result['AMT']);
         $swAmount = $this->getAmount();
-        if(abs($swAmount - $ppAmount) >= 0.01) {
+        if (abs($swAmount - $ppAmount) >= 0.01) {
             $paymentStatus = 'AmountMissMatch'; //Überprüfung notwendig
         }
         $this->Plugin()->setPaymentStatus($result['TRANSACTIONID'], $paymentStatus);
@@ -594,18 +596,18 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
 
         if (version_compare($version, '4.4.0', '>=') || $version == '___VERSION___') {
             $data['billing']['street'] = $details['SHIPTOSTREET'];
-            if(!empty($details['SHIPTOSTREET2'])) {
+            if (!empty($details['SHIPTOSTREET2'])) {
                 $data['billing']['additional_address_line1'] = $details['SHIPTOSTREET2'];
             }
         } else {
             $street = explode(' ', $details['SHIPTOSTREET']);
             $data['billing']['street'] = $street[0];
             $data['billing']['streetnumber'] = implode(' ', array_slice($street, 1));
-            if(strlen($data['billing']['streetnumber']) > 4) {
+            if (strlen($data['billing']['streetnumber']) > 4) {
                 $data['billing']['street'] .= ' ' . $data['billing']['streetnumber'];
                 $data['billing']['streetnumber'] = '';
             }
-            if(empty($data['billing']['streetnumber'])) {
+            if (empty($data['billing']['streetnumber'])) {
                 $data['billing']['streetnumber'] = ' ';
             }
         }
@@ -639,10 +641,10 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $paymentId = Shopware()->Db()->fetchOne($sql, array('paypal'));
         $data['payment']['object'] = $module->sGetPaymentMeanById($paymentId);
 
-        if(!$finish) {
+        if (!$finish) {
             $shop = Shopware()->Shop()->getMain() ?: Shopware()->Shop();
             $sql = 'SELECT `password` FROM `s_user` WHERE `email` LIKE ? AND `active` = 1';
-            if($shop->getCustomerScope()) {
+            if ($shop->getCustomerScope()) {
                 $sql .= ' AND `subshopID` = ' . $shop->getId();
             }
             $data['auth']['passwordMD5'] = Shopware()->Db()->fetchOne($sql, array($data['auth']['email']));
@@ -664,15 +666,15 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             } else {
                 $data['auth']['password'] = md5($data['auth']['password']);
             }
-            if(!$finish) {
+            if (!$finish) {
                 unset($data['shipping']);
-                if(!empty($data['billing']['stateID'])) {
+                if (!empty($data['billing']['stateID'])) {
                     $data['billing']['country_state_' . $data['billing']['country']] = $data['billing']['stateID'];
                 }
             }
             $session->sRegisterFinished = false;
             $session->sRegister = new ArrayObject($data, ArrayObject::ARRAY_AS_PROPS);
-            if($finish) {
+            if ($finish) {
                 $module->sSaveRegister();
             }
         }
@@ -690,15 +692,15 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
 
         $params['CURRENCYCODE'] = $this->getCurrencyShortName();
 
-        if($user !== null) {
+        if ($user !== null) {
             $basket = $this->getBasket();
-            if(!empty($basket['sShippingcosts'])) {
+            if (!empty($basket['sShippingcosts'])) {
                 $params['SHIPPINGAMT'] = $this->getShipment();
             }
             $params['AMT'] = $this->getAmount();
         } else {
             $basket = Shopware()->Modules()->Basket()->sGetBasket();
-            if(!empty($basket['sShippingcosts'])) {
+            if (!empty($basket['sShippingcosts'])) {
                 $params['SHIPPINGAMT'] = !empty($basket['sShippingcostsWithTax']) ? $basket['sShippingcostsWithTax']: $basket['sShippingcosts'];
                 $params['SHIPPINGAMT'] = str_replace(',', '.',  $params['SHIPPINGAMT']);
             }
@@ -715,7 +717,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $params['TAXAMT'] = number_format(0, 2, '.', '');
 
         $config = $this->Plugin()->Config();
-        if($config->get('paypalTransferCart') && $params['ITEMAMT'] != '0.00' && count($basket['content']) < 25) {
+        if ($config->get('paypalTransferCart') && $params['ITEMAMT'] != '0.00' && count($basket['content']) < 25) {
             foreach ($basket['content'] as $key => $item) {
                 if (!empty($user['additional']['charge_vat']) && !empty($item['amountWithTax'])) {
                     $amount = round($item['amountWithTax'], 2);
@@ -736,7 +738,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             }
         }
 
-        if($params['ITEMAMT'] == '0.00') {
+        if ($params['ITEMAMT'] == '0.00') {
             $params['ITEMAMT'] = $params['SHIPPINGAMT'];
             $params['SHIPPINGAMT'] = '0.00';
         }
@@ -752,22 +754,22 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
     protected function getCustomerParameter()
     {
         $user = $this->getUser();
-        if(empty($user)) {
+        if (empty($user)) {
             return array(
                 'LOCALECODE' => Shopware()->Shop()->getLocale()->getLocale(),
             );
         }
         $shipping = $user['shippingaddress'];
         $name = $shipping['firstname'] . ' ' . $shipping['lastname'];
-        if(!empty($shipping['company'])) {
+        if (!empty($shipping['company'])) {
             $name = $shipping['company'] . ' - ' . $name;
         }
-        if(!empty($shipping['streetnumber'])) {
+        if (!empty($shipping['streetnumber'])) {
             $shipping['street'] .= ' ' . $shipping['streetnumber'];
         }
-        if(!empty($shipping['additional_address_line1'])) {
+        if (!empty($shipping['additional_address_line1'])) {
             $shipping['street2'] = $shipping['additional_address_line1'];
-            if(!empty($shipping['additional_address_line2'])) {
+            if (!empty($shipping['additional_address_line2'])) {
                 $shipping['street2'] .= ' ' . $shipping['additional_address_line2'];
             }
         } else {
@@ -786,7 +788,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             'SHIPTOPHONENUM' => $user['billingaddress']['phone'],
             'LOCALECODE' => Shopware()->Locale()->getRegion(),
         );
-        if(!empty($user['additional']['stateShipping']['shortcode'])) {
+        if (!empty($user['additional']['stateShipping']['shortcode'])) {
             $customer['SHIPTOSTATE'] = $user['additional']['stateShipping']['shortcode'];
         }
         return $customer;

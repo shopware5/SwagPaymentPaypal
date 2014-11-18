@@ -47,11 +47,11 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         $limit = $this->Request()->getParam('limit', 20);
         $start = $this->Request()->getParam('start', 0);
         $filter = $this->Request()->getParam('filter', false);
-	    
+        
         if ($filter && !empty($filter)) {
-	        $filter = array_pop($filter);
+            $filter = array_pop($filter);
             if ($filter['property'] == 'shopId') {
-	            $subShopFilter = (int) $filter['value'];
+                $subShopFilter = (int) $filter['value'];
             }
         }
 
@@ -164,14 +164,13 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
                 . ' OR o.ordernumber LIKE ' . $search
                 . ' OR u.firstname LIKE ' . $search
                 . ' OR u.lastname LIKE ' . $search
-		        . ' OR b.firstname LIKE ' . $search
+                . ' OR b.firstname LIKE ' . $search
                 . ' OR b.lastname LIKE ' . $search
                 . ' OR b.company LIKE ' . $search
                 . ' OR u.company LIKE ' . $search);
-
         }
 
-        if($subShopFilter) {
+        if ($subShopFilter) {
             $select->where('o.subshopID = ' .  $subShopFilter);
         }
         $rows = Shopware()->Db()->fetchAll($select);
@@ -204,13 +203,11 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         if (empty($shopId)) {
             $shop = $repository->getActiveDefault();
             return $shop->registerResources(Shopware()->Bootstrap());
-
         }
 
         $shop = $repository->getActiveById($shopId);
         if (!$shop) {
             throw new \Exception("Shop {$shopId} not found");
-
         }
         $shop->registerResources(Shopware()->Bootstrap());
     }
@@ -334,7 +331,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             $row['paymentAmount'], array('currency' => $row['paymentCurrency'])
         );
 
-        if(strpos($transactionId, 'O-') === 0) {
+        if (strpos($transactionId, 'O-') === 0) {
             $transactionsData = $client->TransactionSearch(array(
                 'STARTDATE' => $details['ORDERTIME'],
                 'INVNUM' => $details['INVNUM']

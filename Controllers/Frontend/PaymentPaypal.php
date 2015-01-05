@@ -440,11 +440,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             );
         }
 
-        if (empty($params['TOKEN'])) {
-            $params['PAYMENTACTION'] = 'Authorization';
-        } else {
-            $params['PAYMENTACTION'] = $config->get('paypalPaymentAction', 'Sale');
-        }
+        $params['PAYMENTACTION'] = $config->get('paypalPaymentAction', 'Sale');
 
         $params = array_merge($params, $this->getBasketParameter());
         $params = array_merge($params, $this->getCustomerParameter());

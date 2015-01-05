@@ -12,10 +12,12 @@
 
     "changelog": {
         "de": {
+            "3.0.2": "Korrigiert die Payment-Action bei wiederkehrende Zahlungen",
             "3.0.1": "Korrigiert document.body is null",
             "3.0.0": "Allgemeine Verbesserungen; API-Update"
         },
         "en": {
+            "3.0.2": "Fix payment action for reference transaction",
             "3.0.1": "Fixes document.body is null",
             "3.0.0": "General improvements; API update"
         }

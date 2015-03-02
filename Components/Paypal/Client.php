@@ -6,6 +6,8 @@
  * file that was distributed with this source code.
  */
 
+use Shopware_Components_Paypal_RestClient as RestClient;
+
 /**
  * Shopware Paypal Client
  *
@@ -25,43 +27,43 @@
  */
 class Shopware_Components_Paypal_Client extends Zend_Http_Client
 {
-    /**
+	/**
      * The sandbox url.
      *
      * @var string
      */
-    const URL_SANDBOX = 'https://api-3t.sandbox.paypal.com/nvp';
-
-    /**
+	const URL_SANDBOX = 'https://api-3t.sandbox.paypal.com/nvp';
+	
+	/**
      * The live url.
      *
      * @var string
      */
     const URL_LIVE = 'https://api-3t.paypal.com/nvp';
-
+    
     /**
      * @var string
      */
     protected $apiUsername;
-
+    
     /**
      * @var string
      */
     protected $apiPassword;
-
+    
     /**
      * @var string
      */
     protected $apiSignature;
-
+    
     /**
      * @var string
      */
     protected $apiVersion;
-
+    
     /**
      * Constructor method
-     *
+     * 
      * Expects a configuration parameter.
      *
      * @param Enlight_Config $config
@@ -76,21 +78,9 @@ class Shopware_Components_Paypal_Client extends Zend_Http_Client
         $this->apiUsername = $config->get('paypalUsername');
         $this->apiPassword = $config->get('paypalPassword');
         $this->apiSignature = $config->get('paypalSignature');
-        $timeout = $config->get('paypalTimeout', 20);
         $this->apiVersion = $config->get('paypalVersion');
-        parent::__construct($url, array(
-            'useragent' => 'Shopware/' . Shopware()->Config()->version,
-            'timeout' => $timeout,
-        ));
-        if (extension_loaded('curl')) {
-            $adapter = new Zend_Http_Client_Adapter_Curl();
-            if (!empty($config->paypalSandbox)) {
-                $adapter->setCurlOption(CURLOPT_SSL_VERIFYPEER, false);
-                $adapter->setCurlOption(CURLOPT_SSL_VERIFYHOST, false);
-            }
-            $adapter->setCurlOption(CURLOPT_TIMEOUT, $timeout);
-            $this->setAdapter($adapter);
-        }
+        parent::__construct($url);
+        $this->setAdapter(RestClient::createAdapterFromConfig($config));
     }
 
     /**
@@ -112,11 +102,7 @@ class Shopware_Components_Paypal_Client extends Zend_Http_Client
         if (!empty($args[0])) {
             $this->setParameterGet($args[0]);
         }
-        try {
-            $response = $this->request('GET');
-        } catch (Exception $e) {
-            return false;
-        }
+        $response = $this->request('GET');
 
         $body = $response->getBody();
         $params = array();

@@ -6,15 +6,14 @@
  * file that was distributed with this source code.
  */
 
+if(!interface_exists('Enlight\Event\SubscriberInterface')) {
+    require_once __DIR__ . '/LegacyComponents/SubscriberInterface.php';
+}
+
 class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Components_Plugin_Bootstrap
 {
     /**
      * Installs the plugin
-     *
-     * Creates and subscribe the events and hooks
-     * Creates and save the payment row
-     * Creates the payment table
-     * Creates payment menu item
      *
      * @return bool
      */
@@ -27,7 +26,11 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
         $this->createMyTranslations();
         $this->fixOrderMail();
         $this->createMyAttributes();
-        return true;
+
+        return array(
+            'success' => true,
+            'invalidateCache' => array('config', 'backend', 'proxy', 'template', 'theme')
+        );
     }
 
     /**
@@ -35,50 +38,47 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
      */
     public function uninstall()
     {
-        try {
-            $this->Application()->Models()->removeAttribute(
-                's_order_attributes',
-                'swag_payal',
-                'billing_agreement_id'
-            );
-            $this->Application()->Models()->removeAttribute(
-                's_order_attributes',
-                'swag_payal',
-                'express'
-            );
-            $this->Application()->Models()->generateAttributeModels(array(
-                's_order_attributes'
-            ));
-        } catch (Exception $e) {
-        }
+        $this->secureUninstall();
+        $this->removeMyAttributes();
+        return array(
+            'success' => true,
+            'invalidateCache' => array('config', 'backend', 'proxy', 'template', 'theme')
+        );
+    }
 
+    /**
+     * @return bool
+     */
+    public function secureUninstall()
+    {
         return true;
     }
 
     /**
      * @param string $version
-     * @return bool
+     * @return bool|array
      */
     public function update($version)
     {
+        if($version == '0.0.1') {
+            return false;
+        }
         if (strpos($version, '2.0.') === 0) {
             try {
-                $this->Application()->Models()->removeAttribute(
+                $this->get('models')->removeAttribute(
                     's_user_attributes',
                     'swag_payal',
                     'billing_agreement_id'
                 );
-            } catch (Exception $e) {
-            }
+            } catch(Exception $e) { }
             try {
-                $this->Application()->Models()->addAttribute(
+                $this->get('models')->addAttribute(
                     's_order_attributes', 'swag_payal',
                     'billing_agreement_id', 'VARCHAR(255)'
                 );
-            } catch (Exception $e) {
-            }
+            } catch(Exception $e) { }
 
-            $this->Application()->Models()->generateAttributeModels(array(
+            $this->get('models')->generateAttributeModels(array(
                 's_order_attributes', 's_user_attributes'
             ));
             $this->Form()->removeElement('paypalAllowGuestCheckout');
@@ -93,27 +93,46 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
             $this->Form()->removeElement('paypalPaymentActionPending');
             $this->fixPluginDescription();
         }
+        if (version_compare($version, '3.1.0', '<=')) {
+            $this->createMyMenu();
+        }
 
         //Update form
         $this->createMyForm();
         $this->createMyEvents();
-        return true;
+        return array(
+            'success' => true,
+            'invalidateCache' => array('config', 'backend', 'proxy')
+        );
     }
 
-    protected function fixOrderMail()
+    /**
+     * @param string $name
+     * @return mixed
+     */
+    public function get($name)
+    {
+        if(version_compare(Shopware::VERSION, '4.2.0', '<') && Shopware::VERSION != '___VERSION___') {
+            $name = ucfirst($name);
+            return $this->Application()->Bootstrap()->getResource($name);
+        }
+        return parent::get($name);
+    }
+
+    private function fixOrderMail()
     {
         // Make sure, that the additionadescription field is evaluated by smarty
         $sql = <<<'EOD'
-                UPDATE  `s_core_config_mails`
-                SET
-                    content=REPLACE(content, '{$additional.payment.additionaldescription}', '{include file="string:`$additional.payment.additionaldescription`"}'),
-                    contentHTML=REPLACE(contentHTML, '{$additional.payment.additionaldescription}', '{include file="string:`$additional.payment.additionaldescription`"}')
-                WHERE name='sORDER';
+            UPDATE  `s_core_config_mails`
+            SET
+                content=REPLACE(content, '{$additional.payment.additionaldescription}', '{include file="string:`$additional.payment.additionaldescription`"}'),
+                contentHTML=REPLACE(contentHTML, '{$additional.payment.additionaldescription}', '{include file="string:`$additional.payment.additionaldescription`"}')
+            WHERE name='sORDER';
 EOD;
-        Shopware()->Db()->query($sql);
+        $this->get('db')->query($sql);
     }
 
-    protected function fixPluginDescription()
+    private function fixPluginDescription()
     {
         if ($this->Payment() === null) {
             return;
@@ -160,8 +179,14 @@ EOD;
         $payment = $this->Payment();
         if ($payment !== null) {
             $payment->setActive(true);
+            if(version_compare(Shopware::VERSION, '4.4.0', '>=') || Shopware::VERSION == '___VERSION___') {
+                $this->get('models')->flush($payment);
+            }
         }
-        return true;
+        return array(
+            'success' => true,
+            'invalidateCache' => array('config', 'template', 'theme')
+        );
     }
 
     /**
@@ -174,14 +199,20 @@ EOD;
         $payment = $this->Payment();
         if ($payment !== null) {
             $payment->setActive(false);
+            if(version_compare(Shopware::VERSION, '4.4.0', '>=') || Shopware::VERSION == '___VERSION___') {
+                $this->get('models')->flush($payment);
+            }
         }
-        return true;
+        return array(
+            'success' => true,
+            'invalidateCache' => array('config', 'template', 'theme')
+        );
     }
 
     /**
      * Creates and subscribe the events and hooks.
      */
-    protected function createMyEvents()
+    private function createMyEvents()
     {
         $this->subscribeEvent(
             'Enlight_Controller_Dispatcher_ControllerPath_Frontend_PaymentPaypal',
@@ -203,12 +234,22 @@ EOD;
             'Enlight_Bootstrap_InitResource_PaypalClient',
             'onInitResourcePaypalClient'
         );
+
+        $this->subscribeEvent(
+            'Enlight_Bootstrap_InitResource_PaypalRestClient',
+            'onInitResourcePaypalRestClient'
+        );
+
+        $this->subscribeEvent(
+            'Enlight_Controller_Action_PostDispatch_Backend_Index',
+            'onExtendBackendIndex'
+        );
     }
 
     /**
      * Creates and save the payment row.
      */
-    protected function createMyPayment()
+    private function createMyPayment()
     {
         $this->createPayment(array(
             'name' => 'paypal',
@@ -219,7 +260,7 @@ EOD;
             'additionalDescription' => '<!-- PayPal Logo -->' .
                 '<a onclick="window.open(this.href, \'olcwhatispaypal\',\'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=yes, width=400, height=500\'); return false;"' .
                 '    href="https://www.paypal.com/de/cgi-bin/webscr?cmd=xpt/cps/popup/OLCWhatIsPayPal-outside" target="_blank">' .
-                '<img src="{link file="engine/Shopware/Plugins/Default/Frontend/SwagPaymentPaypal/Views/frontend/_resources/images/paypal_logo.png" "fullPath"}" alt="Logo \'PayPal empfohlen\'">' .
+                '<img src="{link file="engine/Shopware/Plugins/Default/Frontend/SwagPaymentPaypal/Views/frontend/_resources/images/paypal_logo.png" fullPath}" alt="Logo \'PayPal empfohlen\'">' .
                 '</a>' . '<!-- PayPal Logo -->' .
                 'Bezahlung per PayPal - einfach, schnell und sicher.'
         ));
@@ -228,14 +269,14 @@ EOD;
     /**
      * Creates and stores a payment item.
      */
-    protected function createMyMenu()
+    private function createMyMenu()
     {
         $parent = $this->Menu()->findOneBy(array('label' => 'Zahlungen'));
         $this->createMenuItem(array(
             'label' => 'PayPal',
             'controller' => 'PaymentPaypal',
             'action' => 'Index',
-            'class' => 'ico2 date2',
+            'class' => 'paypal--icon',
             'active' => 1,
             'parent' => $parent
         ));
@@ -244,7 +285,7 @@ EOD;
     /**
      * Creates and stores the payment config form.
      */
-    protected function createMyForm()
+    private function createMyForm()
     {
         $form = $this->Form();
 
@@ -307,9 +348,78 @@ EOD;
         ));
         $form->setElement('number', 'paypalTimeout', array(
             'label' => 'API-Timeout in Sekunden',
-            'value' => 5,
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+            'emptyText' => 'Default (20 Sekunden)',
+            'value' => null,
+            'scope' => 0
         ));
+        $form->setElement('boolean', 'paypalCurl', array(
+            'label' => '<a href="http://php.net/manual/de/book.curl.php" target="_blank">Curl</a> verwenden (wenn es verfügbar ist)',
+            'value' => true
+        ));
+        $form->setElement('select', 'paypalSslVersion', array(
+            'label' => 'SSL-Version (<a href="http://curl.haxx.se/libcurl/c/CURLOPT_SSLVERSION.html" target="_blank">CURLOPT_SSLVERSION</a>)',
+            'value' => 0,
+            'store' => array(
+                array(0, 'Default (Keine Vorgabe)'),
+                array(1, 'TLSv1'),
+                array(4, 'TLSv1_0 (Available since PHP 5.5.19 and 5.6.3)'),
+                array(5, 'TLSv1_1 (Available since PHP 5.5.19 and 5.6.3)'),
+                array(6, 'TLSv1_2 (Available since PHP 5.5.19 and 5.6.3)'),
+            ),
+            'description' => 'Funktioniert nur zusammen mit Curl',
+        ));
+        $form->setElement('button', 'paypalButtonClientTest', array(
+            'label' => '<strong>Jetzt API testen<strong>',
+            'handler' => "function(btn) {
+                var pnl = btn.up('panel');
+                var url = document.location.pathname + 'paymentPaypal/testClient';
+                var els = pnl.query('[isFormField]'),
+                    vls = {};
+
+                Ext.Array.each(els, function(el, i) {
+                    var v = el.getSubmitValue();
+                    if(v === false) { v = 0; }
+                    if(v === true) { v = 1; }
+                    vls[el.elementName] = v;
+                });
+
+                Ext.Ajax.request({
+                    url: url,
+                    params: vls,
+                    success: function(response){
+                        var data = Ext.decode(response.responseText);
+                        if(data.ACK && data.ACK == 'Success') {
+                            data.ACK = '<span style=\"color: green;font-weight: bold;\">' + data.ACK + '</span>';
+                        }
+                        if(data.ACK && data.ACK != 'Success') {
+                            data.ACK = '<span style=\"color: red;font-weight: bold;\">' + data.ACK + '</span>';
+                        }
+                        if(data.message && data.message == 'OK') {
+                            data.message = '<span style=\"color: green;font-weight: bold;\">' + data.message + '</span>';
+                        }
+                        if(data.message && data.message != 'OK') {
+                            data.message = '<span style=\"color: red;font-weight: bold;\">' + data.message + '</span>';
+                        }
+                        var title = '<span style=\"font-weight: bold;\">' + btn.text + '</span>';
+                        var text = '';
+                        Ext.iterate(data, function(key, value) {
+                            text += '<strong>' + key + ':</strong> ' + value + '<br>';
+                        });
+                        Shopware.Notification.createStickyGrowlMessage({
+                            title : title,
+                            text  : text,
+                            width : 440,
+                            log   : false,
+                            btnDetail: {
+                                link: 'http://wiki.shopware.com/PayPal_detail_984.html'
+                            }
+                        });
+                    }
+                });
+
+            }"
+        ));
+
         $form->setElement('boolean', 'paypalErrorMode', array(
             'label' => 'Fehlermeldungen ausgeben',
             'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
@@ -320,14 +430,18 @@ EOD;
             'label' => 'Alternativer Shop-Name auf der PayPal-Seite',
             'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
         ));
+        $form->setElement('text', 'paypalLocaleCode', array(
+            'label' => 'Alternative Sprache (<a href="https://developer.paypal.com/docs/classic/express-checkout/integration-guide/ECCustomizing/" target="_blank">LocaleCode</a>)',
+            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+        ));
         $form->setElement('media', 'paypalLogoImage', array(
             'label' => 'Shop-Logo auf der PayPal-Seite',
             'value' => 'frontend/_resources/images/logo.jpg',
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
         ));
         $form->setElement('media', 'paypalHeaderImage', array(
             'label' => 'Header-Logo auf der PayPal-Seite',
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
         ));
         $form->setElement('color', 'paypalCartBorderColor', array(
             'label' => 'Farbe des Warenkorbs auf der PayPal-Seite',
@@ -339,11 +453,6 @@ EOD;
         $form->setElement('boolean', 'paypalFrontendLogo', array(
             'label' => 'Payment-Logo im Frontend ausgeben',
             'value' => true,
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
-        ));
-        $form->setElement('text', 'paypalFrontendLogoBlock', array(
-            'label' => 'Template-Block für das Payment-Logo',
-            'value' => 'frontend_index_left_campaigns_bottom',
             'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
         ));
 
@@ -367,6 +476,12 @@ EOD;
             'label' => '„Login mit PayPal“ aktivieren',
             'description' => 'Achtung: Für diese Funktion müssen Sie erst die Daten für die REST-API hinterlegen.',
             'value' => false,
+            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+        ));
+        $form->setElement('boolean', 'paypalLogInApi', array(
+            'label' => 'API für „Login mit PayPal“ einbinden',
+            'description' => 'Vor PayPal 3.1 musste die API manuell ins Template eingebunden werden.',
+            'value' => true,
             'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
         ));
         $form->setElement('boolean', 'paypalFinishRegister', array(
@@ -394,13 +509,8 @@ EOD;
             'value' => true,
             'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
         ));
-        //$form->setElement('boolean', 'paypalAddressOverride', array(
-        //    'label' => 'Lieferadresse in PayPal ändern erlauben',
-        //    'value' => false,
-        //    'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
-        //));
         $form->setElement('select', 'paypalStatusId', array(
-            'label' => 'Zahlstatus nach der kompletter Zahlung',
+            'label' => 'Zahlungsstatus nach der kompletten Zahlung',
             'value' => 12,
             'store' => 'base.PaymentStatus',
             'displayField' => 'description',
@@ -408,16 +518,11 @@ EOD;
             'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
         ));
         $form->setElement('select', 'paypalPendingStatusId', array(
-            'label' => 'Zahlstatus nach der Autorisierung',
+            'label' => 'Zahlungsstatus nach der Autorisierung',
             'value' => 18,
             'store' => 'base.PaymentStatus',
             'displayField' => 'description',
             'valueField' => 'id',
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
-        ));
-        $form->setElement('boolean', 'paypalStatusMail', array(
-            'label' => 'eMail bei Zahlstatus-Änderung verschicken',
-            'value' => false,
             'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
         ));
         $form->setElement('boolean', 'paypalSendInvoiceId', array(
@@ -435,10 +540,7 @@ EOD;
         ));
     }
 
-    /**
-     *
-     */
-    public function createMyTranslations()
+    private function createMyTranslations()
     {
         $form = $this->Form();
         $translations = array(
@@ -452,14 +554,12 @@ EOD;
                 'paypalLogoImage' => 'Shop image for PayPal',
                 'paypalCartBorderColor' => 'Color of the basket on PayPal',
                 'paypalFrontendLogo' => 'Show payment logo on frontend',
-                'paypalFrontendLogoBlock' => 'Template block for the frontend logo',
                 'paypalBillingAgreement' => 'Billing agreement / Activate "Buy it now"',
                 'paypalTransferCart' => 'Transfer basket to PayPal',
                 'paypalExpressButton' => 'Show express-purchase button in basket',
                 'paypalExpressButtonLayer' => 'Show express-purchase button in modal box',
                 'paypalStatusId' => 'Payment state after completing the payment',
                 'paypalPendingStatusId' => 'Payment state after being authorized',
-                'paypalStatusMail' => 'Send mail on payment state change',
                 'paypalSendInvoiceId' => 'Transfer invoice id to paypal',
                 'paypalPrefixInvoiceId' => 'Add shop prefix to the invoice id'
             )
@@ -485,172 +585,111 @@ EOD;
         }
     }
 
-    /**
-     *
-     */
-    public function createMyAttributes()
+    private function createMyAttributes()
     {
         try {
-            $this->Application()->Models()->addAttribute(
+            $this->get('models')->addAttribute(
                 's_order_attributes', 'swag_payal',
                 'billing_agreement_id', 'VARCHAR(255)'
             );
-        } catch (Exception $e) {
-        }
+        } catch(Exception $e) { }
         try {
-            $this->Application()->Models()->addAttribute(
+            $this->get('models')->addAttribute(
                 's_order_attributes', 'swag_payal',
                 'express', 'boolean'
             );
-        } catch (Exception $e) {
-        }
+        } catch(Exception $e) { }
 
-        $this->Application()->Models()->generateAttributeModels(array(
+        $this->get('models')->generateAttributeModels(array(
             's_order_attributes'
         ));
     }
 
-    /**
-     *
-     */
-    protected function registerMyTemplateDir()
+    private function removeMyAttributes()
     {
-        $this->Application()->Template()->addTemplateDir(
-            $this->Path() . 'Views/', 'paypal'
-        );
+        /** @var $modelManager \Shopware\Components\Model\ModelManager */
+        $modelManager = $this->get('models');
+        try {
+            $modelManager->removeAttribute(
+                's_order_attributes',
+                'swag_payal',
+                'billing_agreement_id'
+            );
+            $modelManager->removeAttribute(
+                's_order_attributes',
+                'swag_payal',
+                'express'
+            );
+            $modelManager->generateAttributeModels(array(
+                's_order_attributes'
+            ));
+        } catch(Exception $e) { }
+    }
+
+    /**
+     * @param bool $next
+     */
+    public function registerMyTemplateDir($next = false)
+    {
+        if($next) {
+            $this->get('template')->addTemplateDir(
+                __DIR__ . '/Views/next/', 'paypal_next'
+            );
+        } else {
+            $this->get('template')->addTemplateDir(
+                __DIR__ . '/Views/', 'paypal'
+            );
+        }
     }
 
     /**
      * Returns the path to a frontend controller for an event.
      *
-     * @param Enlight_Event_EventArgs $args
      * @return string
      */
-    public function onGetControllerPathFrontend(Enlight_Event_EventArgs $args)
+    public function onGetControllerPathFrontend()
     {
-        $this->registerMyTemplateDir();
-        return $this->Path() . 'Controllers/Frontend/PaymentPaypal.php';
+        return __DIR__ . '/Controllers/Frontend/PaymentPaypal.php';
     }
 
     /**
      * Returns the path to a backend controller for an event.
      *
-     * @param Enlight_Event_EventArgs $args
      * @return string
      */
-    public function onGetControllerPathBackend(Enlight_Event_EventArgs $args)
+    public function onGetControllerPathBackend()
     {
         $this->registerMyTemplateDir();
         $this->Application()->Snippets()->addConfigDir(
-            $this->Path() . 'Snippets/'
+            __DIR__ . '/Snippets/'
         );
-        return $this->Path() . 'Controllers/Backend/PaymentPaypal.php';
+        return __DIR__ . '/Controllers/Backend/PaymentPaypal.php';
     }
 
     /**
-     * @return string
-     */
-    public function getLocale()
-    {
-        $locale = $this->Application()->Locale()->toString();
-        if (strpos($locale, 'de_') === 0) {
-            $locale = 'de_DE';
-        }
-        return $locale;
-    }
-
-    /**
-     * Returns the path to a backend controller for an event.
-     *
      * @param Enlight_Event_EventArgs $args
      */
     public function onPostDispatch(Enlight_Event_EventArgs $args)
     {
-        /** @var $action Enlight_Controller_Action */
-        $action = $args->getSubject();
-        $request = $action->Request();
-        $response = $action->Response();
-        $view = $action->View();
-
-        if (!$request->isDispatched()
-            || $response->isException()
-            || $request->getModuleName() != 'frontend'
-        ) {
-            return;
+        static $subscriber;
+        if(!isset($subscriber)) {
+            require_once __DIR__ . '/Subscriber/Frontend.php';
+            $subscriber = new \Shopware\SwagPaymentPaypal\Subscriber\Frontend($this);
         }
+        $subscriber->onPostDispatch($args);
+    }
 
-        if ($request->getControllerName() == 'checkout' || $request->getControllerName() == 'account') {
-            $this->registerMyTemplateDir();
+    /**
+     * @param Enlight_Controller_ActionEventArgs $args
+     */
+    public function onExtendBackendIndex(Enlight_Controller_ActionEventArgs $args)
+    {
+        static $subscriber;
+        if(!isset($subscriber)) {
+            require_once __DIR__ . '/Subscriber/BackendIndex.php';
+            $subscriber = new \Shopware\SwagPaymentPaypal\Subscriber\BackendIndex($this);
         }
-
-        $config = $this->Config();
-        if ($view->hasTemplate() && !empty($config->paypalFrontendLogo)) {
-            $this->registerMyTemplateDir();
-            $view->extendsBlock(
-                $config->paypalFrontendLogoBlock,
-                '{include file="frontend/payment_paypal/logo.tpl"}' . "\n",
-                'append'
-            );
-        }
-
-        if (!empty($config->paypalExpressButtonLayer)
-            && $request->getControllerName() == 'checkout' && $request->getActionName() == 'ajax_add_article') {
-            $view->PaypalShowButton = true;
-            $view->PaypalLocale = $this->getLocale();
-            $view->extendsBlock(
-                'frontend_checkout_ajax_add_article_action_buttons',
-                '{include file="frontend/payment_paypal/layer.tpl"}' . "\n",
-                'prepend'
-            );
-        }
-
-        if (!empty($config->paypalExpressButton)
-          && $request->getControllerName() == 'checkout' && $request->getActionName() == 'cart') {
-            $view->PaypalShowButton = true;
-            $view->PaypalLocale = $this->getLocale();
-            $view->extendsBlock(
-                'frontend_checkout_actions_confirm',
-                '{include file="frontend/payment_paypal/express.tpl"}' . "\n",
-                'prepend'
-            );
-        }
-
-        if (!empty($config->paypalLogIn)
-          && $request->getControllerName() == 'account' && $request->getActionName() == 'ajax_login') {
-            $view->PaypalShowButton = true;
-            $view->PaypalLocale = $this->getLocale();
-            $view->PaypalClientId = $this->Config()->get('paypalClientId');
-            $view->PaypalSandbox = $this->Config()->get('paypalSandbox');
-            $view->PaypalSeamlessCheckout = $this->Config()->get('paypalSeamlessCheckout');
-            $view->extendsTemplate('frontend/payment_paypal/ajax_login.tpl');
-        }
-
-        if ($view->hasTemplate() && isset($view->PaypalShowButton)) {
-            $showButton = false;
-            $admin = Shopware()->Modules()->Admin();
-            $payments = isset($view->sPayments) ? $view->sPayments : $admin->sGetPaymentMeans();
-            foreach ($payments as $payment) {
-                if ($payment['name'] == 'paypal') {
-                    $showButton = true;
-                    break;
-                }
-            }
-            $view->PaypalShowButton = $showButton;
-        }
-
-        if (Shopware()->Modules()->Admin()->sCheckUser()) {
-            $view->PaypalShowButton = false;
-        }
-
-        if ($view->hasTemplate()) {
-            $this->registerMyTemplateDir();
-            $view->extendsTemplate('frontend/payment_paypal/header.tpl');
-        }
-
-        if ($request->getControllerName() == 'checkout' && $request->getActionName() == 'confirm'
-          && !empty(Shopware()->Session()->PaypalResponse)) {
-            $view->sRegisterFinished = false;
-        }
+        $subscriber->onPostDispatchBackendIndex($args);
     }
 
     /**
@@ -696,14 +735,14 @@ EOD;
         $sql = '
             SELECT id FROM s_order WHERE transactionID=? AND status!=-1
         ';
-        $orderId = Shopware()->Db()->fetchOne($sql, array(
+        $orderId = $this->get('db')->fetchOne($sql, array(
             $transactionId
         ));
         $order = Shopware()->Modules()->Order();
         $order->setPaymentStatus($orderId, $paymentStatusId, false, $note);
         if ($paymentStatusId == 21) {
-            $sql = 'UPDATE  `s_order` SET internalcomment = CONCAT( internalcomment, :pStatus) WHERE transactionID = :transactionId';
-            Shopware()->Db()->query($sql, array(
+            $sql = 'UPDATE  s_order SET internalcomment = CONCAT(internalcomment, :pStatus) WHERE transactionID = :transactionId';
+            $this->get('db')->query($sql, array(
                 'pStatus' => "\nPayPal Status: " . $paymentStatus,
                 'transactionId' => $transactionId
             ));
@@ -714,19 +753,36 @@ EOD;
                 WHERE transactionID=?
                 AND cleareddate IS NULL LIMIT 1
             ';
-            Shopware()->Db()->query($sql, array(
+            $this->get('db')->query($sql, array(
                 $transactionId
             ));
         }
     }
 
     /**
-     *
-     * @return array
+     * @param bool $short
+     * @return string
+     */
+    public function getLocaleCode($short = false)
+    {
+        $locale = $this->Config()->get('paypalLocaleCode');
+        if(empty($locale)) {
+            $locale = $this->get('locale')->toString();
+            $locale = $locale == 'de_CH' ? 'de_DE' : $locale;
+            list($l, $c) = explode('_', $locale);
+            if($short && $c !== null) {
+                $locale = $c;
+            }
+        }
+        return $locale;
+    }
+
+    /**
+     * @return string
      */
     public function getLabel()
     {
-        return 'PayPal Payment';
+        return 'PayPal';
     }
 
     /**
@@ -737,7 +793,7 @@ EOD;
      */
     public function getVersion()
     {
-        $info = json_decode(file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'plugin.json'), true);
+        $info = json_decode(file_get_contents(__DIR__ . '/plugin.json'), true);
         if ($info) {
             return $info['currentVersion'];
         } else {
@@ -753,7 +809,7 @@ EOD;
         return array(
             'version' => $this->getVersion(),
             'label' => $this->getLabel(),
-            'description' => file_get_contents($this->Path() . 'info.txt')
+            'description' => file_get_contents(__DIR__ . '/info.txt')
         );
     }
 
@@ -765,11 +821,22 @@ EOD;
      */
     public function onInitResourcePaypalClient(Enlight_Event_EventArgs $args)
     {
-        $this->Application()->Loader()->registerNamespace(
-            'Shopware_Components_Paypal',
-            $this->Path() . 'Components/Paypal/'
-        );
+        require_once __DIR__ . '/Components/Paypal/RestClient.php';
+        require_once __DIR__ . '/Components/Paypal/Client.php';
         $client = new Shopware_Components_Paypal_Client($this->Config());
+        return $client;
+    }
+
+    /**
+     * Creates and returns the paypal rest client for an event.
+     *
+     * @param Enlight_Event_EventArgs $args
+     * @return \Shopware_Components_Paypal_Client
+     */
+    public function onInitResourcePaypalRestClient(Enlight_Event_EventArgs $args)
+    {
+        require_once __DIR__ . '/Components/Paypal/RestClient.php';
+        $client = new Shopware_Components_Paypal_RestClient($this->Config());
         return $client;
     }
 }

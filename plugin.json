@@ -1,17 +1,22 @@
 {
     "label": {
-        "de": "Paypal",
-        "en": "Paypal"
+        "de": "PayPal",
+        "en": "PayPal"
     },
-    "copyright": "(c) by Shopware AG",
-    "license": "proprietary",
+    "copyright": "(c) by shopware AG",
+    "license": "MIT",
     "link": "http://store.shopware.com",
-    "author": "Shopware AG",
+    "author": "shopware AG",
 
-    "currentVersion": "3.0.2",
+    "currentVersion": "3.1.0",
 
     "changelog": {
         "de": {
+            "3.1.0": "„Login mit PayPal“ kann nun verwendet werden",
+            "3.0.6": "Icon im Backend-Module hinzugefügt ",
+            "3.0.5": "„Jetzt API testen“ in der Konfigurationsmaske",
+            "3.0.4": "SSL-Version kann jetzt bestimmt werden / Curl kann jetzt deaktiviert werden",
+            "3.0.3": "Vorgabe für API-Timeout auf 20 Sekunden erhöht",
             "3.0.2": "Korrigiert die Payment-Action bei wiederkehrende Zahlungen",
             "3.0.1": "Korrigiert document.body is null",
             "3.0.0": "Allgemeine Verbesserungen; API-Update"
@@ -24,7 +29,7 @@
     },
 
     "compatibility": {
-        "minimumVersion": "4.0.6",
+        "minimumVersion": "4.1.0",
         "maximumVersion": null,
         "blacklist": [
         ]

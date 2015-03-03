@@ -6,6 +6,9 @@
  * file that was distributed with this source code.
  */
 
+use Shopware_Components_Paypal_RestClient as RestClient;
+use Shopware_Components_Paypal_Client as Client;
+
 class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Backend_ExtJs
 {
     /**
@@ -19,10 +22,11 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         $start = $this->Request()->getParam('start', 0);
         $filter = $this->Request()->getParam('filter', false);
 
+        $subShopFilter = null;
         if ($filter && !empty($filter)) {
             $filter = array_pop($filter);
             if ($filter['property'] == 'shopId') {
-                $subShopFilter = (int) $filter['value'];
+                $subShopFilter = (int)$filter['value'];
             }
         }
 
@@ -42,86 +46,86 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         $select = Shopware()->Db()
             ->select()
             ->from(array('o' => 's_order'), array(
-            new Zend_Db_Expr('SQL_CALC_FOUND_ROWS o.id'),
-            'clearedId' => 'cleared',
-            'statusId' => 'status',
-            'amount' => 'invoice_amount', 'currency',
-            'orderDate' => 'ordertime', 'orderNumber' => 'ordernumber', 'shopId' => 'subshopID',
-            'transactionId',
-            'comment' => 'customercomment',
-            'clearedDate' => 'cleareddate',
-            'trackingId' => 'trackingcode',
-            'customerId' => 'u.userID',
-            'invoiceId' => new Zend_Db_Expr('(' . Shopware()->Db()
-                ->select()
-                ->from(array('s_order_documents'), array('ID'))
-                ->where('orderID=o.id')
-                ->order('ID DESC')
-                ->limit(1) . ')'),
-            'invoiceHash' => new Zend_Db_Expr('(' . Shopware()->Db()
-                ->select()
-                ->from(array('s_order_documents'), array('hash'))
-                ->where('orderID=o.id')
-                ->order('ID DESC')
-                ->limit(1) . ')')
-        ))
+                new Zend_Db_Expr('SQL_CALC_FOUND_ROWS o.id'),
+                'clearedId' => 'cleared',
+                'statusId' => 'status',
+                'amount' => 'invoice_amount', 'currency',
+                'orderDate' => 'ordertime', 'orderNumber' => 'ordernumber', 'shopId' => 'subshopID',
+                'transactionId',
+                'comment' => 'customercomment',
+                'clearedDate' => 'cleareddate',
+                'trackingId' => 'trackingcode',
+                'customerId' => 'u.userID',
+                'invoiceId' => new Zend_Db_Expr('(' . Shopware()->Db()
+                        ->select()
+                        ->from(array('s_order_documents'), array('ID'))
+                        ->where('orderID=o.id')
+                        ->order('ID DESC')
+                        ->limit(1) . ')'),
+                'invoiceHash' => new Zend_Db_Expr('(' . Shopware()->Db()
+                        ->select()
+                        ->from(array('s_order_documents'), array('hash'))
+                        ->where('orderID=o.id')
+                        ->order('ID DESC')
+                        ->limit(1) . ')')
+            ))
             ->joinLeft(
                 array('shops' => 's_core_shops'),
                 'shops.id =  o.subshopID',
                 array(
                     'shopName' => 'shops.name'
                 )
-        )
+            )
             ->join(
-            array('p' => 's_core_paymentmeans'),
-            'p.id =  o.paymentID',
-            array(
-                'paymentDescription' => 'p.description'
+                array('p' => 's_core_paymentmeans'),
+                'p.id =  o.paymentID',
+                array(
+                    'paymentDescription' => 'p.description'
+                )
             )
-        )
             ->joinLeft(
-            array('so' => 's_core_states'),
-            'so.id =  o.status',
-            array(
-                'statusDescription' => 'so.description'
+                array('so' => 's_core_states'),
+                'so.id =  o.status',
+                array(
+                    'statusDescription' => 'so.description'
+                )
             )
-        )
             ->joinLeft(
-            array('oa' => 's_order_attributes'),
-            'o.id =  oa.orderID',
-            array(
-                'express' => 'oa.swag_payal_express'
+                array('oa' => 's_order_attributes'),
+                'o.id =  oa.orderID',
+                array(
+                    'express' => 'oa.swag_payal_express'
+                )
             )
-        )
             ->joinLeft(
-            array('sc' => 's_core_states'),
-            'sc.id =  o.cleared',
-            array(
-                'clearedDescription' => 'sc.description'
+                array('sc' => 's_core_states'),
+                'sc.id =  o.cleared',
+                array(
+                    'clearedDescription' => 'sc.description'
+                )
             )
-        )
             ->joinLeft(
-            array('u' => 's_user_billingaddress'),
-            'u.userID = o.userID',
-            array()
-        )
+                array('u' => 's_user_billingaddress'),
+                'u.userID = o.userID',
+                array()
+            )
             ->joinLeft(
-            array('b' => 's_order_billingaddress'),
-            'b.orderID = o.id',
-            new Zend_Db_Expr("
+                array('b' => 's_order_billingaddress'),
+                'b.orderID = o.id',
+                new Zend_Db_Expr("
 					IF(b.id IS NULL,
 						IF(u.company='', CONCAT(u.firstname, ' ', u.lastname), u.company),
 						IF(b.company='', CONCAT(b.firstname, ' ', b.lastname), b.company)
 					) as customer
 				")
-        )
-            ->joinLeft(
-            array('d' => 's_premium_dispatch'),
-            'd.id = o.dispatchID',
-            array(
-                'dispatchDescription' => 'd.name'
             )
-        )
+            ->joinLeft(
+                array('d' => 's_premium_dispatch'),
+                'd.id = o.dispatchID',
+                array(
+                    'dispatchDescription' => 'd.name'
+                )
+            )
             ->where('p.name LIKE ?', 'paypal')
             ->where('o.status >= 0')
             ->order(array($property . ' ' . $direction))
@@ -142,7 +146,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         }
 
         if ($subShopFilter) {
-            $select->where('o.subshopID = ' .  $subShopFilter);
+            $select->where('o.subshopID = ' . $subShopFilter);
         }
         $rows = Shopware()->Db()->fetchAll($select);
         $total = Shopware()->Db()->fetchOne('SELECT FOUND_ROWS()');
@@ -210,7 +214,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
      */
     public function getBalanceAction()
     {
-        $shopId = (int) $this->Request()->getParam('shopId', null);
+        $shopId = (int)$this->Request()->getParam('shopId', null);
         $this->registerShopByShopId($shopId);
 
         $client = $this->Plugin()->Client();
@@ -272,7 +276,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         $row = array(
             'accountEmail' => $details['EMAIL'],
             'accountName' =>
-            (isset($details['PAYERBUSINESS']) ? $details['PAYERBUSINESS'] . ' - ' : '') .
+                (isset($details['PAYERBUSINESS']) ? $details['PAYERBUSINESS'] . ' - ' : '') .
                 $details['FIRSTNAME'] . ' ' . $details['LASTNAME'] .
                 ' (' . $details['COUNTRYCODE'] . ')',
             'accountStatus' => $details['PAYERSTATUS'],
@@ -341,7 +345,6 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         $this->View()->assign(array('success' => true, 'data' => array($row)));
     }
 
-
     /**
      * Do payment action
      */
@@ -372,7 +375,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
                 // Set prefixed invoice id - Remove special chars and spaces
                 $prefix = str_replace(' ', '', $prefix);
                 $prefix = preg_replace('/[^A-Za-z0-9\-]/', '', $prefix);
-                $invoiceId = $prefix.$orderNumber;
+                $invoiceId = $prefix . $orderNumber;
             } else {
                 $invoiceId = $orderNumber;
             }
@@ -447,7 +450,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             if ($result['ACK'] != 'Success') {
                 throw new Exception(
                     '[' . $result['L_SEVERITYCODE0'] . '] ' .
-                        $result['L_SHORTMESSAGE0'] . " " . $result['L_LONGMESSAGE0'] . "<br>\n"
+                    $result['L_SHORTMESSAGE0'] . " " . $result['L_LONGMESSAGE0'] . "<br>\n"
                 );
             }
 
@@ -500,5 +503,55 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         $document = "string:{link file='backend/_resources/$document' fullPath}";
         $document = $this->View()->fetch($document);
         $this->redirect($document);
+    }
+
+    public function testClientAction()
+    {
+        $this->Plugin()->Client();
+
+        $config = $this->Request()->getParams();
+        $config = new \Enlight_Config($config, true);
+
+        // Test timeout
+        $timeout = (($config->get('paypalTimeout') ?: 20) * 0.25);
+        $config->set('paypalTimeout', $timeout);
+
+        /** @var Zend_Http_Client|Client|RestClient $client */
+        $client = null;
+
+        try {
+            $client = new Client($config, true);
+            $data = $client->getBalance();
+            for ($i = 0; isset($data['L_AMT' . $i]); $i++) {
+                unset($data['L_AMT' . $i], $data['L_CURRENCYCODE' . $i]);
+            }
+
+            if ($config->get('paypalClientId', false) && $data['ACK'] == 'Success') {
+                $client = new RestClient($config);
+                $data = $client->setAuthToken();
+                $data = array('ACK' => 'Success') + $data;
+                if (isset($data['access_token'])) {
+                    $data['access_token'] = preg_replace('/[A-Z]/', '#', $data['access_token']);
+                }
+                unset($data['expires_in']);
+            }
+        } catch (Exception $e) {
+            $data = array(
+                'code' => $e->getCode(),
+                'message' => $e->getMessage()
+            );
+        }
+
+        $data['shopware_version'] = Shopware::VERSION;
+        $data['php_version'] = phpversion();
+        if(function_exists('curl_version')) {
+            $curlVersion = curl_version();
+            $data['curl_version'] = $curlVersion['version'];
+            $data['system_host'] = $curlVersion['host'];
+            $data['ssl_version'] = $curlVersion['ssl_version'];
+            $data['libz_version'] = $curlVersion['libz_version'];
+        }
+
+        $this->View()->assign($data);
     }
 }

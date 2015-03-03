@@ -19,10 +19,9 @@
 }
 #paypal_login_button {
     position: absolute;
-    top: 158px;
-    left: 164px;
+    top: 168px;
+    left: 170px;
 }
-
 .paypal_button_delimiter {
     font-weight: bold;
     line-height: 40px;

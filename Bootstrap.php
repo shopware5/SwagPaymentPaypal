@@ -431,7 +431,8 @@ EOD;
             'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
         ));
         $form->setElement('text', 'paypalLocaleCode', array(
-            'label' => 'Alternative Sprache (<a href="https://developer.paypal.com/docs/classic/express-checkout/integration-guide/ECCustomizing/" target="_blank">LocaleCode</a>)',
+            'label' => 'Alternative Sprache (LocaleCode)',
+            'emptyText' => 'Beispiel: de_DE',
             'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
         ));
         $form->setElement('media', 'paypalLogoImage', array(

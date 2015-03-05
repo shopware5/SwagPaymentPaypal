@@ -12,16 +12,13 @@
 
     "changelog": {
         "de": {
-            "3.1.0": "„Login mit PayPal“ kann nun verwendet werden",
-            "3.0.6": "Icon im Backend-Module hinzugefügt ",
-            "3.0.5": "„Jetzt API testen“ in der Konfigurationsmaske",
-            "3.0.4": "SSL-Version kann jetzt bestimmt werden / Curl kann jetzt deaktiviert werden",
-            "3.0.3": "Vorgabe für API-Timeout auf 20 Sekunden erhöht",
+            "3.1.0": "PT-2768 - Feature: “Login mit PayPal“ kann nun verwendet werden; PT-2768 - Feature: “Jetzt API testen“ in der Pluginkonfiguration; PT-2768 - Feature: SSL-Version kann jetzt bestimmt werden; PT-2768 - Feature: Curl kann jetzt deaktiviert werden; PT-2768 - Bugfix: Vorgabe für API-Timeout auf 20 Sekunden erhöht; PT-2768 - Bugfix: Icon im Backend-Module hinzugefügt;",
             "3.0.2": "Korrigiert die Payment-Action bei wiederkehrende Zahlungen",
             "3.0.1": "Korrigiert document.body is null",
             "3.0.0": "Allgemeine Verbesserungen; API-Update"
         },
         "en": {
+            "3.1.0": "PT-2768 - Feature: possibility to use “Login with PayPal“ now; PT-2768 - Feature: “Test API now“ in the plugin config; PT-2768 - Feature: possibility to identify SSL version; PT-2768 - Feature: possibility to disable curl; PT-2768 - Bugfix: increase API timeout default to 20 seconds; PT-2768 - Bugfix: added icon to the backend module;",
             "3.0.2": "Fix payment action for reference transaction",
             "3.0.1": "Fixes document.body is null",
             "3.0.0": "General improvements; API update"

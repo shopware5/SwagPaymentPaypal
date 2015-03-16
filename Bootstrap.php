@@ -326,11 +326,13 @@ EOD;
         ));
         $form->setElement('text', 'paypalClientId', array(
             'label' => 'REST-API Client ID',
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+            'stripCharsRe' => ' '
         ));
         $form->setElement('text', 'paypalSecret', array(
             'label' => 'REST-API Secret',
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+            'stripCharsRe' => ' '
         ));
         $form->setElement('button', 'paypalButtonRestApi', array(
             'label' => '<strong>Jetzt Daten für REST-API erhalten</strong>',
@@ -370,10 +372,7 @@ EOD;
         if(is_file(__DIR__ . '/Views/backend/plugins/paypal/test.js')) {
             $form->setElement('button', 'paypalButtonClientTest', array(
                 'label' => '<strong>Jetzt API testen<strong>',
-                'handler' => "function(btn) {
-            " . file_get_contents(__DIR__ . '/Views/backend/plugins/paypal/test.js') . "
-                });
-            }"
+                'handler' => "function(btn) {" . file_get_contents(__DIR__ . '/Views/backend/plugins/paypal/test.js') . "}"
             ));
         }
 

@@ -8,10 +8,11 @@
     "link": "http://store.shopware.com",
     "author": "shopware AG",
 
-    "currentVersion": "3.1.0",
+    "currentVersion": "3.1.1",
 
     "changelog": {
         "de": {
+            "3.1.1": "PT-2833 - Bugfix: Add force secure for paypal lip; PT-2833 - Bugfix: Fix locale for austria",
             "3.1.0": "PT-2768 - Feature: “Login mit PayPal“ kann nun verwendet werden; PT-2768 - Feature: “Jetzt API testen“ in der Pluginkonfiguration; PT-2768 - Feature: SSL-Version kann jetzt bestimmt werden; PT-2768 - Feature: Curl kann jetzt deaktiviert werden; PT-2768 - Bugfix: Vorgabe für API-Timeout auf 20 Sekunden erhöht; PT-2768 - Bugfix: Icon im Backend-Module hinzugefügt;",
             "3.0.2": "Korrigiert die Payment-Action bei wiederkehrende Zahlungen",
             "3.0.1": "Korrigiert document.body is null",

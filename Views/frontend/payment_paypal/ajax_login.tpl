@@ -4,17 +4,19 @@
 </div>
 
 <script>
-    paypal.use( ["login"], function(login) {
-        var r = login.render ({
+if (paypal) {
+    paypal.use(["login"], function (login) {
+        var r = login.render({
             "appid": "{$PaypalClientId}",
-{if $PaypalSandbox}
+            {if $PaypalSandbox}
             "authend": "sandbox",
-{/if}
+            {/if}
             "scopes": "openid profile email address phone https://uri.paypal.com/services/paypalattributes{if $PaypalSeamlessCheckout} https://uri.paypal.com/services/expresscheckout{/if}",
             "containerid": "paypal_login_button",
             "locale": "{$PaypalLocale|replace:'_':'-'|strtolower}",
-            "returnurl": "{url controller=payment_paypal action=login}"
+            "returnurl": "{url controller=payment_paypal action=login forceSecure}"
         });
     });
+}
 </script>
 {/block}

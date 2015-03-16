@@ -171,13 +171,15 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
      * @param $shopId
      * @throws Exception
      */
-    public function registerShopByShopId($shopId)
+    private function registerShopByShopId($shopId)
     {
+        /** @var Shopware\Models\Shop\Repository $repository */
         $repository = Shopware()->Models()->getRepository('Shopware\Models\Shop\Shop');
 
         if (empty($shopId)) {
             $shop = $repository->getActiveDefault();
-            return $shop->registerResources(Shopware()->Bootstrap());
+            $shop->registerResources(Shopware()->Bootstrap());
+            return;
         }
 
         $shop = $repository->getActiveById($shopId);
@@ -505,6 +507,15 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         $this->redirect($document);
     }
 
+    private function formatErrorMessage($data)
+    {
+        return sprintf(
+            "An error occured: %s: %s - %s",
+            $data['L_ERRORCODE0'],
+            $data['L_SHORTMESSAGE0'],
+            $data['L_LONGMESSAGE0']);
+    }
+
     public function testClientAction()
     {
         $this->Plugin()->Client();
@@ -525,6 +536,13 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             for ($i = 0; isset($data['L_AMT' . $i]); $i++) {
                 unset($data['L_AMT' . $i], $data['L_CURRENCYCODE' . $i]);
             }
+            unset($data['VERSION']);
+
+            if(isset($data['L_ERRORCODE0'])) {
+                $data['code'] = $data['L_ERRORCODE0'];
+                $data['message'] = $this->formatErrorMessage($data);
+                unset($data['L_ERRORCODE0'], $data['L_SHORTMESSAGE0'], $data['L_LONGMESSAGE0'], $data['L_SEVERITYCODE0']);
+            }
 
             if ($config->get('paypalClientId', false) && $data['ACK'] == 'Success') {
                 $client = new RestClient($config);
@@ -544,7 +562,8 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
 
         $data['shopware_version'] = Shopware::VERSION;
         $data['php_version'] = phpversion();
-        if(function_exists('curl_version')) {
+
+        if($config->get('paypalCurl', true) && function_exists('curl_version')) {
             $curlVersion = curl_version();
             $data['curl_version'] = $curlVersion['version'];
             $data['system_host'] = $curlVersion['host'];

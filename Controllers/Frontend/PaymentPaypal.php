@@ -17,19 +17,18 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
      * @var Enlight_Components_Session_Namespace
      */
     private $session;
-    
+
     /**
-     *
+     * {@inheritdoc}
      */
     public function init()
     {
-        $this->plugin = Shopware()->Plugins()->Frontend()->SwagPaymentPaypal();
-        $this->session = Shopware()->Session();
+        $this->plugin = $this->get('plugins')->Frontend()->SwagPaymentPaypal();
+        $this->session = $this->get('session');
     }
 
     /**
-     * @param string $name
-     * @return mixed
+     * {@inheritdoc}
      */
     public function get($name)
     {
@@ -37,15 +36,15 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             $name = ucfirst($name);
             return Shopware()->Bootstrap()->getResource($name);
         }
-        return parent::get($name);
+        return Shopware()->Container()->get($name);
     }
 
     /**
-     *
+     * {@inheritdoc}
      */
     public function preDispatch()
     {
-        if (in_array($this->Request()->getActionName(), array('recurring'))) {
+        if (in_array($this->Request()->getActionName(), array('recurring', 'notify'))) {
             $this->Front()->Plugins()->ViewRenderer()->setNoRender();
         }
     }
@@ -193,7 +192,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             AND a.swag_payal_billing_agreement_id IS NOT NULL
             ORDER BY o.id DESC
         ';
-        $agreementId = Shopware()->Db()->fetchOne($sql, array(
+        $agreementId = $this->get('db')->fetchOne($sql, array(
             $orderId,
             $this->session->sUserId
         ));
@@ -353,13 +352,20 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
      */
     public function notifyAction()
     {
-        $this->View()->setTemplate();
+        $txnId = $this->Request()->get('parent_txn_id') ?: $this->Request()->get('txn_id');
         try {
             $client = $this->plugin->Client();
             $details = $client->getTransactionDetails(array(
                 'TRANSACTIONID' => $this->Request()->get('parent_txn_id') ? $this->Request()->get('parent_txn_id') : $this->Request()->get('txn_id')
             ));
-        } catch (Exception $e) { }
+        } catch (Exception $e) {
+            $message = sprintf(
+                "PayPal-Notify: Could not find TRANSACTIONID %s",
+                $txnId
+            );
+            $context = array('exception' => $e);
+            $this->get('pluginlogger')->error($message, $context);
+        }
 
         if (empty($details['PAYMENTSTATUS']) || empty($details['ACK']) || $details['ACK'] != 'Success') {
             return;
@@ -488,7 +494,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             return $result;
         }
 
-        if (!$config->get('paypalSendInvoiceId')) {
+        if (empty($orderNumber)) {
             $orderNumber = $this->saveOrder(
                 $result['TRANSACTIONID'],
                 $result['CUSTOM']
@@ -504,7 +510,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                     ON DUPLICATE KEY UPDATE
                        swag_payal_billing_agreement_id = VALUES(swag_payal_billing_agreement_id)
                 ';
-                Shopware()->Db()->query($sql, array(
+                $this->get('db')->query($sql, array(
                     $result['BILLINGAGREEMENTID'],
                     $orderNumber
                 ));
@@ -519,7 +525,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                     SELECT id, 1 FROM s_order WHERE ordernumber = ?
                     ON DUPLICATE KEY UPDATE swag_payal_express = 1
                 ';
-                Shopware()->Db()->query($sql, array(
+                $this->get('db')->query($sql, array(
                     $orderNumber,
                 ));
             } catch(Exception $e) { }
@@ -532,7 +538,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
               customercomment = CONCAT(customercomment, ?)
             WHERE ordernumber = ?
         ';
-        Shopware()->Db()->query($sql, array(
+        $this->get('db')->query($sql, array(
             $result['TRANSACTIONID'],
             isset($details['EMAIL']) ? "{$details['EMAIL']} ({$details['PAYERSTATUS']})\r\n" : null,
             isset($details['NOTE']) ? $details['NOTE'] : '',
@@ -559,12 +565,11 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
      */
     protected function createAccount($details, $finish = true)
     {
-        $module = Shopware()->Modules()->Admin();
+        $module = $this->get('modules')->Admin();
         $session = $this->session;
 
-        $version = Shopware()->Config()->version;
-        if (version_compare($version, '4.1.0', '>=') || $version == '___VERSION___') {
-            $encoderName =  Shopware()->PasswordEncoder()->getDefaultPasswordEncoderName();
+        if (version_compare(Shopware::VERSION, '4.1.0', '>=') || Shopware::VERSION == '___VERSION___') {
+            $encoderName =  $this->get('passwordEncoder')->getDefaultPasswordEncoderName();
         }
 
         $data['auth']['email'] = $details['EMAIL'];
@@ -575,7 +580,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $data['billing']['firstname'] = $details['FIRSTNAME'];
         $data['billing']['lastname'] = $details['LASTNAME'];
 
-        if (version_compare($version, '4.4.0', '>=') || $version == '___VERSION___') {
+        if (version_compare(Shopware::VERSION, '4.4.0', '>=') || Shopware::VERSION == '___VERSION___') {
             $data['billing']['street'] = $details['SHIPTOSTREET'];
             if (!empty($details['SHIPTOSTREET2'])) {
                 $data['billing']['additional_address_line1'] = $details['SHIPTOSTREET2'];
@@ -596,11 +601,11 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $data['billing']['zipcode'] = $details['SHIPTOZIP'];
         $data['billing']['city'] = $details['SHIPTOCITY'];
         $sql = 'SELECT id FROM s_core_countries WHERE countryiso=?';
-        $countryId = Shopware()->Db()->fetchOne($sql, array($details['SHIPTOCOUNTRYCODE']));
+        $countryId = $this->get('db')->fetchOne($sql, array($details['SHIPTOCOUNTRYCODE']));
         $data['billing']['country'] = $countryId;
         if (!empty($details['SHIPTOSTATE']) && $details['SHIPTOSTATE'] != 'Empty') {
             $sql = 'SELECT id FROM s_core_countries_states WHERE countryID=? AND shortcode=?';
-            $stateId = Shopware()->Db()->fetchOne($sql, array($countryId, $details['SHIPTOSTATE']));
+            $stateId = $this->get('db')->fetchOne($sql, array($countryId, $details['SHIPTOSTATE']));
             $data['billing']['stateID'] = $stateId;
         }
         if (!empty($details['BUSINESS'])) {
@@ -621,17 +626,18 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         }
 
         $sql = 'SELECT id FROM s_core_paymentmeans WHERE name=?';
-        $paymentId = Shopware()->Db()->fetchOne($sql, array('paypal'));
+        $paymentId = $this->get('db')->fetchOne($sql, array('paypal'));
         $data['payment']['object'] = $module->sGetPaymentMeanById($paymentId);
 
         //if(!$finish) {
-            $shop = Shopware()->Shop()->getMain() ?: Shopware()->Shop();
+            $shop = $this->get('shop');
+            $shop = $shop->getMain() ?: $shop;
             $sql = 'SELECT `password` FROM `s_user` WHERE `email` LIKE ? AND `active` = 1 ';
             if($shop->getCustomerScope()) {
                 $sql .= "AND `subshopID` = {$shop->getId()} ";
             }
             $sql .= 'ORDER BY `accountmode`';
-            $data['auth']['passwordMD5'] = Shopware()->Db()->fetchOne($sql, array($data['auth']['email']));
+            $data['auth']['passwordMD5'] = $this->get('db')->fetchOne($sql, array($data['auth']['email']));
         //}
         // First try login / Reuse paypal account
         $module->sSYSTEM->_POST = $data['auth'];
@@ -646,7 +652,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         } else {
             if (isset($encoderName)) {
                 $data["auth"]["encoderName"] = $encoderName;
-                $data["auth"]["password"] = Shopware()->PasswordEncoder()->encodePassword($data["auth"]["password"], $encoderName);
+                $data["auth"]["password"] = $this->get('passwordEncoder')->encodePassword($data["auth"]["password"], $encoderName);
             } else {
                 $data['auth']['password'] = md5($data['auth']['password']);
             }
@@ -657,7 +663,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                 }
             }
             $session->sRegisterFinished = false;
-            if (version_compare($version, '4.3.0', '>=') || $version == '___VERSION___') {
+            if (version_compare(Shopware::VERSION, '4.3.0', '>=') || Shopware::VERSION == '___VERSION___') {
                 $session->sRegister = $data;
             } else {
                 $session->sRegister = new ArrayObject($data, ArrayObject::ARRAY_AS_PROPS);

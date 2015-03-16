@@ -179,9 +179,7 @@ EOD;
         $payment = $this->Payment();
         if ($payment !== null) {
             $payment->setActive(true);
-            if(version_compare(Shopware::VERSION, '4.4.0', '>=') || Shopware::VERSION == '___VERSION___') {
-                $this->get('models')->flush($payment);
-            }
+            $this->get('models')->flush($payment);
         }
         return array(
             'success' => true,
@@ -199,9 +197,7 @@ EOD;
         $payment = $this->Payment();
         if ($payment !== null) {
             $payment->setActive(false);
-            if(version_compare(Shopware::VERSION, '4.4.0', '>=') || Shopware::VERSION == '___VERSION___') {
-                $this->get('models')->flush($payment);
-            }
+            $this->get('models')->flush($payment);
         }
         return array(
             'success' => true,
@@ -293,18 +289,20 @@ EOD;
         $form->setElement('text', 'paypalUsername', array(
             'label' => 'API-Benutzername',
             'required' => true,
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+            'stripCharsRe' => ' '
         ));
         $form->setElement('text', 'paypalPassword', array(
             'label' => 'API-Passwort',
             'required' => true,
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+            'stripCharsRe' => ' '
         ));
         $form->setElement('text', 'paypalSignature', array(
             'label' => 'API-Unterschrift',
             'required' => true,
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
-
+            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+            'stripCharsRe' => ' '
         ));
         $form->setElement('text', 'paypalVersion', array(
             'label' => 'API-Version',
@@ -348,7 +346,7 @@ EOD;
         ));
         $form->setElement('number', 'paypalTimeout', array(
             'label' => 'API-Timeout in Sekunden',
-            'emptyText' => 'Default (20 Sekunden)',
+            'emptyText' => 'Default (60 Sekunden)',
             'value' => null,
             'scope' => 0
         ));
@@ -368,57 +366,16 @@ EOD;
             ),
             'description' => 'Funktioniert nur zusammen mit Curl',
         ));
-        $form->setElement('button', 'paypalButtonClientTest', array(
-            'label' => '<strong>Jetzt API testen<strong>',
-            'handler' => "function(btn) {
-                var pnl = btn.up('panel');
-                var url = document.location.pathname + 'paymentPaypal/testClient';
-                var els = pnl.query('[isFormField]'),
-                    vls = {};
 
-                Ext.Array.each(els, function(el, i) {
-                    var v = el.getSubmitValue();
-                    if(v === false) { v = 0; }
-                    if(v === true) { v = 1; }
-                    vls[el.elementName] = v;
+        if(is_file(__DIR__ . '/Views/backend/plugins/paypal/test.js')) {
+            $form->setElement('button', 'paypalButtonClientTest', array(
+                'label' => '<strong>Jetzt API testen<strong>',
+                'handler' => "function(btn) {
+            " . file_get_contents(__DIR__ . '/Views/backend/plugins/paypal/test.js') . "
                 });
-
-                Ext.Ajax.request({
-                    url: url,
-                    params: vls,
-                    success: function(response){
-                        var data = Ext.decode(response.responseText);
-                        if(data.ACK && data.ACK == 'Success') {
-                            data.ACK = '<span style=\"color: green;font-weight: bold;\">' + data.ACK + '</span>';
-                        }
-                        if(data.ACK && data.ACK != 'Success') {
-                            data.ACK = '<span style=\"color: red;font-weight: bold;\">' + data.ACK + '</span>';
-                        }
-                        if(data.message && data.message == 'OK') {
-                            data.message = '<span style=\"color: green;font-weight: bold;\">' + data.message + '</span>';
-                        }
-                        if(data.message && data.message != 'OK') {
-                            data.message = '<span style=\"color: red;font-weight: bold;\">' + data.message + '</span>';
-                        }
-                        var title = '<span style=\"font-weight: bold;\">' + btn.text + '</span>';
-                        var text = '';
-                        Ext.iterate(data, function(key, value) {
-                            text += '<strong>' + key + ':</strong> ' + value + '<br>';
-                        });
-                        Shopware.Notification.createStickyGrowlMessage({
-                            title : title,
-                            text  : text,
-                            width : 440,
-                            log   : false,
-                            btnDetail: {
-                                link: 'http://wiki.shopware.com/PayPal_detail_984.html'
-                            }
-                        });
-                    }
-                });
-
             }"
-        ));
+            ));
+        }
 
         $form->setElement('boolean', 'paypalErrorMode', array(
             'label' => 'Fehlermeldungen ausgeben',
@@ -439,10 +396,12 @@ EOD;
             'label' => 'Shop-Logo auf der PayPal-Seite',
             'value' => 'frontend/_resources/images/logo.jpg',
             'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+            'readOnly' => false,
         ));
         $form->setElement('media', 'paypalHeaderImage', array(
             'label' => 'Header-Logo auf der PayPal-Seite',
             'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+            'readOnly' => false,
         ));
         $form->setElement('color', 'paypalCartBorderColor', array(
             'label' => 'Farbe des Warenkorbs auf der PayPal-Seite',
@@ -492,7 +451,7 @@ EOD;
         ));
         $form->setElement('boolean', 'paypalSeamlessCheckout', array(
             'label' => '„Seamless Checkout“ beim „Login mit PayPal“ aktivieren',
-            'value' => true,
+            'value' => false,
             'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
         ));
         $form->setElement('boolean', 'paypalTransferCart', array(
@@ -769,10 +728,11 @@ EOD;
         $locale = $this->Config()->get('paypalLocaleCode');
         if(empty($locale)) {
             $locale = $this->get('locale')->toString();
-            $locale = $locale == 'de_CH' ? 'de_DE' : $locale;
             list($l, $c) = explode('_', $locale);
             if($short && $c !== null) {
                 $locale = $c;
+            } elseif($l == 'de') {
+                $locale = 'de_DE';
             }
         }
         return $locale;

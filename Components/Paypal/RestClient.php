@@ -43,18 +43,20 @@ class Shopware_Components_Paypal_RestClient extends Zend_Http_Client
 
     /**
      * @param Enlight_Config $config
+     * @see https://github.com/paypal/sdk-core-php
      * @return Zend_Http_Client_Adapter_Curl|Zend_Http_Client_Adapter_Socket
      */
     public static function createAdapterFromConfig($config)
     {
         $curl = $config->get('paypalCurl', true);
         $sslVersion = $config->get('paypalSslVersion', 0);
-        $timeout = $config->get('paypalTimeout') ?: 20;
+        $timeout = $config->get('paypalTimeout') ?: 60;
+        $userAgent = 'Shopware/' . Shopware::VERSION;
 
         if ($curl && extension_loaded('curl')) {
             $adapter = new Zend_Http_Client_Adapter_Curl();
             $adapter->setConfig(array(
-                'useragent' => 'Shopware/' . Shopware::VERSION,
+                'useragent' => $userAgent,
                 'timeout' => $timeout,
             ));
             if(!empty($config->paypalSandbox)) {
@@ -63,11 +65,13 @@ class Shopware_Components_Paypal_RestClient extends Zend_Http_Client
             }
             $adapter->setCurlOption(CURLOPT_TIMEOUT, $timeout);
             $adapter->setCurlOption(CURLOPT_SSLVERSION, $sslVersion);
-           ;
+            //$adapter->setCurlOption(CURLOPT_SSL_CIPHER_LIST, 'TLSv1');
+            //$adapter->setCurlOption(CURLOPT_SSL_VERIFYPEER, 1);
+            //$adapter->setCurlOption(CURLOPT_SSL_VERIFYHOST, 2);
         } else {
             $adapter = new Zend_Http_Client_Adapter_Socket();
             $adapter->setConfig(array(
-                'useragent' => 'Shopware/' . Shopware::VERSION,
+                'useragent' => $userAgent,
                 'timeout' => $timeout,
                 'ssltransport' => ($sslVersion > 3 || $sslVersion == 1) ? 'tls' : 'ssl' ,
             ));

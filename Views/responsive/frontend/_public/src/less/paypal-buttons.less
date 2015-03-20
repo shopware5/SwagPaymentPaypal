@@ -1,0 +1,85 @@
+// Login with PayPal button
+#paypal-login--button {
+    .unitize(10, 16, margin-top);
+    width: 100%;
+}
+
+.paypal-express--container {
+    .clearfix();
+    float: none;
+    width: 100%;
+}
+
+// PayPal express button styling
+.paypal-express {
+    .clearfix();
+    float: right;
+
+    .paypal-express--delimiter {
+        .unitize(30, 16, line-height);
+        .unitize(10, 16, margin-right);
+        width: auto;
+        display: block;
+        float: left;
+    }
+
+    .paypal-express--btn {
+        .unitize-width(170, 16);
+        .unitize-height(32, 16);
+        display: block;
+        float: left;
+    }
+}
+
+// Add spacing to PayPal express button in ajax cart
+.container--ajax-cart {
+    .paypal-express,
+    .paypal-express-de {
+        .unitize(10, 16, margin-top);
+    }
+}
+
+// Modify table actions spacing in checkout cart
+.is--ctl-checkout.is--act-cart .product--table {
+    .paypal-express {
+        .unitize(20, 16, margin-bottom);
+    }
+
+    .table--actions {
+        padding-bottom: 0;
+        margin-bottom: 0;
+    }
+
+    .main--actions {
+        margin-bottom: 0;
+    }
+
+    .btn--inquiry {
+        .unitize(10, 16, margin-bottom);
+    }
+}
+
+@media screen and (min-width: @phoneLandscapeViewportWidth) {
+    .is--ctl-checkout.is--act-cart .product--table {
+        .table--actions {
+            .unitize(10, 16, margin-bottom);
+        }
+
+        .btn--inquiry {
+            .unitize(10, 16, margin-top);
+            margin-bottom: 0;
+        }
+    }
+}
+
+@media screen and (min-width: @tabletViewportWidth) {
+    .is--ctl-checkout.is--act-cart .product--table {
+        .table--actions {
+            .unitize(20, 16, margin-bottom);
+        }
+
+        .btn--inquiry {
+            margin-top: 0;
+        }
+    }
+}

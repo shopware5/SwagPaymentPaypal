@@ -104,9 +104,11 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $client = $this->plugin->Client();
 
         $logoImage = $config->get('paypalLogoImage');
+        if(empty($logoImage) && empty($this->View()->theme)) {
+            $logoImage = 'frontend/_resources/images/logo.jpg';
+        }
         $logoImage = 'string:{link file=' . var_export($logoImage, true) . ' fullPath}';
         $logoImage = $this->View()->fetch($logoImage);
-
         $shopName = Shopware()->Config()->get('shopName');
         $shopName = $config->get('paypalBrandName', $shopName);
 
@@ -452,7 +454,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             );
         }
 
-        if (Shopware::VERSION == '___VERSION___' || version_compare(Shopware::VERSION, '4.3.2') >= 0) {
+        if (Shopware::VERSION == '___VERSION___' || version_compare(Shopware::VERSION, '4.4.0') >= 0) {
             $params['BUTTONSOURCE'] = 'Shopware_Cart_5';
         }
 

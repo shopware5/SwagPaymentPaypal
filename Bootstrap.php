@@ -26,11 +26,8 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
         $this->createMyTranslations();
         $this->fixOrderMail();
         $this->createMyAttributes();
-
-        return array(
-            'success' => true,
-            'invalidateCache' => array('config', 'backend', 'proxy', 'template', 'theme')
-        );
+        
+        return true;
     }
 
     /**
@@ -42,7 +39,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
         $this->removeMyAttributes();
         return array(
             'success' => true,
-            'invalidateCache' => array('config', 'backend', 'proxy', 'template', 'theme')
+            'invalidateCache' => array('config', 'backend', 'proxy', 'frontend')
         );
     }
 
@@ -100,9 +97,10 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
         //Update form
         $this->createMyForm();
         $this->createMyEvents();
+        
         return array(
             'success' => true,
-            'invalidateCache' => array('config', 'backend', 'proxy')
+            'invalidateCache' => array('config', 'backend', 'proxy', 'frontend')
         );
     }
 
@@ -140,7 +138,7 @@ EOD;
         $newLogo = '<!-- PayPal Logo -->' .
             '<a onclick="window.open(this.href, \'olcwhatispaypal\',\'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=yes, width=400, height=500\'); return false;"' .
             '    href="https://www.paypal.com/de/cgi-bin/webscr?cmd=xpt/cps/popup/OLCWhatIsPayPal-outside" target="_blank">' .
-            '<img src="{link file="engine/Shopware/Plugins/Default/Frontend/SwagPaymentPaypal/Views/frontend/_resources/images/paypal_logo.png" "fullPath"}" alt="Logo \'PayPal empfohlen\'">' .
+            '<img src="{link file="frontend/_resources/images/paypal_logo.png"}" alt="Logo \'PayPal empfohlen\'">' .
             '</a>' . '<!-- PayPal Logo -->';
         $description = $this->Payment()->getAdditionalDescription();
         $description = preg_replace('#<!-- PayPal Logo -->.+<!-- PayPal Logo -->#msi', $newLogo, $description);
@@ -183,7 +181,7 @@ EOD;
         }
         return array(
             'success' => true,
-            'invalidateCache' => array('config', 'template', 'theme')
+            'invalidateCache' => array('config', 'backend', 'proxy', 'frontend')
         );
     }
 
@@ -201,7 +199,7 @@ EOD;
         }
         return array(
             'success' => true,
-            'invalidateCache' => array('config', 'template', 'theme')
+            'invalidateCache' => array('config', 'backend')
         );
     }
 
@@ -240,6 +238,11 @@ EOD;
             'Enlight_Controller_Action_PostDispatch_Backend_Index',
             'onExtendBackendIndex'
         );
+
+        $this->subscribeEvent(
+            'Theme_Compiler_Collect_Plugin_Less',
+            'addLessFiles'
+        );
     }
 
     /**
@@ -255,8 +258,9 @@ EOD;
             'position' => 0,
             'additionalDescription' => '<!-- PayPal Logo -->' .
                 '<a onclick="window.open(this.href, \'olcwhatispaypal\',\'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=yes, width=400, height=500\'); return false;"' .
-                '    href="https://www.paypal.com/de/cgi-bin/webscr?cmd=xpt/cps/popup/OLCWhatIsPayPal-outside" target="_blank">' .
-                '<img src="{link file="engine/Shopware/Plugins/Default/Frontend/SwagPaymentPaypal/Views/frontend/_resources/images/paypal_logo.png" fullPath}" alt="Logo \'PayPal empfohlen\'">' .
+                '    href="https://www.paypal.com/de/cgi-bin/webscr?cmd=xpt/cps/popup/OLCWhatIsPayPal-outside" target="_blank" '.
+                '    class="paypal-logo">' .
+                '<img src="{link file="frontend/_resources/images/paypal_logo.png"}" alt="Logo \'PayPal empfohlen\'">' .
                 '</a>' . '<!-- PayPal Logo -->' .
                 'Bezahlung per PayPal - einfach, schnell und sicher.'
         ));
@@ -393,7 +397,7 @@ EOD;
         ));
         $form->setElement('media', 'paypalLogoImage', array(
             'label' => 'Shop-Logo auf der PayPal-Seite',
-            'value' => 'frontend/_resources/images/logo.jpg',
+            'value' => null,
             'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
             'readOnly' => false,
         ));
@@ -586,19 +590,18 @@ EOD;
     }
 
     /**
-     * @param bool $next
+     * @param bool $responsive
      */
-    public function registerMyTemplateDir($next = false)
+    public function registerMyTemplateDir($responsive = false)
     {
-        if($next) {
+        if($responsive) {
             $this->get('template')->addTemplateDir(
-                __DIR__ . '/Views/next/', 'paypal_next'
-            );
-        } else {
-            $this->get('template')->addTemplateDir(
-                __DIR__ . '/Views/', 'paypal'
+                __DIR__ . '/Views/responsive/', 'paypal_responsive'
             );
         }
+        $this->get('template')->addTemplateDir(
+            __DIR__ . '/Views/', 'paypal'
+        );
     }
 
     /**
@@ -649,6 +652,27 @@ EOD;
             $subscriber = new \Shopware\SwagPaymentPaypal\Subscriber\BackendIndex($this);
         }
         $subscriber->onPostDispatchBackendIndex($args);
+    }
+
+    /**
+     * Provide the file collection for less
+     *
+     * @param Enlight_Event_EventArgs $args
+     * @return \Doctrine\Common\Collections\ArrayCollection
+     */
+    public function addLessFiles(Enlight_Event_EventArgs $args)
+    {
+        $less = new \Shopware\Components\Theme\LessDefinition(
+        //configuration
+            array(),
+            //less files to compile
+            array(
+                __DIR__ . '/Views/responsive/frontend/_public/src/less/all.less'
+            ),
+            //import directory
+            __DIR__
+        );
+        return new Doctrine\Common\Collections\ArrayCollection(array($less));
     }
 
     /**

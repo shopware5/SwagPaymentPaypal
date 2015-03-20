@@ -383,7 +383,6 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             }
         }
 
-
         try {
             switch ($action) {
                 case 'refund':

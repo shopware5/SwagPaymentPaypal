@@ -1,0 +1,21 @@
+.paypal-content .alert {
+    .unitize(20, 16, margin-bottom);
+}
+
+.paypal-content--actions .btn {
+    .unitize(10, 16, margin-top);
+    display: block;
+    width: 100%;
+}
+
+@media screen and (min-width: @phoneLandscapeViewportWidth) {
+    .paypal-content--actions {
+        .clearfix();
+    }
+
+    .paypal-content--actions .btn {
+        .unitize-margin(0, 5, 0, 0);
+        display: inline-block;
+        width: auto;
+    }
+}

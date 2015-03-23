@@ -49,6 +49,9 @@ class Frontend implements SubscriberInterface
             return;
         }
 
+        $admin = Shopware()->Modules()->Admin();
+        $session = Shopware()->Session();
+
         /** @var $shopContext \Shopware\Models\Shop\Shop */
         $shopContext = $this->bootstrap->get('shop');
         $templateVersion = $shopContext->getTemplate()->getVersion();
@@ -117,7 +120,6 @@ class Frontend implements SubscriberInterface
 
         if (isset($view->PaypalShowButton)) {
             $showButton = false;
-            $admin = Shopware()->Modules()->Admin();
             $payments = isset($view->sPayments) ? $view->sPayments : $admin->sGetPaymentMeans();
             foreach ($payments as $payment) {
                 if ($payment['name'] == 'paypal') {
@@ -128,7 +130,7 @@ class Frontend implements SubscriberInterface
             $view->PaypalShowButton = $showButton;
         }
 
-        if (!empty($view->PaypalShowButton) && Shopware()->Modules()->Admin()->sCheckUser()) {
+        if (!empty($view->PaypalShowButton) && !empty($session->sUserId)) {
             $view->PaypalShowButton = false;
         }
 
@@ -138,7 +140,7 @@ class Frontend implements SubscriberInterface
         }
 
         if ($request->getControllerName() == 'checkout' && $request->getActionName() == 'confirm'
-            && !empty(Shopware()->Session()->PaypalResponse)
+            && !empty($session->PaypalResponse)
         ) {
             $view->sRegisterFinished = false;
         }

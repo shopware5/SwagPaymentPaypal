@@ -6,9 +6,6 @@
     <title>{config name=shopName}</title>
     <script>
         {if $PaypalIdentity && $PaypalUserLoggedIn}
-        //(function($) {
-        //    $('.modal form[name=existing_customer]').submit();
-        //})(window.opener.jQuery);
         window.opener.location.href = "{url controller=checkout}";
         {elseif $PaypalIdentity && !$PaypalFinishRegister}
         window.opener.location.href = "{url controller=register}";

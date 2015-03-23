@@ -92,6 +92,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
         }
         if (version_compare($version, '3.1.0', '<=')) {
             $this->createMyMenu();
+            $this->fixPluginDescription();
         }
 
         //Update form
@@ -132,7 +133,8 @@ EOD;
 
     private function fixPluginDescription()
     {
-        if ($this->Payment() === null) {
+        $payment = $this->Payment();
+        if ($payment === null) {
             return;
         }
         $newLogo = '<!-- PayPal Logo -->' .
@@ -140,10 +142,11 @@ EOD;
             '    href="https://www.paypal.com/de/cgi-bin/webscr?cmd=xpt/cps/popup/OLCWhatIsPayPal-outside" target="_blank">' .
             '<img src="{link file="frontend/_resources/images/paypal_logo.png"}" alt="Logo \'PayPal empfohlen\'">' .
             '</a>' . '<!-- PayPal Logo -->';
-        $description = $this->Payment()->getAdditionalDescription();
+        $description = $payment->getAdditionalDescription();
         $description = preg_replace('#<!-- PayPal Logo -->.+<!-- PayPal Logo -->#msi', $newLogo, $description);
         $description = str_replace('<p>PayPal. <em>Sicherererer.</em></p>', '<br><br>', $description);
-        $this->Payment()->setAdditionalDescription($description);
+        $payment->setAdditionalDescription($description);
+        $this->get('models')->flush($payment);
     }
 
     /**

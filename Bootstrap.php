@@ -92,6 +92,8 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
         }
         if (version_compare($version, '3.1.0', '<=')) {
             $this->createMyMenu();
+            $this->Form()->removeElement('paypalPlus');
+            $this->Form()->removeElement('paypalPlusCountries');
             $this->fixPluginDescription();
         }
 

@@ -22,7 +22,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
         $this->createMyTranslations();
         $this->fixOrderMail();
         $this->createMyAttributes();
-        $this->fixPluginLogo();
+        $this->fixPaymentLogo();
 
         return true;
     }
@@ -92,7 +92,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
             $this->createMyMenu();
         }
         if (version_compare($version, '3.3.0', '<=')) {
-            $this->fixPluginLogo();
+            $this->fixPaymentLogo();
             $this->fixPluginDescription();
         }
 
@@ -138,11 +138,7 @@ EOD;
         if ($payment === null) {
             return;
         }
-        $newLogo = '<!-- PayPal Logo -->' .
-            '<a onclick="window.open(this.href, \'olcwhatispaypal\',\'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=yes, width=400, height=500\'); return false;"' .
-            '    href="https://www.paypal.com/de/cgi-bin/webscr?cmd=xpt/cps/popup/OLCWhatIsPayPal-outside" target="_blank">' .
-            '<img src="{link file="media/image/paypal_logo.png"}" alt="Logo \'PayPal empfohlen\'">' .
-            '</a>' . '<!-- PayPal Logo -->';
+        $newLogo = $this->getPaymentLogo();
         $description = $payment->getAdditionalDescription();
         $description = preg_replace('#<!-- PayPal Logo -->.+<!-- PayPal Logo -->#msi', $newLogo, $description);
         $description = str_replace('<p>PayPal. <em>Sicherererer.</em></p>', '<br><br>', $description);
@@ -150,7 +146,16 @@ EOD;
         $this->get('models')->flush($payment);
     }
 
-    private function fixPluginLogo()
+    private function getPaymentLogo()
+    {
+        return '<!-- PayPal Logo -->' .
+        '<a onclick="window.open(this.href, \'olcwhatispaypal\',\'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=yes, width=400, height=500\'); return false;"' .
+        '    href="https://www.paypal.com/de/cgi-bin/webscr?cmd=xpt/cps/popup/OLCWhatIsPayPal-outside" target="_blank">' .
+        '<img src="{link file="media/image/paypal_logo.png" fullPath}" alt="Logo \'PayPal empfohlen\'">' .
+        '</a>' . '<!-- PayPal Logo -->';
+    }
+
+    private function fixPaymentLogo()
     {
         $logo = 'paypal_logo.png';
         $pluginPath = __DIR__ . '/Views/frontend/_resources/images/';
@@ -277,12 +282,7 @@ EOD;
             'action' => 'payment_paypal',
             'active' => 0,
             'position' => 0,
-            'additionalDescription' => '<!-- PayPal Logo -->' .
-                '<a onclick="window.open(this.href, \'olcwhatispaypal\',\'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=yes, width=400, height=500\'); return false;"' .
-                '    href="https://www.paypal.com/de/cgi-bin/webscr?cmd=xpt/cps/popup/OLCWhatIsPayPal-outside" target="_blank" ' .
-                '    class="paypal-logo">' .
-                '<img src="{link file="media/image/paypal_logo.png"}" alt="Logo \'PayPal empfohlen\'">' .
-                '</a>' . '<!-- PayPal Logo -->' .
+            'additionalDescription' => $this->getPaymentLogo() .
                 'Bezahlung per PayPal - einfach, schnell und sicher.'
         ));
     }

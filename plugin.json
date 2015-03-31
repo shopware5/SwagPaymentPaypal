@@ -10,7 +10,7 @@
   "currentVersion": "3.3.1",
   "changelog": {
     "de": {
-      "3.3.1": "PT-2909 - Bugfix: Behebt das Problem mit dem PayPal-Logo",
+      "3.3.1": "PT-2909 - Bugfix: Problem PayPal-Logo in Bestellmails",
       "3.3.0": "SW-9488 - Feature: Fügt Responsive-Theme hinzu",
       "3.1.1": "PT-2833 - Bugfix: Force secure für “Login mit PayPal“ hinzugefügt; PT-2833 - Bugfix: locale für Österreich korrigiert",
       "3.1.0": "PT-2768 - Feature: “Login mit PayPal“ kann nun verwendet werden; PT-2768 - Feature: “Jetzt API testen“ in der Pluginkonfiguration; PT-2768 - Feature: SSL-Version kann jetzt bestimmt werden; PT-2768 - Feature: Curl kann jetzt deaktiviert werden; PT-2768 - Bugfix: Vorgabe für API-Timeout auf 20 Sekunden erhöht; PT-2768 - Bugfix: Icon im Backend-Module hinzugefügt;",
@@ -19,8 +19,8 @@
       "3.0.0": "Allgemeine Verbesserungen; API-Update"
     },
     "en": {
-      "3.3.1": "PT-2909 - Bugfix: Fix payment in logo in order emails",
-      "3.3.0": "PT-2833 - Feature: Add responsive theme support",
+      "3.3.1": "PT-2909 - Bugfix: PayPal logo in order emails",
+      "3.3.0": "SW-9488 - Feature: Add responsive theme support",
       "3.1.1": "PT-2833 - Bugfix: Add force secure for “Login with PayPal“; PT-2833 - Bugfix: Fix locale for austria",
       "3.1.0": "PT-2768 - Feature: possibility to use “Login with PayPal“ now; PT-2768 - Feature: “Test API now“ in the plugin config; PT-2768 - Feature: possibility to identify SSL version; PT-2768 - Feature: possibility to disable curl; PT-2768 - Bugfix: increase API timeout default to 20 seconds; PT-2768 - Bugfix: added icon to the backend module;",
       "3.0.2": "Fix payment action for reference transaction",

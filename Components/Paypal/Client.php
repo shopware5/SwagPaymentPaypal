@@ -27,43 +27,43 @@ use Shopware_Components_Paypal_RestClient as RestClient;
  */
 class Shopware_Components_Paypal_Client extends Zend_Http_Client
 {
-	/**
+    /**
      * The sandbox url.
      *
      * @var string
      */
-	const URL_SANDBOX = 'https://api-3t.sandbox.paypal.com/nvp';
-	
-	/**
+    const URL_SANDBOX = 'https://api-3t.sandbox.paypal.com/nvp';
+
+    /**
      * The live url.
      *
      * @var string
      */
     const URL_LIVE = 'https://api-3t.paypal.com/nvp';
-    
+
     /**
      * @var string
      */
     protected $apiUsername;
-    
+
     /**
      * @var string
      */
     protected $apiPassword;
-    
+
     /**
      * @var string
      */
     protected $apiSignature;
-    
+
     /**
      * @var string
      */
     protected $apiVersion;
-    
+
     /**
      * Constructor method
-     * 
+     *
      * Expects a configuration parameter.
      *
      * @param Enlight_Config $config

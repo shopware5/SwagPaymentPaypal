@@ -537,7 +537,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             }
             unset($data['VERSION']);
 
-            if(isset($data['L_ERRORCODE0'])) {
+            if (isset($data['L_ERRORCODE0'])) {
                 $data['code'] = $data['L_ERRORCODE0'];
                 $data['message'] = $this->formatErrorMessage($data);
                 unset($data['L_ERRORCODE0'], $data['L_SHORTMESSAGE0'], $data['L_LONGMESSAGE0'], $data['L_SEVERITYCODE0']);
@@ -562,7 +562,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         $data['shopware_version'] = Shopware::VERSION;
         $data['php_version'] = phpversion();
 
-        if($config->get('paypalCurl', true) && function_exists('curl_version')) {
+        if ($config->get('paypalCurl', true) && function_exists('curl_version')) {
             $curlVersion = curl_version();
             $data['curl_version'] = $curlVersion['version'];
             $data['system_host'] = $curlVersion['host'];

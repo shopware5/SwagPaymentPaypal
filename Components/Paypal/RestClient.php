@@ -11,14 +11,14 @@
  */
 class Shopware_Components_Paypal_RestClient extends Zend_Http_Client
 {
-	/**
+    /**
      * The sandbox url.
      *
      * @var string
      */
-	const URL_SANDBOX = 'https://api.sandbox.paypal.com/v1/';
+    const URL_SANDBOX = 'https://api.sandbox.paypal.com/v1/';
 
-	/**
+    /**
      * The live url.
      *
      * @var string
@@ -59,7 +59,7 @@ class Shopware_Components_Paypal_RestClient extends Zend_Http_Client
                 'useragent' => $userAgent,
                 'timeout' => $timeout,
             ));
-            if(!empty($config->paypalSandbox)) {
+            if (!empty($config->paypalSandbox)) {
                 $adapter->setCurlOption(CURLOPT_SSL_VERIFYPEER, false);
                 $adapter->setCurlOption(CURLOPT_SSL_VERIFYHOST, false);
             }
@@ -73,7 +73,7 @@ class Shopware_Components_Paypal_RestClient extends Zend_Http_Client
             $adapter->setConfig(array(
                 'useragent' => $userAgent,
                 'timeout' => $timeout,
-                'ssltransport' => ($sslVersion > 3 || $sslVersion == 1) ? 'tls' : 'ssl' ,
+                'ssltransport' => ($sslVersion > 3 || $sslVersion == 1) ? 'tls' : 'ssl',
             ));
         }
         return $adapter;
@@ -82,7 +82,7 @@ class Shopware_Components_Paypal_RestClient extends Zend_Http_Client
 
     protected function getBaseUri()
     {
-        if(!empty($this->pluginConfig->paypalSandbox)) {
+        if (!empty($this->pluginConfig->paypalSandbox)) {
             return self::URL_SANDBOX;
         } else {
             return self::URL_LIVE;
@@ -100,7 +100,7 @@ class Shopware_Components_Paypal_RestClient extends Zend_Http_Client
     public function setAuthToken($auth = null)
     {
         static $defaultAuth;
-        if(!isset($defaultAuth) && $auth === null) {
+        if (!isset($defaultAuth) && $auth === null) {
             $uri = 'oauth2/token';
             $params = array(
                 'grant_type' => 'client_credentials',
@@ -108,7 +108,8 @@ class Shopware_Components_Paypal_RestClient extends Zend_Http_Client
             $this->setAuthBase();
             $defaultAuth = $this->post($uri, $params);
             $this->resetParameters();
-        } if($auth === null) {
+        }
+        if ($auth === null) {
             $auth = $defaultAuth;
         }
         $this->setAuth(false);
@@ -150,18 +151,18 @@ class Shopware_Components_Paypal_RestClient extends Zend_Http_Client
 
     public function request($method = null, $uri = null, $params = null)
     {
-        if($method !== null) {
+        if ($method !== null) {
             $this->setMethod($method);
         }
-        if($uri !== null) {
-            if(strpos($uri, 'http') !== 0) {
+        if ($uri !== null) {
+            if (strpos($uri, 'http') !== 0) {
                 $uri = $this->getBaseUri() . $uri;
             }
             $this->setUri($uri);
         }
-        if($params !== null) {
+        if ($params !== null) {
             $this->resetParameters();
-            if($this->method == self::POST) {
+            if ($this->method == self::POST) {
                 $this->setMethod($this->method);
                 $this->setParameterPost($params);
             } else {
@@ -169,16 +170,21 @@ class Shopware_Components_Paypal_RestClient extends Zend_Http_Client
             }
         }
         $response = parent::request();
+        return $this->filterResponse($response);
+    }
+
+    private function filterResponse($response)
+    {
         $body = $response->getBody();
 
         $data = array();
         $data['status'] = $response->getStatus();
         $data['message'] = $response->getMessage();
 
-        if(strpos($response->getHeader('content-type'), 'application/json') === 0) {
+        if (strpos($response->getHeader('content-type'), 'application/json') === 0) {
             $body = json_decode($body, true);
         }
-        if(!is_array($body)) {
+        if (!is_array($body)) {
             $body = array('body' => $body);
         }
         return $data + $body;

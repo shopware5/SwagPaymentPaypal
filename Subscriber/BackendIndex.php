@@ -8,10 +8,9 @@
 
 namespace Shopware\SwagPaymentPaypal\Subscriber;
 
-use Enlight\Event\SubscriberInterface;
 use Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap as Bootstrap;
 
-class BackendIndex implements SubscriberInterface
+class BackendIndex
 {
     protected $bootstrap;
 
@@ -28,11 +27,10 @@ class BackendIndex implements SubscriberInterface
     }
 
     /**
-     * @param \Enlight_Event_EventArgs $args
+     * @param \Enlight_Controller_ActionEventArgs $args
      */
-    public function onPostDispatchBackendIndex(\Enlight_Event_EventArgs $args)
+    public function onPostDispatchBackendIndex($args)
     {
-        /** @var $action \Enlight_Controller_Action */
         $action = $args->getSubject();
         $request = $action->Request();
         $response = $action->Response();

@@ -6,10 +6,6 @@
  * file that was distributed with this source code.
  */
 
-if(!interface_exists('Enlight\Event\SubscriberInterface')) {
-    require_once __DIR__ . '/LegacyComponents/SubscriberInterface.php';
-}
-
 class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Components_Plugin_Bootstrap
 {
     /**
@@ -26,7 +22,8 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
         $this->createMyTranslations();
         $this->fixOrderMail();
         $this->createMyAttributes();
-        
+        $this->fixPluginLogo();
+
         return true;
     }
 
@@ -57,7 +54,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
      */
     public function update($version)
     {
-        if($version == '0.0.1') {
+        if ($version == '0.0.1') {
             return false;
         }
         if (strpos($version, '2.0.') === 0) {
@@ -67,13 +64,15 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
                     'swag_payal',
                     'billing_agreement_id'
                 );
-            } catch(Exception $e) { }
+            } catch (Exception $e) {
+            }
             try {
                 $this->get('models')->addAttribute(
                     's_order_attributes', 'swag_payal',
                     'billing_agreement_id', 'VARCHAR(255)'
                 );
-            } catch(Exception $e) { }
+            } catch (Exception $e) {
+            }
 
             $this->get('models')->generateAttributeModels(array(
                 's_order_attributes', 's_user_attributes'
@@ -88,19 +87,19 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
         }
         if (version_compare($version, '3.0.0', '<=')) {
             $this->Form()->removeElement('paypalPaymentActionPending');
-            $this->fixPluginDescription();
         }
         if (version_compare($version, '3.1.0', '<=')) {
             $this->createMyMenu();
-            $this->Form()->removeElement('paypalPlus');
-            $this->Form()->removeElement('paypalPlusCountries');
+        }
+        if (version_compare($version, '3.3.0', '<=')) {
+            $this->fixPluginLogo();
             $this->fixPluginDescription();
         }
 
         //Update form
         $this->createMyForm();
         $this->createMyEvents();
-        
+
         return array(
             'success' => true,
             'invalidateCache' => array('config', 'backend', 'proxy', 'frontend')
@@ -113,7 +112,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
      */
     public function get($name)
     {
-        if(version_compare(Shopware::VERSION, '4.2.0', '<') && Shopware::VERSION != '___VERSION___') {
+        if (version_compare(Shopware::VERSION, '4.2.0', '<') && Shopware::VERSION != '___VERSION___') {
             $name = ucfirst($name);
             return $this->Application()->Bootstrap()->getResource($name);
         }
@@ -142,13 +141,30 @@ EOD;
         $newLogo = '<!-- PayPal Logo -->' .
             '<a onclick="window.open(this.href, \'olcwhatispaypal\',\'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=yes, width=400, height=500\'); return false;"' .
             '    href="https://www.paypal.com/de/cgi-bin/webscr?cmd=xpt/cps/popup/OLCWhatIsPayPal-outside" target="_blank">' .
-            '<img src="{link file="frontend/_resources/images/paypal_logo.png"}" alt="Logo \'PayPal empfohlen\'">' .
+            '<img src="{link file="media/image/paypal_logo.png"}" alt="Logo \'PayPal empfohlen\'">' .
             '</a>' . '<!-- PayPal Logo -->';
         $description = $payment->getAdditionalDescription();
         $description = preg_replace('#<!-- PayPal Logo -->.+<!-- PayPal Logo -->#msi', $newLogo, $description);
         $description = str_replace('<p>PayPal. <em>Sicherererer.</em></p>', '<br><br>', $description);
         $payment->setAdditionalDescription($description);
         $this->get('models')->flush($payment);
+    }
+
+    private function fixPluginLogo()
+    {
+        $logo = 'paypal_logo.png';
+        $pluginPath = __DIR__ . '/Views/frontend/_resources/images/';
+        $mediaPath = $this->Application()->DocPath(). 'media/image/';
+        if(!is_file($mediaPath . $logo)) {
+            copy($pluginPath . $logo, $mediaPath . $logo);
+            $sql = "
+                INSERT INTO `s_media`
+                    (`albumID`, `name`, `description`, `path`, `type`, `extension`, `file_size`, `created`)
+                VALUES
+                    (-12, 'paypal_logo', '', 'media/image/paypal_logo.png', 'IMAGE', 'png', 3415, CURDATE());
+            ";
+            $this->get('db')->exec($sql);
+        }
     }
 
     /**
@@ -263,7 +279,7 @@ EOD;
             'position' => 0,
             'additionalDescription' => '<!-- PayPal Logo -->' .
                 '<a onclick="window.open(this.href, \'olcwhatispaypal\',\'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=yes, width=400, height=500\'); return false;"' .
-                '    href="https://www.paypal.com/de/cgi-bin/webscr?cmd=xpt/cps/popup/OLCWhatIsPayPal-outside" target="_blank" '.
+                '    href="https://www.paypal.com/de/cgi-bin/webscr?cmd=xpt/cps/popup/OLCWhatIsPayPal-outside" target="_blank" ' .
                 '    class="paypal-logo">' .
                 '<img src="{link file="frontend/_resources/images/paypal_logo.png"}" alt="Logo \'PayPal empfohlen\'">' .
                 '</a>' . '<!-- PayPal Logo -->' .
@@ -378,7 +394,7 @@ EOD;
             'description' => 'Funktioniert nur zusammen mit Curl',
         ));
 
-        if(is_file(__DIR__ . '/Views/backend/plugins/paypal/test.js')) {
+        if (is_file(__DIR__ . '/Views/backend/plugins/paypal/test.js')) {
             $form->setElement('button', 'paypalButtonClientTest', array(
                 'label' => '<strong>Jetzt API testen<strong>',
                 'handler' => "function(btn) {" . file_get_contents(__DIR__ . '/Views/backend/plugins/paypal/test.js') . "}"
@@ -560,13 +576,13 @@ EOD;
                 's_order_attributes', 'swag_payal',
                 'billing_agreement_id', 'VARCHAR(255)'
             );
-        } catch(Exception $e) { }
+        } catch (Exception $e) { }
         try {
             $this->get('models')->addAttribute(
                 's_order_attributes', 'swag_payal',
                 'express', 'boolean'
             );
-        } catch(Exception $e) { }
+        } catch (Exception $e) { }
 
         $this->get('models')->generateAttributeModels(array(
             's_order_attributes'
@@ -591,7 +607,7 @@ EOD;
             $modelManager->generateAttributeModels(array(
                 's_order_attributes'
             ));
-        } catch(Exception $e) { }
+        } catch (Exception $e) { }
     }
 
     /**
@@ -599,7 +615,7 @@ EOD;
      */
     public function registerMyTemplateDir($responsive = false)
     {
-        if($responsive) {
+        if ($responsive) {
             $this->get('template')->addTemplateDir(
                 __DIR__ . '/Views/responsive/', 'paypal_responsive'
             );
@@ -639,7 +655,7 @@ EOD;
     public function onPostDispatch(Enlight_Event_EventArgs $args)
     {
         static $subscriber;
-        if(!isset($subscriber)) {
+        if (!isset($subscriber)) {
             require_once __DIR__ . '/Subscriber/Frontend.php';
             $subscriber = new \Shopware\SwagPaymentPaypal\Subscriber\Frontend($this);
         }
@@ -652,7 +668,7 @@ EOD;
     public function onExtendBackendIndex(Enlight_Controller_ActionEventArgs $args)
     {
         static $subscriber;
-        if(!isset($subscriber)) {
+        if (!isset($subscriber)) {
             require_once __DIR__ . '/Subscriber/BackendIndex.php';
             $subscriber = new \Shopware\SwagPaymentPaypal\Subscriber\BackendIndex($this);
         }
@@ -688,25 +704,33 @@ EOD;
     {
         switch ($paymentStatus) {
             case 'Completed':
-                $paymentStatusId = $this->Config()->get('paypalStatusId', 12); break;
+                $paymentStatusId = $this->Config()->get('paypalStatusId', 12);
+                break;
             case 'Pending':
             case 'In-Progress':
-                 $paymentStatusId = $this->Config()->get('paypalPendingStatusId', 18); break; //Reserviert
+                $paymentStatusId = $this->Config()->get('paypalPendingStatusId', 18);
+                break; //Reserviert
             case 'Processed':
-                $paymentStatusId = 18; break; //In Bearbeitung > Reserviert
+                $paymentStatusId = 18;
+                break; //In Bearbeitung > Reserviert
             case 'Refunded':
-                $paymentStatusId = 20; break; //Wiedergutschrift
+                $paymentStatusId = 20;
+                break; //Wiedergutschrift
             case 'Partially-Refunded':
-                $paymentStatusId = 20; break; //Wiedergutschrift
+                $paymentStatusId = 20;
+                break; //Wiedergutschrift
             case 'Cancelled-Reversal':
-                $paymentStatusId = 12; break;
+                $paymentStatusId = 12;
+                break;
             case 'Expired': //Offen
             case 'Denied':
             case 'Voided':
-                $paymentStatusId = 17; break;
+                $paymentStatusId = 17;
+                break;
             case 'Reversed':
             default:
-                $paymentStatusId = 21; break;
+                $paymentStatusId = 21;
+                break;
         }
         return $paymentStatusId;
     }
@@ -736,7 +760,7 @@ EOD;
             ));
         }
         if ($paymentStatus == 'Completed') {
-            $sql  = '
+            $sql = '
                 UPDATE s_order SET cleareddate=NOW()
                 WHERE transactionID=?
                 AND cleareddate IS NULL LIMIT 1
@@ -754,12 +778,12 @@ EOD;
     public function getLocaleCode($short = false)
     {
         $locale = $this->Config()->get('paypalLocaleCode');
-        if(empty($locale)) {
+        if (empty($locale)) {
             $locale = $this->get('locale')->toString();
             list($l, $c) = explode('_', $locale);
-            if($short && $c !== null) {
+            if ($short && $c !== null) {
                 $locale = $c;
-            } elseif($l == 'de') {
+            } elseif ($l == 'de') {
                 $locale = 'de_DE';
             }
         }

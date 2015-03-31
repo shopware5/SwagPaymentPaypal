@@ -8,10 +8,9 @@
 
 namespace Shopware\SwagPaymentPaypal\Subscriber;
 
-use Enlight\Event\SubscriberInterface;
 use Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap as Bootstrap;
 
-class Frontend implements SubscriberInterface
+class Frontend
 {
     protected $bootstrap;
     protected $config;
@@ -80,7 +79,6 @@ class Frontend implements SubscriberInterface
             || ($templateVersion >= 3 && $request->getControllerName() == 'checkout' && $request->getActionName() == 'ajaxCart')
         ) {
             $view->PaypalShowButton = true;
-            $view->PaypalLocale = $this->bootstrap->getLocaleCode();
             if ($templateVersion < 3) {
                 $view->extendsBlock(
                     'frontend_checkout_ajax_add_article_action_buttons',
@@ -94,7 +92,6 @@ class Frontend implements SubscriberInterface
             && $request->getControllerName() == 'checkout' && $request->getActionName() == 'cart'
         ) {
             $view->PaypalShowButton = true;
-            $view->PaypalLocale = $this->bootstrap->getLocaleCode();
             if ($templateVersion < 3) {
                 $view->extendsBlock(
                     'frontend_checkout_actions_confirm',
@@ -109,11 +106,10 @@ class Frontend implements SubscriberInterface
             || ($templateVersion >= 3 && $request->getControllerName() == 'register' && $request->getActionName() == 'index')
         ) {
             $view->PaypalShowButton = true;
-            $view->PaypalLocale = $this->bootstrap->getLocaleCode();
             $view->PaypalClientId = $config->get('paypalClientId');
             $view->PaypalSandbox = $config->get('paypalSandbox');
             $view->PaypalSeamlessCheckout = $config->get('paypalSeamlessCheckout');
-            if($templateVersion < 3) {
+            if ($templateVersion < 3) {
                 $view->extendsTemplate('frontend/payment_paypal/ajax_login.tpl');
             }
         }
@@ -135,6 +131,8 @@ class Frontend implements SubscriberInterface
         }
 
         $view->PaypalLogIn = $config->get('paypalLogIn') && $config->get('paypalLogInApi');
+        $view->PaypalLocale = $this->bootstrap->getLocaleCode();
+
         if ($templateVersion < 3) {
             $view->extendsTemplate('frontend/payment_paypal/header.tpl');
         }

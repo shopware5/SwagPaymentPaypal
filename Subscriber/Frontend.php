@@ -73,10 +73,10 @@ class Frontend
             }
         }
 
-
         if (!empty($config->paypalExpressButtonLayer)
             && ($templateVersion < 3 && $request->getControllerName() == 'checkout' && $request->getActionName() == 'ajax_add_article')
             || ($templateVersion >= 3 && $request->getControllerName() == 'checkout' && $request->getActionName() == 'ajaxCart')
+		    && $config->paypalExpressButtonLayer
         ) {
             $view->PaypalShowButton = true;
             if ($templateVersion < 3) {
@@ -89,7 +89,7 @@ class Frontend
         }
 
         if (!empty($config->paypalExpressButton)
-            && $request->getControllerName() == 'checkout' && $request->getActionName() == 'cart'
+            && $request->getControllerName() == 'checkout' && $request->getActionName() == 'cart' && $config->paypalExpressButton
         ) {
             $view->PaypalShowButton = true;
             if ($templateVersion < 3) {

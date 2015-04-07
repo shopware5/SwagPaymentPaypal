@@ -105,9 +105,10 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.Detail', {
                 fieldLabel: '{s name=detail/order_data/amount}Amount{/s}'
             }, {
                 name: 'express',
-                fieldLabel: '{s name=detail/order_data/express_order}Express-Order{/s}',
-                editable: false,
-                xtype: 'checkbox'
+                fieldLabel: '{s name=detail/order_data/order_type}Order type{/s}',
+                readOnly: true,
+                store: [[0, 'Normal'], [1, 'Express'], [2, 'Plus']],
+                xtype: 'combobox'
             }]
         },{
             title: '{s name=detail/payment_data/title}Payment data{/s}',

@@ -10,6 +10,7 @@
   "currentVersion": "3.3.1",
   "changelog": {
     "de": {
+      "3.3.2": "PT-2917 - Zeige „PayPal Plus“ in der Zahlungsübersicht an",
       "3.3.1": "PT-2909 - Bugfix: Problem PayPal-Logo in Bestellmails",
       "3.3.0": "SW-9488 - Feature: Fügt Responsive-Theme hinzu",
       "3.1.1": "PT-2833 - Bugfix: Force secure für “Login mit PayPal“ hinzugefügt; PT-2833 - Bugfix: locale für Österreich korrigiert",

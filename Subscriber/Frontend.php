@@ -73,23 +73,23 @@ class Frontend
             }
         }
 
-        if (!empty($config->paypalExpressButtonLayer)
-            && ($templateVersion < 3 && $request->getControllerName() == 'checkout' && $request->getActionName() == 'ajax_add_article')
-            || ($templateVersion >= 3 && $request->getControllerName() == 'checkout' && $request->getActionName() == 'ajaxCart')
-		    && $config->paypalExpressButtonLayer
-        ) {
-            $view->PaypalShowButton = true;
-            if ($templateVersion < 3) {
-                $view->extendsBlock(
-                    'frontend_checkout_ajax_add_article_action_buttons',
-                    '{include file="frontend/payment_paypal/layer.tpl"}' . "\n",
-                    'prepend'
-                );
+        if (!empty($config->paypalExpressButtonLayer)) {
+            if (($templateVersion < 3 && $request->getControllerName() == 'checkout' && $request->getActionName() == 'ajax_add_article')
+                || ($templateVersion >= 3 && $request->getControllerName() == 'checkout' && $request->getActionName() == 'ajaxCart')
+            ) {
+                $view->PaypalShowButton = true;
+                if ($templateVersion < 3) {
+                    $view->extendsBlock(
+                        'frontend_checkout_ajax_add_article_action_buttons',
+                        '{include file="frontend/payment_paypal/layer.tpl"}' . "\n",
+                        'prepend'
+                    );
+                }
             }
         }
 
         if (!empty($config->paypalExpressButton)
-            && $request->getControllerName() == 'checkout' && $request->getActionName() == 'cart' && $config->paypalExpressButton
+            && $request->getControllerName() == 'checkout' && $request->getActionName() == 'cart'
         ) {
             $view->PaypalShowButton = true;
             if ($templateVersion < 3) {
@@ -101,23 +101,24 @@ class Frontend
             }
         }
 
-        if (!empty($config->paypalLogIn)
-            && ($templateVersion < 3 && $request->getControllerName() == 'account' && $request->getActionName() == 'ajax_login')
-            || ($templateVersion >= 3 && $request->getControllerName() == 'register' && $request->getActionName() == 'index')
-        ) {
-            $view->PaypalShowButton = true;
-            $view->PaypalClientId = $config->get('paypalClientId');
-            $view->PaypalSandbox = $config->get('paypalSandbox');
-            $view->PaypalSeamlessCheckout = $config->get('paypalSeamlessCheckout');
-            if ($templateVersion < 3) {
-                $view->extendsTemplate('frontend/payment_paypal/ajax_login.tpl');
+        if (!empty($config->paypalLogIn)) {
+            if (($templateVersion < 3 && $request->getControllerName() == 'account' && $request->getActionName() == 'ajax_login')
+                || ($templateVersion >= 3 && $request->getControllerName() == 'register' && $request->getActionName() == 'index')
+            ) {
+                $view->PaypalShowButton = true;
+                $view->PaypalClientId = $config->get('paypalClientId');
+                $view->PaypalSandbox = $config->get('paypalSandbox');
+                if ($templateVersion < 3) {
+                    $view->PaypalSeamlessCheckout = $config->get('paypalSeamlessCheckout');
+                    $view->extendsTemplate('frontend/payment_paypal/ajax_login.tpl');
+                }
             }
         }
 
         if (isset($view->PaypalShowButton)) {
             $showButton = false;
-            $payments = isset($view->sPayments) ? $view->sPayments : $admin->sGetPaymentMeans();
-            foreach ($payments as $payment) {
+            $view->sPayments = isset($view->sPayments) ? $view->sPayments : $admin->sGetPaymentMeans();
+            foreach ($view->sPayments as $payment) {
                 if ($payment['name'] == 'paypal') {
                     $showButton = true;
                     break;

@@ -159,7 +159,8 @@ EOD;
     {
         $logo = 'paypal_logo.png';
         $pluginPath = __DIR__ . '/Views/frontend/_resources/images/';
-        $mediaPath = $this->Application()->DocPath(). 'media/image/';
+        $docPath = $this->Application()->DocPath(). 'media/image/';
+        $mediaPath = $docPath. 'media/image/';
         if(!is_file($mediaPath . $logo)) {
             copy($pluginPath . $logo, $mediaPath . $logo);
             $sql = "
@@ -632,6 +633,7 @@ EOD;
      */
     public function onGetControllerPathFrontend()
     {
+        $this->registerMyTemplateDir();
         return __DIR__ . '/Controllers/Frontend/PaymentPaypal.php';
     }
 

@@ -12,6 +12,32 @@ use Shopware_Components_Paypal_Client as Client;
 class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Backend_ExtJs
 {
     /**
+     * @var Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap
+     */
+    private $plugin;
+
+    /**
+     * {@inheritdoc}
+     */
+    public function init()
+    {
+        $this->plugin = $this->get('plugins')->Frontend()->SwagPaymentPaypal();
+        parent::init();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function get($name)
+    {
+        if (version_compare(Shopware::VERSION, '4.2.0', '<') && Shopware::VERSION != '___VERSION___') {
+            $name = ucfirst($name);
+            return Shopware()->Bootstrap()->getResource($name);
+        }
+        return Shopware()->Container()->get($name);
+    }
+
+    /**
      * List payments action.
      *
      * Outputs the payment data as json list.
@@ -31,7 +57,6 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         }
 
         if ($sort = $this->Request()->getParam('sort')) {
-            //$sort = Zend_Json::decode($sort);
             $sort = current($sort);
         }
         $direction = empty($sort['direction']) || $sort['direction'] == 'DESC' ? 'DESC' : 'ASC';
@@ -43,7 +68,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             }
         }
 
-        $select = Shopware()->Db()
+        $select = $this->get('db')
             ->select()
             ->from(array('o' => 's_order'), array(
                 new Zend_Db_Expr('SQL_CALC_FOUND_ROWS o.id'),
@@ -56,13 +81,13 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
                 'clearedDate' => 'cleareddate',
                 'trackingId' => 'trackingcode',
                 'customerId' => 'u.userID',
-                'invoiceId' => new Zend_Db_Expr('(' . Shopware()->Db()
+                'invoiceId' => new Zend_Db_Expr('(' . $this->get('db')
                         ->select()
                         ->from(array('s_order_documents'), array('ID'))
                         ->where('orderID=o.id')
                         ->order('ID DESC')
                         ->limit(1) . ')'),
-                'invoiceHash' => new Zend_Db_Expr('(' . Shopware()->Db()
+                'invoiceHash' => new Zend_Db_Expr('(' . $this->get('db')
                         ->select()
                         ->from(array('s_order_documents'), array('hash'))
                         ->where('orderID=o.id')
@@ -133,7 +158,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
 
         if ($search = $this->Request()->getParam('search')) {
             $search = trim($search);
-            $search = Shopware()->Db()->quote($search);
+            $search = $this->get('db')->quote($search);
 
             $select->where('o.transactionID LIKE ' . $search
                 . ' OR o.ordernumber LIKE ' . $search
@@ -148,8 +173,8 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         if ($subShopFilter) {
             $select->where('o.subshopID = ' . $subShopFilter);
         }
-        $rows = Shopware()->Db()->fetchAll($select);
-        $total = Shopware()->Db()->fetchOne('SELECT FOUND_ROWS()');
+        $rows = $this->get('db')->fetchAll($select);
+        $total = $this->get('db')->fetchOne('SELECT FOUND_ROWS()');
 
         foreach ($rows as &$row) {
             if ($row['clearedDate'] == '0000-00-00 00:00:00') {
@@ -178,15 +203,17 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
 
         if (empty($shopId)) {
             $shop = $repository->getActiveDefault();
-            $shop->registerResources(Shopware()->Bootstrap());
-            return;
+        } else {
+            $shop = $repository->getActiveById($shopId);
+            if (!$shop) {
+                throw new \Exception("Shop {$shopId} not found");
+            }
         }
 
-        $shop = $repository->getActiveById($shopId);
-        if (!$shop) {
-            throw new \Exception("Shop {$shopId} not found");
+        $pluginNamespace = $this->plugin->Collection();
+        if ($pluginNamespace instanceof \Shopware_Components_Plugin_Namespace) {
+            $pluginNamespace->setShop($shop);
         }
-        $shop->registerResources(Shopware()->Bootstrap());
     }
 
     /**
@@ -204,7 +231,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
               ON s_order_attributes.orderID = s_order.id
             WHERE s_order.transactionID = ?
         ';
-        $result = Shopware()->Db()->fetchOne($sql, array($transactionId));
+        $result = $this->get('db')->fetchOne($sql, array($transactionId));
 
         if (!empty($result)) {
             $this->registerShopByShopId($result);
@@ -219,7 +246,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         $shopId = (int)$this->Request()->getParam('shopId', null);
         $this->registerShopByShopId($shopId);
 
-        $client = $this->Plugin()->Client();
+        $client = $this->plugin->Client();
         $balance = $client->getBalance(array(
             'RETURNALLCURRENCIES' => 0
         ));
@@ -259,7 +286,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         $this->registerShopByTransactionId($transactionId);
 
 
-        $client = $this->Plugin()->Client();
+        $client = $this->plugin->Client();
         $details = $client->getTransactionDetails(array(
             'TRANSACTIONID' => $transactionId
         ));
@@ -303,7 +330,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             //'orderNumber' => $details['INVNUM'],
         );
         $sql = 'SELECT `countryname` FROM `s_core_countries` WHERE `countryiso` LIKE ?';
-        $row['addressCountry'] = Shopware()->Db()->fetchOne($sql, array($row['addressCountry']));
+        $row['addressCountry'] = $this->get('db')->fetchOne($sql, array($row['addressCountry']));
         $row['paymentAmountFormat'] = Shopware()->Currency()->toCurrency(
             $row['paymentAmount'], array('currency' => $row['paymentCurrency'])
         );
@@ -359,7 +386,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
 
         $config = Shopware()->Config();
 
-        $client = $this->Plugin()->Client();
+        $client = $this->plugin->Client();
 
         $action = $this->Request()->getParam('paymentAction');
         $amount = $this->Request()->getParam('paymentAmount');
@@ -461,7 +488,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
                     UPDATE s_order SET transactionID=?
                     WHERE transactionID=? LIMIT 1
                 ';
-                Shopware()->Db()->query($sql, array(
+                $this->get('db')->query($sql, array(
                     isset($result['TRANSACTIONID']) ? $result['TRANSACTIONID'] : $result['AUTHORIZATIONID'],
                     $transactionId
                 ));
@@ -477,7 +504,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             }
             if (isset($paymentStatus)) {
                 try {
-                    $this->Plugin()->setPaymentStatus($transactionId, $paymentStatus, $note);
+                    $this->plugin->setPaymentStatus($transactionId, $paymentStatus, $note);
                 } catch (Exception $e) {
                     $result['SW_STATUS_ERROR'] = $e->getMessage();
                 }
@@ -486,16 +513,6 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         } catch (Exception $e) {
             $this->View()->assign(array('message' => $e->getMessage(), 'success' => false));
         }
-    }
-
-    /**
-     * Returns the payment plugin config data.
-     *
-     * @return Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap
-     */
-    public function Plugin()
-    {
-        return Shopware()->Plugins()->Frontend()->SwagPaymentPaypal();
     }
 
     public function downloadRestDocumentAction()
@@ -517,7 +534,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
 
     public function testClientAction()
     {
-        $this->Plugin()->Client();
+        $this->plugin->Client();
 
         $config = $this->Request()->getParams();
         $config = new \Enlight_Config($config, true);

@@ -377,7 +377,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                 "PayPal-Notify: Could not find TRANSACTIONID %s",
                 $txnId
             );
-            $context = array('details' => $details, 'body' => $this->Request()->getRawBody());
+            $context = array('details' => $details);
             $this->get('pluginlogger')->error($message, $context);
             return;
         }
@@ -706,7 +706,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             }
             $params['AMT'] = $this->getAmount();
         } else {
-            $basket = Shopware()->Modules()->Basket()->sGetBasket();
+            $basket = $this->get('modules')->Basket()->sGetBasket();
             if (!empty($basket['sShippingcosts'])) {
                 $params['SHIPPINGAMT'] = !empty($basket['sShippingcostsWithTax']) ? $basket['sShippingcostsWithTax'] : $basket['sShippingcosts'];
                 $params['SHIPPINGAMT'] = str_replace(',', '.', $params['SHIPPINGAMT']);

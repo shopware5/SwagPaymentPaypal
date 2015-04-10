@@ -210,10 +210,8 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             }
         }
 
-        $pluginNamespace = $this->plugin->Collection();
-        if ($pluginNamespace instanceof \Shopware_Components_Plugin_Namespace) {
-            $pluginNamespace->setShop($shop);
-        }
+        $bootstrap = Shopware()->Bootstrap();
+        $shop->registerResources($bootstrap);
     }
 
     /**
@@ -384,8 +382,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         // Load the correct shop in order to use the correct api credentials
         $this->registerShopByTransactionId($transactionId);
 
-        $config = Shopware()->Config();
-
+        $config = $this->plugin->Config();
         $client = $this->get('paypalClient');
 
         $action = $this->Request()->getParam('paymentAction');

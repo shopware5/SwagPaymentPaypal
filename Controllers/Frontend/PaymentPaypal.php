@@ -104,7 +104,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
     {
         $router = $this->Front()->Router();
         $config = $this->plugin->Config();
-        $client = $this->plugin->Client();
+        $client = $this->get('paypalClient');
 
         $logoImage = $config->get('paypalLogoImage');
         if (empty($logoImage) && empty($this->View()->theme)) {
@@ -246,7 +246,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
     {
         $token = $this->Request()->getParam('token');
         $config = $this->plugin->Config();
-        $client = $this->plugin->Client();
+        $client = $this->get('paypalClient');
         $initialResponse = $this->session->PaypalResponse;
 
         if ($token !== null) {
@@ -359,7 +359,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
     {
         $txnId = $this->Request()->get('parent_txn_id') ?: $this->Request()->get('txn_id');
         try {
-            $client = $this->plugin->Client();
+            $client = $this->get('paypalClient');
             $details = $client->getTransactionDetails(array(
                 'TRANSACTIONID' => $txnId
             ));
@@ -437,7 +437,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
      */
     protected function finishCheckout($details)
     {
-        $client = $this->plugin->Client();
+        $client = $client = $this->get('paypalClient');
         $config = $this->plugin->Config();
 
         $router = $this->Front()->Router();

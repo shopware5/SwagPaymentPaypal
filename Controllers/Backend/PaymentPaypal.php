@@ -246,7 +246,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         $shopId = (int)$this->Request()->getParam('shopId', null);
         $this->registerShopByShopId($shopId);
 
-        $client = $this->plugin->Client();
+        $client = $this->get('paypalClient');
         $balance = $client->getBalance(array(
             'RETURNALLCURRENCIES' => 0
         ));
@@ -286,7 +286,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         $this->registerShopByTransactionId($transactionId);
 
 
-        $client = $this->plugin->Client();
+        $client = $this->get('paypalClient');
         $details = $client->getTransactionDetails(array(
             'TRANSACTIONID' => $transactionId
         ));
@@ -386,7 +386,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
 
         $config = Shopware()->Config();
 
-        $client = $this->plugin->Client();
+        $client = $this->get('paypalClient');
 
         $action = $this->Request()->getParam('paymentAction');
         $amount = $this->Request()->getParam('paymentAmount');
@@ -534,7 +534,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
 
     public function testClientAction()
     {
-        $this->plugin->Client();
+        $this->get('paypalClient');
 
         $config = $this->Request()->getParams();
         $config = new \Enlight_Config($config, true);

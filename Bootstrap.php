@@ -95,6 +95,10 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
             $this->fixPaymentLogo();
             $this->fixPluginDescription();
         }
+        if (version_compare($version, '3.1.0', '<=')) {
+            $sql = 'ALTER TABLE `s_order_attributes` CHANGE `swag_payal_express` `swag_payal_express` INT( 11 ) NULL DEFAULT NULL';
+            $this->get('db')->exec($sql);
+        }
 
         //Update form
         $this->createMyForm();
@@ -159,7 +163,7 @@ EOD;
     {
         $logo = 'paypal_logo.png';
         $pluginPath = __DIR__ . '/Views/frontend/_resources/images/';
-        $docPath = $this->Application()->DocPath(). 'media/image/';
+        $docPath = $this->Application()->DocPath();
         $mediaPath = $docPath. 'media/image/';
         if(!is_file($mediaPath . $logo)) {
             copy($pluginPath . $logo, $mediaPath . $logo);
@@ -183,14 +187,6 @@ EOD;
         return $this->Payments()->findOneBy(
             array('name' => 'paypal')
         );
-    }
-
-    /**
-     * @return \Shopware_Components_Paypal_Client
-     */
-    public function Client()
-    {
-        return $this->Application()->PaypalClient();
     }
 
     /**
@@ -581,7 +577,7 @@ EOD;
         try {
             $this->get('models')->addAttribute(
                 's_order_attributes', 'swag_payal',
-                'express', 'boolean'
+                'express', 'int(11)'
             );
         } catch (Exception $e) { }
 
@@ -665,9 +661,9 @@ EOD;
     }
 
     /**
-     * @param Enlight_Controller_ActionEventArgs $args
+     * @param $args
      */
-    public function onExtendBackendIndex(Enlight_Controller_ActionEventArgs $args)
+    public function onExtendBackendIndex($args)
     {
         static $subscriber;
         if (!isset($subscriber)) {
@@ -831,10 +827,9 @@ EOD;
     /**
      * Creates and returns the paypal client for an event.
      *
-     * @param Enlight_Event_EventArgs $args
      * @return \Shopware_Components_Paypal_Client
      */
-    public function onInitResourcePaypalClient(Enlight_Event_EventArgs $args)
+    public function onInitResourcePaypalClient()
     {
         require_once __DIR__ . '/Components/Paypal/RestClient.php';
         require_once __DIR__ . '/Components/Paypal/Client.php';
@@ -845,10 +840,9 @@ EOD;
     /**
      * Creates and returns the paypal rest client for an event.
      *
-     * @param Enlight_Event_EventArgs $args
      * @return \Shopware_Components_Paypal_Client
      */
-    public function onInitResourcePaypalRestClient(Enlight_Event_EventArgs $args)
+    public function onInitResourcePaypalRestClient()
     {
         require_once __DIR__ . '/Components/Paypal/RestClient.php';
         $client = new Shopware_Components_Paypal_RestClient($this->Config());

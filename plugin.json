@@ -7,9 +7,10 @@
   "license": "MIT",
   "link": "http://store.shopware.com",
   "author": "shopware AG",
-  "currentVersion": "3.3.2",
+  "currentVersion": "3.3.3",
   "changelog": {
     "de": {
+      "3.3.3": "PT-3077 - Bugfix: Unterstützung für „Login mit PayPal“ entfernt",
       "3.3.2": "PT-2876 - Bugfix: Anzeige der Express-Buttons behoben; PT-2917 - Feature: Zeige „PayPal Plus“ in der Zahlungsübersicht an",
       "3.3.1": "PT-2909 - Bugfix: Problem PayPal-Logo in Bestellmails",
       "3.3.0": "SW-9488 - Feature: Fügt Responsive-Theme hinzu",
@@ -20,6 +21,7 @@
       "3.0.0": "Allgemeine Verbesserungen; API-Update"
     },
     "en": {
+      "3.3.3": "PT-3077 - Bugfix: Support for „Login with PayPal“ removed",
       "3.3.2": "PT-2876 - Bugfix: The visibility of the paypal express button; PT-2917 - Feature: Show „PayPal Plus“ in payment overview",
       "3.3.1": "PT-2909 - Bugfix: PayPal logo in order emails",
       "3.3.0": "SW-9488 - Feature: Add responsive theme support",

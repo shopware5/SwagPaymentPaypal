@@ -99,6 +99,11 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
             $sql = 'ALTER TABLE `s_order_attributes` CHANGE `swag_payal_express` `swag_payal_express` INT( 11 ) NULL DEFAULT NULL';
             $this->get('db')->exec($sql);
         }
+        if (version_compare($version, '3.3.2', '<=')) {
+            //always remove unneeded settings
+            $this->Form()->removeElement('paypalLogInApi');
+            $this->Form()->removeElement('paypalSeamlessCheckout');
+        }
 
         //Update form
         $this->createMyForm();
@@ -453,28 +458,17 @@ EOD;
             'description' => 'Achtung: Diese Funktion muss erst für Ihren PayPal-Account von PayPal aktiviert werden.',
             'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
         ));
-        $form->setElement('boolean', 'paypalLogIn', array(
-            'label' => '„Login mit PayPal“ aktivieren',
-            'description' => 'Achtung: Für diese Funktion müssen Sie erst die Daten für die REST-API hinterlegen.',
-            'value' => false,
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
-        ));
-        $form->setElement('boolean', 'paypalLogInApi', array(
-            'label' => 'API für „Login mit PayPal“ einbinden',
-            'description' => 'Vor PayPal 3.1 musste die API manuell ins Template eingebunden werden.',
-            'value' => true,
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
-        ));
-        $form->setElement('boolean', 'paypalFinishRegister', array(
-            'label' => 'Nach dem ersten „Login mit PayPal“ auf die Registrierung umleiten',
-            'value' => true,
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
-        ));
-        $form->setElement('boolean', 'paypalSeamlessCheckout', array(
-            'label' => '„Seamless Checkout“ beim „Login mit PayPal“ aktivieren',
-            'value' => false,
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
-        ));
+//        $form->setElement('boolean', 'paypalLogIn', array(
+//            'label' => '„Login mit PayPal“ aktivieren',
+//            'description' => 'Achtung: Für diese Funktion müssen Sie erst die Daten für die REST-API hinterlegen.',
+//            'value' => false,
+//            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+//        ));
+//        $form->setElement('boolean', 'paypalFinishRegister', array(
+//            'label' => 'Nach dem ersten „Login mit PayPal“ auf die Registrierung umleiten',
+//            'value' => true,
+//            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+//        ));
         $form->setElement('boolean', 'paypalTransferCart', array(
             'label' => 'Warenkorb an PayPal übertragen',
             'value' => true,

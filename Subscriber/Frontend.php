@@ -131,7 +131,7 @@ class Frontend
             $view->PaypalShowButton = false;
         }
 
-        $view->PaypalLogIn = $config->get('paypalLogIn') && $config->get('paypalLogInApi');
+        $view->PaypalLogIn = $config->get('paypalLogIn');
         $view->PaypalLocale = $this->bootstrap->getLocaleCode();
 
         if ($templateVersion < 3) {

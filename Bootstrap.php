@@ -1,4 +1,5 @@
 <?php
+
 /*
  * (c) shopware AG <info@shopware.com>
  *
@@ -34,10 +35,8 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
     {
         $this->secureUninstall();
         $this->removeMyAttributes();
-        return array(
-            'success' => true,
-            'invalidateCache' => array('config', 'backend', 'proxy', 'frontend')
-        );
+
+        return array('success' => true, 'invalidateCache' => array('config', 'backend', 'proxy', 'frontend'));
     }
 
     /**
@@ -68,15 +67,15 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
             }
             try {
                 $this->get('models')->addAttribute(
-                    's_order_attributes', 'swag_payal',
-                    'billing_agreement_id', 'VARCHAR(255)'
+                    's_order_attributes',
+                    'swag_payal',
+                    'billing_agreement_id',
+                    'VARCHAR(255)'
                 );
             } catch (Exception $e) {
             }
 
-            $this->get('models')->generateAttributeModels(array(
-                's_order_attributes', 's_user_attributes'
-            ));
+            $this->get('models')->generateAttributeModels(array('s_order_attributes', 's_user_attributes'));
             $this->Form()->removeElement('paypalAllowGuestCheckout');
         }
         if (version_compare($version, '2.1.5', '<=')) {
@@ -96,7 +95,8 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
             $this->fixPluginDescription();
         }
         if (version_compare($version, '3.1.0', '<=')) {
-            $sql = 'ALTER TABLE `s_order_attributes` CHANGE `swag_payal_express` `swag_payal_express` INT( 11 ) NULL DEFAULT NULL';
+            $sql = 'ALTER TABLE `s_order_attributes`
+                    CHANGE `swag_payal_express` `swag_payal_express` INT( 11 ) NULL DEFAULT NULL';
             $this->get('db')->exec($sql);
         }
         if (version_compare($version, '3.3.2', '<=')) {
@@ -126,8 +126,10 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
     {
         if (version_compare(Shopware::VERSION, '4.2.0', '<') && Shopware::VERSION != '___VERSION___') {
             $name = ucfirst($name);
+
             return $this->Application()->Bootstrap()->getResource($name);
         }
+
         return parent::get($name);
     }
 
@@ -146,7 +148,7 @@ EOD;
 
     private function fixPluginDescription()
     {
-        $payment = $this->Payment();
+        $payment = $this->getPayment();
         if ($payment === null) {
             return;
         }
@@ -162,7 +164,7 @@ EOD;
     {
         return '<!-- PayPal Logo -->' .
         '<a onclick="window.open(this.href, \'olcwhatispaypal\',\'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=yes, width=400, height=500\'); return false;"' .
-        '    href="https://www.paypal.com/de/cgi-bin/webscr?cmd=xpt/cps/popup/OLCWhatIsPayPal-outside" target="_blank">' .
+        ' href="https://www.paypal.com/de/cgi-bin/webscr?cmd=xpt/cps/popup/OLCWhatIsPayPal-outside" target="_blank">' .
         '<img src="{link file="media/image/paypal_logo.png" fullPath}" alt="Logo \'PayPal empfohlen\'">' .
         '</a>' . '<!-- PayPal Logo -->';
     }
@@ -172,8 +174,8 @@ EOD;
         $logo = 'paypal_logo.png';
         $pluginPath = __DIR__ . '/Views/frontend/_resources/images/';
         $docPath = $this->Application()->DocPath();
-        $mediaPath = $docPath. 'media/image/';
-        if(!is_file($mediaPath . $logo)) {
+        $mediaPath = $docPath . 'media/image/';
+        if (!is_file($mediaPath . $logo)) {
             copy($pluginPath . $logo, $mediaPath . $logo);
             $sql = "
                 INSERT INTO `s_media`
@@ -190,7 +192,7 @@ EOD;
      *
      * @return \Shopware\Models\Payment\Payment
      */
-    public function Payment()
+    public function getPayment()
     {
         return $this->Payments()->findOneBy(
             array('name' => 'paypal')
@@ -205,11 +207,12 @@ EOD;
      */
     public function enable()
     {
-        $payment = $this->Payment();
+        $payment = $this->getPayment();
         if ($payment !== null) {
             $payment->setActive(true);
             $this->get('models')->flush($payment);
         }
+
         return array(
             'success' => true,
             'invalidateCache' => array('config', 'backend', 'proxy', 'frontend')
@@ -223,11 +226,12 @@ EOD;
      */
     public function disable()
     {
-        $payment = $this->Payment();
+        $payment = $this->getPayment();
         if ($payment !== null) {
             $payment->setActive(false);
             $this->get('models')->flush($payment);
         }
+
         return array(
             'success' => true,
             'invalidateCache' => array('config', 'backend')
@@ -281,15 +285,17 @@ EOD;
      */
     private function createMyPayment()
     {
-        $this->createPayment(array(
-            'name' => 'paypal',
-            'description' => 'PayPal',
-            'action' => 'payment_paypal',
-            'active' => 0,
-            'position' => 0,
-            'additionalDescription' => $this->getPaymentLogo() .
-                'Bezahlung per PayPal - einfach, schnell und sicher.'
-        ));
+        $this->createPayment(
+            array(
+                'name' => 'paypal',
+                'description' => 'PayPal',
+                'action' => 'payment_paypal',
+                'active' => 0,
+                'position' => 0,
+                'additionalDescription' => $this->getPaymentLogo()
+                    . 'Bezahlung per PayPal - einfach, schnell und sicher.'
+            )
+        );
     }
 
     /**
@@ -298,14 +304,16 @@ EOD;
     private function createMyMenu()
     {
         $parent = $this->Menu()->findOneBy(array('label' => 'Zahlungen'));
-        $this->createMenuItem(array(
-            'label' => 'PayPal',
-            'controller' => 'PaymentPaypal',
-            'action' => 'Index',
-            'class' => 'paypal--icon',
-            'active' => 1,
-            'parent' => $parent
-        ));
+        $this->createMenuItem(
+            array(
+                'label' => 'PayPal',
+                'controller' => 'PaymentPaypal',
+                'action' => 'Index',
+                'class' => 'paypal--icon',
+                'active' => 1,
+                'parent' => $parent
+            )
+        );
     }
 
     /**
@@ -316,34 +324,53 @@ EOD;
         $form = $this->Form();
 
         // API settings
-        $form->setElement('text', 'paypalUsername', array(
-            'label' => 'API-Benutzername',
-            'required' => true,
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
-            'stripCharsRe' => ' '
-        ));
-        $form->setElement('text', 'paypalPassword', array(
-            'label' => 'API-Passwort',
-            'required' => true,
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
-            'stripCharsRe' => ' '
-        ));
-        $form->setElement('text', 'paypalSignature', array(
-            'label' => 'API-Unterschrift',
-            'required' => true,
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
-            'stripCharsRe' => ' '
-        ));
-        $form->setElement('text', 'paypalVersion', array(
-            'label' => 'API-Version',
-            'value' => '113.0',
-            'required' => true,
-            'readOnly' => true,
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
-        ));
-        $form->setElement('button', 'paypalButtonApi', array(
-            'label' => '<strong>Jetzt API-Signatur erhalten</strong>',
-            'handler' => "function(btn) {
+        $form->setElement(
+            'text',
+            'paypalUsername',
+            array(
+                'label' => 'API-Benutzername',
+                'required' => true,
+                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+                'stripCharsRe' => ' '
+            )
+        );
+        $form->setElement(
+            'text',
+            'paypalPassword',
+            array(
+                'label' => 'API-Passwort',
+                'required' => true,
+                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+                'stripCharsRe' => ' '
+            )
+        );
+        $form->setElement(
+            'text',
+            'paypalSignature',
+            array(
+                'label' => 'API-Unterschrift',
+                'required' => true,
+                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+                'stripCharsRe' => ' '
+            )
+        );
+        $form->setElement(
+            'text',
+            'paypalVersion',
+            array(
+                'label' => 'API-Version',
+                'value' => '113.0',
+                'required' => true,
+                'readOnly' => true,
+                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+            )
+        );
+        $form->setElement(
+            'button',
+            'paypalButtonApi',
+            array(
+                'label' => '<strong>Jetzt API-Signatur erhalten</strong>',
+                'handler' => "function(btn) {
                 var sandbox = btn.up('panel').down('[elementName=paypalSandbox]').getValue();
                 if(sandbox) {
                     var link = 'https://www.sandbox.paypal.com/';
@@ -353,114 +380,175 @@ EOD;
                 link += 'de/cgi-bin/webscr?cmd=_get-api-signature&generic-flow=true';
                 window.open(link, '', 'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=yes, width=400, height=540');
             }"
-        ));
-        $form->setElement('text', 'paypalClientId', array(
-            'label' => 'REST-API Client ID',
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
-            'stripCharsRe' => ' '
-        ));
-        $form->setElement('text', 'paypalSecret', array(
-            'label' => 'REST-API Secret',
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
-            'stripCharsRe' => ' '
-        ));
-        $form->setElement('button', 'paypalButtonRestApi', array(
-            'label' => '<strong>Jetzt Daten für REST-API erhalten</strong>',
-            'handler' => "function(btn) {
+            )
+        );
+        $form->setElement(
+            'text',
+            'paypalClientId',
+            array(
+                'label' => 'REST-API Client ID',
+                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+                'stripCharsRe' => ' '
+            )
+        );
+        $form->setElement(
+            'text',
+            'paypalSecret',
+            array(
+                'label' => 'REST-API Secret',
+                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+                'stripCharsRe' => ' '
+            )
+        );
+        $form->setElement(
+            'button',
+            'paypalButtonRestApi',
+            array(
+                'label' => '<strong>Jetzt Daten für REST-API erhalten</strong>',
+                'handler' => "function(btn) {
                 var link = document.location.pathname + 'paymentPaypal/downloadRestDocument';
                 window.open(link, '');
             }"
-        ));
+            )
+        );
 
-        $form->setElement('boolean', 'paypalSandbox', array(
-            'label' => 'Sandbox-Modus aktivieren',
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
-        ));
-        $form->setElement('number', 'paypalTimeout', array(
-            'label' => 'API-Timeout in Sekunden',
-            'emptyText' => 'Default (60 Sekunden)',
-            'value' => null,
-            'scope' => 0
-        ));
-        $form->setElement('boolean', 'paypalCurl', array(
-            'label' => '<a href="http://php.net/manual/de/book.curl.php" target="_blank">Curl</a> verwenden (wenn es verfügbar ist)',
-            'value' => true
-        ));
-        $form->setElement('select', 'paypalSslVersion', array(
-            'label' => 'SSL-Version (<a href="http://curl.haxx.se/libcurl/c/CURLOPT_SSLVERSION.html" target="_blank">CURLOPT_SSLVERSION</a>)',
-            'value' => 0,
-            'store' => array(
-                array(0, 'Default (Keine Vorgabe)'),
-                array(1, 'TLSv1'),
-                array(4, 'TLSv1_0 (Available since PHP 5.5.19 and 5.6.3)'),
-                array(5, 'TLSv1_1 (Available since PHP 5.5.19 and 5.6.3)'),
-                array(6, 'TLSv1_2 (Available since PHP 5.5.19 and 5.6.3)'),
-            ),
-            'description' => 'Funktioniert nur zusammen mit Curl',
-        ));
+        $form->setElement(
+            'boolean',
+            'paypalSandbox',
+            array(
+                'label' => 'Sandbox-Modus aktivieren',
+                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+            )
+        );
+        $form->setElement(
+            'number',
+            'paypalTimeout',
+            array(
+                'label' => 'API-Timeout in Sekunden',
+                'emptyText' => 'Default (60 Sekunden)',
+                'value' => null,
+                'scope' => 0
+            )
+        );
+        $form->setElement(
+            'boolean',
+            'paypalCurl',
+            array(
+                'label' => '<a href="http://php.net/manual/de/book.curl.php" target="_blank">Curl</a> verwenden (wenn es verfügbar ist)',
+                'value' => true
+            )
+        );
+        $form->setElement(
+            'select',
+            'paypalSslVersion',
+            array(
+                'label' => 'SSL-Version (<a href="http://curl.haxx.se/libcurl/c/CURLOPT_SSLVERSION.html" target="_blank">CURLOPT_SSLVERSION</a>)',
+                'value' => 0,
+                'store' => array(
+                    array(0, 'Default (Keine Vorgabe)'),
+                    array(1, 'TLSv1'),
+                    array(4, 'TLSv1_0 (Available since PHP 5.5.19 and 5.6.3)'),
+                    array(5, 'TLSv1_1 (Available since PHP 5.5.19 and 5.6.3)'),
+                    array(6, 'TLSv1_2 (Available since PHP 5.5.19 and 5.6.3)'),
+                ),
+                'description' => 'Funktioniert nur zusammen mit Curl',
+            )
+        );
 
         if (is_file(__DIR__ . '/Views/backend/plugins/paypal/test.js')) {
-            $form->setElement('button', 'paypalButtonClientTest', array(
-                'label' => '<strong>Jetzt API testen<strong>',
-                'handler' => "function(btn) {" . file_get_contents(__DIR__ . '/Views/backend/plugins/paypal/test.js') . "}"
-            ));
+            $form->setElement(
+                'button',
+                'paypalButtonClientTest',
+                array(
+                    'label' => '<strong>Jetzt API testen<strong>',
+                    'handler' => "function(btn) {"
+                        . file_get_contents(__DIR__ . '/Views/backend/plugins/paypal/test.js') . "}"
+                )
+            );
         }
 
-        $form->setElement('boolean', 'paypalErrorMode', array(
-            'label' => 'Fehlermeldungen ausgeben',
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
-        ));
+        $form->setElement(
+            'boolean',
+            'paypalErrorMode',
+            array(
+                'label' => 'Fehlermeldungen ausgeben',
+                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+            )
+        );
 
         // Payment page settings
-        $form->setElement('text', 'paypalBrandName', array(
-            'label' => 'Alternativer Shop-Name auf der PayPal-Seite',
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
-        ));
-        $form->setElement('text', 'paypalLocaleCode', array(
-            'label' => 'Alternative Sprache (LocaleCode)',
-            'emptyText' => 'Beispiel: de_DE',
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
-        ));
-        $form->setElement('media', 'paypalLogoImage', array(
-            'label' => 'Shop-Logo auf der PayPal-Seite',
-            'value' => null,
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
-            'readOnly' => false,
-        ));
-        $form->setElement('media', 'paypalHeaderImage', array(
-            'label' => 'Header-Logo auf der PayPal-Seite',
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
-            'readOnly' => false,
-        ));
-        $form->setElement('color', 'paypalCartBorderColor', array(
-            'label' => 'Farbe des Warenkorbs auf der PayPal-Seite',
-            'value' => '#E1540F',
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
-        ));
+        $form->setElement(
+            'text',
+            'paypalBrandName',
+            array(
+                'label' => 'Alternativer Shop-Name auf der PayPal-Seite',
+                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+            )
+        );
+        $form->setElement(
+            'text',
+            'paypalLocaleCode',
+            array(
+                'label' => 'Alternative Sprache (LocaleCode)',
+                'emptyText' => 'Beispiel: de_DE',
+                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+            )
+        );
+        $form->setElement(
+            'media',
+            'paypalLogoImage',
+            array(
+                'label' => 'Shop-Logo auf der PayPal-Seite',
+                'value' => null,
+                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+                'readOnly' => false,
+            )
+        );
+        $form->setElement(
+            'color',
+            'paypalCartBorderColor',
+            array(
+                'label' => 'Farbe des Warenkorbs auf der PayPal-Seite',
+                'value' => '#E1540F',
+                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+            )
+        );
 
         // Frontend settings
-        $form->setElement('boolean', 'paypalFrontendLogo', array(
-            'label' => 'Payment-Logo im Frontend ausgeben',
-            'value' => true,
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
-        ));
+        $form->setElement(
+            'boolean',
+            'paypalFrontendLogo',
+            array(
+                'label' => 'Payment-Logo im Frontend ausgeben',
+                'value' => true,
+                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+            )
+        );
 
         // Payment settings
-        $form->setElement('select', 'paypalPaymentAction', array(
-            'label' => 'Zahlungsabschluss',
-            'value' => 'Sale',
-            'store' => array(
-                array('Sale', 'Zahlung sofort abschließen (Sale)'),
-                array('Authorization', 'Zeitverzögerter Zahlungseinzug (Auth-Capture)'),
-                array('Order', 'Zeitverzögerter Zahlungseinzug (Order-Auth-Capture)')
-            ),
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
-        ));
-        $form->setElement('boolean', 'paypalBillingAgreement', array(
-            'label' => 'Zahlungsvereinbarung treffen / „Sofort-Kaufen“ aktivieren',
-            'description' => 'Achtung: Diese Funktion muss erst für Ihren PayPal-Account von PayPal aktiviert werden.',
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
-        ));
+        $form->setElement(
+            'select',
+            'paypalPaymentAction',
+            array(
+                'label' => 'Zahlungsabschluss',
+                'value' => 'Sale',
+                'store' => array(
+                    array('Sale', 'Zahlung sofort abschließen (Sale)'),
+                    array('Authorization', 'Zeitverzögerter Zahlungseinzug (Auth-Capture)'),
+                    array('Order', 'Zeitverzögerter Zahlungseinzug (Order-Auth-Capture)')
+                ),
+                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+            )
+        );
+        $form->setElement(
+            'boolean',
+            'paypalBillingAgreement',
+            array(
+                'label' => 'Zahlungsvereinbarung treffen / „Sofort-Kaufen“ aktivieren',
+                'description' => 'Achtung: Diese Funktion muss erst für Ihren PayPal-Account von PayPal aktiviert werden.',
+                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+            )
+        );
 //        $form->setElement('boolean', 'paypalLogIn', array(
 //            'label' => '„Login mit PayPal“ aktivieren',
 //            'description' => 'Achtung: Für diese Funktion müssen Sie erst die Daten für die REST-API hinterlegen.',
@@ -472,50 +560,78 @@ EOD;
 //            'value' => true,
 //            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
 //        ));
-        $form->setElement('boolean', 'paypalTransferCart', array(
-            'label' => 'Warenkorb an PayPal übertragen',
-            'value' => true,
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
-        ));
-        $form->setElement('boolean', 'paypalExpressButton', array(
-            'label' => '„Direkt zu PayPal Button“ im Warenkorb anzeigen',
-            'value' => true,
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
-        ));
-        $form->setElement('boolean', 'paypalExpressButtonLayer', array(
-            'label' => '„Direkt zu PayPal Button“ in der Modal-Box anzeigen',
-            'value' => true,
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
-        ));
-        $form->setElement('select', 'paypalStatusId', array(
-            'label' => 'Zahlungsstatus nach der kompletten Zahlung',
-            'value' => 12,
-            'store' => 'base.PaymentStatus',
-            'displayField' => 'description',
-            'valueField' => 'id',
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
-        ));
-        $form->setElement('select', 'paypalPendingStatusId', array(
-            'label' => 'Zahlungsstatus nach der Autorisierung',
-            'value' => 18,
-            'store' => 'base.PaymentStatus',
-            'displayField' => 'description',
-            'valueField' => 'id',
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
-        ));
-        $form->setElement('boolean', 'paypalSendInvoiceId', array(
-            'label' => 'Bestellnummer an PayPal übertragen',
-            'description' => 'Ist ggf. für einige Warenwirtschaften erforderlich. Stellen Sie in diesem Fall sicher, dass ihr Nummernkreis für Bestellnummern sich nicht mit anderen/vorherigen Shops überschneidet, die Sie ebenfalls über ihren PayPal-Account betreiben.',
-            'value' => false,
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
-        ));
-        $form->setElement('text', 'paypalPrefixInvoiceId', array(
-            'label' => 'Bestellnummer für PayPal mit einem Shop-Prefix versehen',
-            'description' => 'Wenn Sie Ihren PayPal-Account für mehrere Shops nutzen, können Sie vermeiden, dass es Überschneidungen bei den Bestellnummern gibt, indem Sie hier ein eindeutiges Prefix definieren.',
-            'value' => 'MeinShop_',
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
-            'vtype' => 'alphanum'
-        ));
+        $form->setElement(
+            'boolean',
+            'paypalTransferCart',
+            array(
+                'label' => 'Warenkorb an PayPal übertragen',
+                'value' => true,
+                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+            )
+        );
+        $form->setElement(
+            'boolean',
+            'paypalExpressButton',
+            array(
+                'label' => '„Direkt zu PayPal Button“ im Warenkorb anzeigen',
+                'value' => true,
+                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+            )
+        );
+        $form->setElement(
+            'boolean',
+            'paypalExpressButtonLayer',
+            array(
+                'label' => '„Direkt zu PayPal Button“ in der Modal-Box anzeigen',
+                'value' => true,
+                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+            )
+        );
+        $form->setElement(
+            'select',
+            'paypalStatusId',
+            array(
+                'label' => 'Zahlungsstatus nach der kompletten Zahlung',
+                'value' => 12,
+                'store' => 'base.PaymentStatus',
+                'displayField' => 'description',
+                'valueField' => 'id',
+                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+            )
+        );
+        $form->setElement(
+            'select',
+            'paypalPendingStatusId',
+            array(
+                'label' => 'Zahlungsstatus nach der Autorisierung',
+                'value' => 18,
+                'store' => 'base.PaymentStatus',
+                'displayField' => 'description',
+                'valueField' => 'id',
+                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+            )
+        );
+        $form->setElement(
+            'boolean',
+            'paypalSendInvoiceId',
+            array(
+                'label' => 'Bestellnummer an PayPal übertragen',
+                'description' => 'Ist ggf. für einige Warenwirtschaften erforderlich. Stellen Sie in diesem Fall sicher, dass ihr Nummernkreis für Bestellnummern sich nicht mit anderen/vorherigen Shops überschneidet, die Sie ebenfalls über ihren PayPal-Account betreiben.',
+                'value' => false,
+                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+            )
+        );
+        $form->setElement(
+            'text',
+            'paypalPrefixInvoiceId',
+            array(
+                'label' => 'Bestellnummer für PayPal mit einem Shop-Prefix versehen',
+                'description' => 'Wenn Sie Ihren PayPal-Account für mehrere Shops nutzen, können Sie vermeiden, dass es Überschneidungen bei den Bestellnummern gibt, indem Sie hier ein eindeutiges Prefix definieren.',
+                'value' => 'MeinShop_',
+                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+                'vtype' => 'alphanum'
+            )
+        );
     }
 
     private function createMyTranslations()
@@ -544,9 +660,7 @@ EOD;
         );
         $shopRepository = Shopware()->Models()->getRepository('\Shopware\Models\Shop\Locale');
         foreach ($translations as $locale => $snippets) {
-            $localeModel = $shopRepository->findOneBy(array(
-                'locale' => $locale
-            ));
+            $localeModel = $shopRepository->findOneBy(array('locale' => $locale));
             foreach ($snippets as $element => $snippet) {
                 if ($localeModel === null) {
                     continue;
@@ -567,20 +681,19 @@ EOD;
     {
         try {
             $this->get('models')->addAttribute(
-                's_order_attributes', 'swag_payal',
-                'billing_agreement_id', 'VARCHAR(255)'
+                's_order_attributes',
+                'swag_payal',
+                'billing_agreement_id',
+                'VARCHAR(255)'
             );
-        } catch (Exception $e) { }
+        } catch (Exception $e) {
+        }
         try {
-            $this->get('models')->addAttribute(
-                's_order_attributes', 'swag_payal',
-                'express', 'int(11)'
-            );
-        } catch (Exception $e) { }
+            $this->get('models')->addAttribute('s_order_attributes', 'swag_payal', 'express', 'int(11)');
+        } catch (Exception $e) {
+        }
 
-        $this->get('models')->generateAttributeModels(array(
-            's_order_attributes'
-        ));
+        $this->get('models')->generateAttributeModels(array('s_order_attributes'));
     }
 
     private function removeMyAttributes()
@@ -588,20 +701,11 @@ EOD;
         /** @var $modelManager \Shopware\Components\Model\ModelManager */
         $modelManager = $this->get('models');
         try {
-            $modelManager->removeAttribute(
-                's_order_attributes',
-                'swag_payal',
-                'billing_agreement_id'
-            );
-            $modelManager->removeAttribute(
-                's_order_attributes',
-                'swag_payal',
-                'express'
-            );
-            $modelManager->generateAttributeModels(array(
-                's_order_attributes'
-            ));
-        } catch (Exception $e) { }
+            $modelManager->removeAttribute('s_order_attributes', 'swag_payal', 'billing_agreement_id');
+            $modelManager->removeAttribute('s_order_attributes', 'swag_payal', 'express');
+            $modelManager->generateAttributeModels(array('s_order_attributes'));
+        } catch (Exception $e) {
+        }
     }
 
     /**
@@ -610,13 +714,9 @@ EOD;
     public function registerMyTemplateDir($responsive = false)
     {
         if ($responsive) {
-            $this->get('template')->addTemplateDir(
-                __DIR__ . '/Views/responsive/', 'paypal_responsive'
-            );
+            $this->get('template')->addTemplateDir(__DIR__ . '/Views/responsive/', 'paypal_responsive');
         }
-        $this->get('template')->addTemplateDir(
-            __DIR__ . '/Views/', 'paypal'
-        );
+        $this->get('template')->addTemplateDir(__DIR__ . '/Views/', 'paypal');
     }
 
     /**
@@ -627,6 +727,7 @@ EOD;
     public function onGetControllerPathFrontend()
     {
         $this->registerMyTemplateDir();
+
         return __DIR__ . '/Controllers/Frontend/PaymentPaypal.php';
     }
 
@@ -638,9 +739,8 @@ EOD;
     public function onGetControllerPathBackend()
     {
         $this->registerMyTemplateDir();
-        $this->Application()->Snippets()->addConfigDir(
-            __DIR__ . '/Snippets/'
-        );
+        $this->Application()->Snippets()->addConfigDir(__DIR__ . '/Snippets/');
+
         return __DIR__ . '/Controllers/Backend/PaymentPaypal.php';
     }
 
@@ -679,15 +779,11 @@ EOD;
     public function addLessFiles(Enlight_Event_EventArgs $args)
     {
         $less = new \Shopware\Components\Theme\LessDefinition(
-        //configuration
             array(),
-            //less files to compile
-            array(
-                __DIR__ . '/Views/responsive/frontend/_public/src/less/all.less'
-            ),
-            //import directory
+            array(__DIR__ . '/Views/responsive/frontend/_public/src/less/all.less'),
             __DIR__
         );
+
         return new Doctrine\Common\Collections\ArrayCollection(array($less));
     }
 
@@ -717,16 +813,17 @@ EOD;
             case 'Cancelled-Reversal':
                 $paymentStatusId = 12;
                 break;
-            case 'Expired': //Offen
+            case 'Expired':
             case 'Denied':
             case 'Voided':
                 $paymentStatusId = 17;
-                break;
+                break; //Offen
             case 'Reversed':
             default:
                 $paymentStatusId = 21;
                 break;
         }
+
         return $paymentStatusId;
     }
 
@@ -742,17 +839,17 @@ EOD;
         $sql = '
             SELECT id FROM s_order WHERE transactionID=? AND status!=-1
         ';
-        $orderId = $this->get('db')->fetchOne($sql, array(
-            $transactionId
-        ));
+        $orderId = $this->get('db')->fetchOne($sql, array($transactionId));
         $order = Shopware()->Modules()->Order();
         $order->setPaymentStatus($orderId, $paymentStatusId, false, $note);
         if ($paymentStatusId == 21) {
-            $sql = 'UPDATE  s_order SET internalcomment = CONCAT(internalcomment, :pStatus) WHERE transactionID = :transactionId';
-            $this->get('db')->query($sql, array(
-                'pStatus' => "\nPayPal Status: " . $paymentStatus,
-                'transactionId' => $transactionId
-            ));
+            $sql = 'UPDATE  s_order
+                    SET internalcomment = CONCAT(internalcomment, :pStatus)
+                    WHERE transactionID = :transactionId';
+            $this->get('db')->query(
+                $sql,
+                array('pStatus' => "\nPayPal Status: " . $paymentStatus, 'transactionId' => $transactionId)
+            );
         }
         if ($paymentStatus == 'Completed') {
             $sql = '
@@ -760,9 +857,7 @@ EOD;
                 WHERE transactionID=?
                 AND cleareddate IS NULL LIMIT 1
             ';
-            $this->get('db')->query($sql, array(
-                $transactionId
-            ));
+            $this->get('db')->query($sql, array($transactionId));
         }
     }
 
@@ -782,6 +877,7 @@ EOD;
                 $locale = 'de_DE';
             }
         }
+
         return $locale;
     }
 
@@ -831,6 +927,7 @@ EOD;
         require_once __DIR__ . '/Components/Paypal/RestClient.php';
         require_once __DIR__ . '/Components/Paypal/Client.php';
         $client = new Shopware_Components_Paypal_Client($this->Config());
+
         return $client;
     }
 
@@ -843,6 +940,15 @@ EOD;
     {
         require_once __DIR__ . '/Components/Paypal/RestClient.php';
         $client = new Shopware_Components_Paypal_RestClient($this->Config());
+
         return $client;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isShopware51()
+    {
+        return $this->assertMinimumVersion("5.1.0");
     }
 }

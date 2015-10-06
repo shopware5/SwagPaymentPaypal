@@ -131,11 +131,13 @@ class Frontend
             $view->PaypalShowButton = false;
         }
 
+        $view->assign('PaypalLogo', $this->bootstrap->getLogoPath());
         $view->PaypalLogIn = $config->get('paypalLogIn');
         $view->PaypalLocale = $this->bootstrap->getLocaleCode();
 
         if ($templateVersion < 3) {
             $view->extendsTemplate('frontend/payment_paypal/header.tpl');
+            $view->extendsTemplate('frontend/payment_paypal/change_payment.tpl');
         }
 
         if ($request->getControllerName() == 'checkout' && $request->getActionName() == 'confirm'

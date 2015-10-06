@@ -161,32 +161,50 @@ EOD;
     }
 
     /**
-     * Add paypal logo to unsorted album if logo don't exists
+     * Check if paypal logo exists in "unsorted" album otherwise create it and remove old logo
+     *
      */
     private function fixPaymentLogo()
     {
         list($file, $fileName) = $this->getMediaLogo();
 
-        //Don't create logo with thumbnail if we already have it
+        //Don't create logo with thumbnail if we already have it album "unsorted"
         $mediaRepo = $this->get('models')->getRepository('Shopware\Models\Media\Media');
         $image = $mediaRepo->findOneBy(array('name' => $fileName));
-        if (!$image) {
-            $media = new \Shopware\Models\Media\Media();
-            $media->setAlbumId(-10);
-            $media->setAlbum($this->get('models')->find('Shopware\Models\Media\Album', -10));
-
-            $media->setFile($file);
-            $media->setName($fileName);
-            $media->setDescription('');
-            $media->setCreated(new \DateTime());
-            $media->setUserId(0);
-
-            $this->get('models')->persist($media);
-            $this->get('models')->flush();
-            if ($media->getType() == \Shopware\Models\Media\Media::TYPE_IMAGE) {
-                $manager = Shopware()->Container()->get('thumbnail_manager');
-                $manager->createMediaThumbnail($media, array(), true);
+        if ($image) {
+            if ($image->getAlbumId() != '-10') {
+                $this->insertLogoToMediaManager($file, $fileName);
+                $this->get('models')->remove($image);
             }
+        } else {
+            $this->insertLogoToMediaManager($file, $fileName);
+        }
+    }
+
+    /**
+     * Insert paypal logo to "unsorted" album and generate thumbnail
+     *
+     * @param \Symfony\Component\HttpFoundation\File\File $file object contain information for paypal logo
+     * @param string $fileName name ot paypal logo
+     * @throws Exception
+     */
+    private function insertLogoToMediaManager($file, $fileName)
+    {
+        $media = new \Shopware\Models\Media\Media();
+        $media->setAlbumId(-10);
+        $media->setAlbum($this->get('models')->find('Shopware\Models\Media\Album', -10));
+
+        $media->setFile($file);
+        $media->setName($fileName);
+        $media->setDescription('');
+        $media->setCreated(new \DateTime());
+        $media->setUserId(0);
+
+        $this->get('models')->persist($media);
+        $this->get('models')->flush();
+        if ($media->getType() == \Shopware\Models\Media\Media::TYPE_IMAGE) {
+            $manager = Shopware()->Container()->get('thumbnail_manager');
+            $manager->createMediaThumbnail($media, array(), true);
         }
     }
 

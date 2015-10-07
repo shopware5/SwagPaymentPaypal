@@ -168,13 +168,18 @@ EOD;
     {
         list($file, $fileName) = $this->getMediaLogo();
 
+        if (!$this->assertMinimumVersion("5.0.0")) {
+            $file = $this->copyLogoToTempFolder();
+        }
+
         //Don't create logo with thumbnail if we already have it album "unsorted"
         $mediaRepo = $this->get('models')->getRepository('Shopware\Models\Media\Media');
         $image = $mediaRepo->findOneBy(array('name' => $fileName));
         if ($image) {
             if ($image->getAlbumId() != '-10') {
-                $this->insertLogoToMediaManager($file, $fileName);
                 $this->get('models')->remove($image);
+                $this->get('models')->flush();
+                $this->insertLogoToMediaManager($file, $fileName);
             }
         } else {
             $this->insertLogoToMediaManager($file, $fileName);
@@ -206,6 +211,23 @@ EOD;
             $manager = Shopware()->Container()->get('thumbnail_manager');
             $manager->createMediaThumbnail($media, array(), true);
         }
+    }
+
+    /**
+     * Copy paypal logo to media/temp folder in case we use older version of shopware
+     *
+     * @return \Symfony\Component\HttpFoundation\File\File
+     */
+    public function copyLogoToTempFolder()
+    {
+        $logo = 'paypal_logo.png';
+        $pluginPath = __DIR__ . '/Views/frontend/_resources/images/' . $logo;
+        $mediaPath = $this->Application()->DocPath() . 'media/temp/' . $logo;
+        copy($pluginPath, $mediaPath);
+
+        $file = new \Symfony\Component\HttpFoundation\File\File($mediaPath);
+
+        return $file;
     }
 
     /**

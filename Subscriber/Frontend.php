@@ -131,7 +131,6 @@ class Frontend
             $view->PaypalShowButton = false;
         }
 
-        $view->assign('PaypalLogo', $this->bootstrap->getLogoPath());
         $view->PaypalLogIn = $config->get('paypalLogIn');
         $view->PaypalLocale = $this->bootstrap->getLocaleCode();
 

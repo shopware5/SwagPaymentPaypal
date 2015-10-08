@@ -17,13 +17,13 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
     public function install()
     {
         $this->createMyEvents();
-        $this->createMyPayment();
         $this->createMyMenu();
         $this->createMyForm();
         $this->createMyTranslations();
         $this->fixOrderMail();
         $this->createMyAttributes();
         $this->fixPaymentLogo();
+        $this->createMyPayment();
 
         return true;
     }
@@ -90,10 +90,6 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
         if (version_compare($version, '3.1.0', '<=')) {
             $this->createMyMenu();
         }
-        if (version_compare($version, '3.3.0', '<=')) {
-            $this->fixPaymentLogo();
-            $this->fixPluginDescription();
-        }
         if (version_compare($version, '3.1.0', '<=')) {
             $sql = 'ALTER TABLE `s_order_attributes`
                     CHANGE `swag_payal_express` `swag_payal_express` INT( 11 ) NULL DEFAULT NULL';
@@ -106,6 +102,10 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
             $em->remove($form->getElement('paypalLogInApi'));
             $em->remove($form->getElement('paypalSeamlessCheckout'));
             $em->flush();
+        }
+        if (version_compare($version, '3.3.4', '<')) {
+            $this->fixPaymentLogo();
+            $this->fixPluginDescription();
         }
 
         //Update form
@@ -152,38 +152,33 @@ EOD;
         if ($payment === null) {
             return;
         }
-        $newLogo = $this->getPaymentLogo();
+
         $description = $payment->getAdditionalDescription();
-        $description = preg_replace('#<!-- PayPal Logo -->.+<!-- PayPal Logo -->#msi', $newLogo, $description);
+        $description = preg_replace('#<!-- PayPal Logo -->.+<!-- PayPal Logo -->#msi', '', $description);
         $description = str_replace('<p>PayPal. <em>Sicherererer.</em></p>', '<br><br>', $description);
         $payment->setAdditionalDescription($description);
         $this->get('models')->flush($payment);
     }
 
-    private function getPaymentLogo()
-    {
-        return '<!-- PayPal Logo -->' .
-        '<a onclick="window.open(this.href, \'olcwhatispaypal\',\'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=yes, width=400, height=500\'); return false;"' .
-        ' href="https://www.paypal.com/de/cgi-bin/webscr?cmd=xpt/cps/popup/OLCWhatIsPayPal-outside" target="_blank">' .
-        '<img src="{link file="media/image/paypal_logo.png" fullPath}" alt="Logo \'PayPal empfohlen\'">' .
-        '</a>' . '<!-- PayPal Logo -->';
-    }
-
+    /**
+     * Check if paypal logo exists in "unsorted" album otherwise create it and remove old logo
+     *
+     */
     private function fixPaymentLogo()
     {
         $logo = 'paypal_logo.png';
-        $pluginPath = __DIR__ . '/Views/frontend/_resources/images/';
-        $docPath = $this->Application()->DocPath();
-        $mediaPath = $docPath . 'media/image/';
-        if (!is_file($mediaPath . $logo)) {
-            copy($pluginPath . $logo, $mediaPath . $logo);
-            $sql = "
-                INSERT INTO `s_media`
-                    (`albumID`, `name`, `description`, `path`, `type`, `extension`, `file_size`, `created`)
-                VALUES
-                    (-12, 'paypal_logo', '', 'media/image/paypal_logo.png', 'IMAGE', 'png', 3415, CURDATE());
-            ";
-            $this->get('db')->exec($sql);
+        $mediaPath = $this->Application()->DocPath() . 'media/image/' . $logo;
+
+        $mediaRepo = $this->get('models')->getRepository('Shopware\Models\Media\Media');
+        $image = $mediaRepo->findOneBy(array('name' => 'paypal_logo'));
+        if ($image) {
+            $this->get('models')->remove($image);
+            $this->get('models')->flush();
+        }
+
+        //Remove file if don't have it in media manager but we have it under media/image folder
+        if (file_exists($mediaPath)) {
+            unlink($mediaPath);
         }
     }
 
@@ -292,8 +287,7 @@ EOD;
                 'action' => 'payment_paypal',
                 'active' => 0,
                 'position' => 0,
-                'additionalDescription' => $this->getPaymentLogo()
-                    . 'Bezahlung per PayPal - einfach, schnell und sicher.'
+                'additionalDescription' => 'Bezahlung per PayPal - einfach, schnell und sicher.'
             )
         );
     }

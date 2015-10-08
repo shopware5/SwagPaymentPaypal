@@ -1,41 +1,46 @@
 {
-  "label": {
-    "de": "PayPal",
-    "en": "PayPal"
-  },
-  "copyright": "(c) by shopware AG",
-  "license": "MIT",
-  "link": "http://store.shopware.com",
-  "author": "shopware AG",
-  "currentVersion": "3.3.3",
-  "changelog": {
-    "de": {
-      "3.3.3": "PT-3077 - Bugfix: Unterstützung für „Login mit PayPal“ entfernt",
-      "3.3.2": "PT-2876 - Bugfix: Anzeige der Express-Buttons behoben; PT-2917 - Feature: Zeige „PayPal Plus“ in der Zahlungsübersicht an",
-      "3.3.1": "PT-2909 - Bugfix: Problem PayPal-Logo in Bestellmails",
-      "3.3.0": "SW-9488 - Feature: Fügt Responsive-Theme hinzu",
-      "3.1.1": "PT-2833 - Bugfix: Force secure für “Login mit PayPal“ hinzugefügt; PT-2833 - Bugfix: locale für Österreich korrigiert",
-      "3.1.0": "PT-2768 - Feature: “Login mit PayPal“ kann nun verwendet werden; PT-2768 - Feature: “Jetzt API testen“ in der Pluginkonfiguration; PT-2768 - Feature: SSL-Version kann jetzt bestimmt werden; PT-2768 - Feature: Curl kann jetzt deaktiviert werden; PT-2768 - Bugfix: Vorgabe für API-Timeout auf 20 Sekunden erhöht; PT-2768 - Bugfix: Icon im Backend-Module hinzugefügt;",
-      "3.0.2": "Korrigiert die Payment-Action bei wiederkehrende Zahlungen",
-      "3.0.1": "Korrigiert document.body is null",
-      "3.0.0": "Allgemeine Verbesserungen; API-Update"
+    "label": {
+        "de": "PayPal",
+        "en": "PayPal"
     },
-    "en": {
-      "3.3.3": "PT-3077 - Bugfix: Support for „Login with PayPal“ removed",
-      "3.3.2": "PT-2876 - Bugfix: The visibility of the paypal express button; PT-2917 - Feature: Show „PayPal Plus“ in payment overview",
-      "3.3.1": "PT-2909 - Bugfix: PayPal logo in order emails",
-      "3.3.0": "SW-9488 - Feature: Add responsive theme support",
-      "3.1.1": "PT-2833 - Bugfix: Add force secure for “Login with PayPal“; PT-2833 - Bugfix: Fix locale for austria",
-      "3.1.0": "PT-2768 - Feature: possibility to use “Login with PayPal“ now; PT-2768 - Feature: “Test API now“ in the plugin config; PT-2768 - Feature: possibility to identify SSL version; PT-2768 - Feature: possibility to disable curl; PT-2768 - Bugfix: increase API timeout default to 20 seconds; PT-2768 - Bugfix: added icon to the backend module;",
-      "3.0.2": "Fix payment action for reference transaction",
-      "3.0.1": "Fixes document.body is null",
-      "3.0.0": "General improvements; API update"
+    "copyright": "(c) by shopware AG",
+    "license": "MIT",
+    "link": "http://store.shopware.com",
+    "author": "shopware AG",
+
+    "currentVersion": "3.3.4",
+
+    "changelog": {
+        "de": {
+            "3.3.4": "PT-3819 - Bugfix: Shopware 5.1 Kompatibilität;",
+            "3.3.3": "PT-3077 - Bugfix: Unterstützung für „Login mit PayPal“ entfernt",
+            "3.3.2": "PT-2876 - Bugfix: Anzeige der Express-Buttons behoben; PT-2917 - Feature: Zeige „PayPal Plus“ in der Zahlungsübersicht an",
+            "3.3.1": "PT-2909 - Bugfix: Problem PayPal-Logo in Bestellmails",
+            "3.3.0": "SW-9488 - Feature: Fügt Responsive-Theme hinzu",
+            "3.1.1": "PT-2833 - Bugfix: Force secure für “Login mit PayPal“ hinzugefügt; PT-2833 - Bugfix: locale für Österreich korrigiert",
+            "3.1.0": "PT-2768 - Feature: “Login mit PayPal“ kann nun verwendet werden; PT-2768 - Feature: “Jetzt API testen“ in der Pluginkonfiguration; PT-2768 - Feature: SSL-Version kann jetzt bestimmt werden; PT-2768 - Feature: Curl kann jetzt deaktiviert werden; PT-2768 - Bugfix: Vorgabe für API-Timeout auf 20 Sekunden erhöht; PT-2768 - Bugfix: Icon im Backend-Module hinzugefügt;",
+            "3.0.2": "Korrigiert die Payment-Action bei wiederkehrende Zahlungen",
+            "3.0.1": "Korrigiert document.body is null",
+            "3.0.0": "Allgemeine Verbesserungen; API-Update"
+        },
+        "en": {
+            "3.3.4": "PT-3819 - Bugfix: Shopware 5.1 compatibility;",
+            "3.3.3": "PT-3077 - Bugfix: Support for „Login with PayPal“ removed",
+            "3.3.2": "PT-2876 - Bugfix: The visibility of the paypal express button; PT-2917 - Feature: Show „PayPal Plus“ in payment overview",
+            "3.3.1": "PT-2909 - Bugfix: PayPal logo in order emails",
+            "3.3.0": "SW-9488 - Feature: Add responsive theme support",
+            "3.1.1": "PT-2833 - Bugfix: Add force secure for “Login with PayPal“; PT-2833 - Bugfix: Fix locale for austria",
+            "3.1.0": "PT-2768 - Feature: possibility to use “Login with PayPal“ now; PT-2768 - Feature: “Test API now“ in the plugin config; PT-2768 - Feature: possibility to identify SSL version; PT-2768 - Feature: possibility to disable curl; PT-2768 - Bugfix: increase API timeout default to 20 seconds; PT-2768 - Bugfix: added icon to the backend module;",
+            "3.0.2": "Fix payment action for reference transaction",
+            "3.0.1": "Fixes document.body is null",
+            "3.0.0": "General improvements; API update"
+        }
+    },
+
+    "compatibility": {
+        "minimumVersion": "4.1.3",
+        "maximumVersion": null,
+        "blacklist": [
+        ]
     }
-  },
-  "compatibility": {
-    "minimumVersion": "4.1.3",
-    "maximumVersion": null,
-    "blacklist": [
-    ]
-  }
 }

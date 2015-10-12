@@ -9,9 +9,9 @@
     {if $PaypalLogIn}
         <script src="https://www.paypalobjects.com/js/external/api.js"></script>
         <script>
-            if(paypal) {
-                paypal.use( ["login"], function(login) {
-                    var r = login.render ({
+            if (paypal) {
+                paypal.use(["login"], function (login) {
+                    var r = login.render({
                         "appid": "{$PaypalClientId}",
                         {if $PaypalSandbox}
                         "authend": "sandbox",

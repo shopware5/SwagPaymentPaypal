@@ -10,7 +10,7 @@
     <div class="paypal-content content custom-page--content">
 
         {if !empty($PaypalResponse.ACK) && $PaypalResponse.ACK == 'Failure'
-          && ($PaypalConfig.paypalSandbox || $PaypalConfig.paypalErrorMode)}
+        && ($PaypalConfig.paypalSandbox || $PaypalConfig.paypalErrorMode)}
 
             {$debugErrorMessage = "{s name='PaypalDebugErrorMessage'}{/s}"}
             {include file="frontend/_includes/messages.tpl" type="error" content="{$debugErrorMessage}"}

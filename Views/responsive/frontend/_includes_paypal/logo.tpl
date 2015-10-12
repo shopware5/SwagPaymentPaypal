@@ -6,7 +6,7 @@
                title="{s name='PaypalLogoLinkTitleText'}{/s}"
                target="_blank">
                 <img class="paypal-sidebar--logo" src="{link file='frontend/_public/src/img/paypal-logo.png'}"
-                     alt="PayPal Logo" />
+                     alt="PayPal Logo"/>
             </a>
         </div>
     </div>

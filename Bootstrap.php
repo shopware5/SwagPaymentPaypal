@@ -287,9 +287,22 @@ EOD;
                 'action' => 'payment_paypal',
                 'active' => 0,
                 'position' => 0,
-                'additionalDescription' => 'Bezahlung per PayPal - einfach, schnell und sicher.'
+                'additionalDescription' => $this->getPaymentLogo() . 'Bezahlung per PayPal - einfach, schnell und sicher.'
             )
         );
+    }
+
+    private function getPaymentLogo()
+    {
+        $this->Application()->Template()->addTemplateDir(
+            $this->Path() . 'Views/'
+        );
+
+        return '<!-- PayPal Logo -->' .
+        '<a onclick="window.open(this.href, \'olcwhatispaypal\',\'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=yes, width=400, height=500\'); return false;"' .
+        ' href="https://www.paypal.com/de/cgi-bin/webscr?cmd=xpt/cps/popup/OLCWhatIsPayPal-outside" target="_blank">' .
+        '<img src="{link file=\'frontend/_resources/images/paypal_logo.png\' fullPath}" alt="Logo \'PayPal empfohlen\'">' .
+        '</a>' . '<!-- PayPal Logo -->';
     }
 
     /**

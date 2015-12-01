@@ -169,11 +169,11 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         }
         if (!empty($response['ACK']) && $response['ACK'] == 'Success') {
             if (!empty($config->paypalSandbox)) {
-                $gatewayUrl = 'https://www.sandbox.paypal.com/';
+                $gatewayUrl = 'https://www.sandbox.paypal.com/cgi-bin/';
             } else {
-                $gatewayUrl = 'https://www.paypal.com/';
+                $gatewayUrl = 'https://www.paypal.com/cgi-bin/';
             }
-            $gatewayUrl .= 'webscr&cmd=_express-checkout';
+            $gatewayUrl .= 'webscr?cmd=_express-checkout';
             if ($this->getUser() !== null) {
                 $gatewayUrl .= '&useraction=commit';
             }
@@ -294,9 +294,9 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                     if ($response['ACK'] != 'Success') {
                         if ($response['L_ERRORCODE0'] == 10486) {
                             if (!empty($config->paypalSandbox)) {
-                                $redirectUrl = 'https://www.sandbox.paypal.com/';
+                                $redirectUrl = 'https://www.sandbox.paypal.com/cgi-bin/';
                             } else {
-                                $redirectUrl = 'https://www.paypal.com/';
+                                $redirectUrl = 'https://www.paypal.com/cgi-bin/';
                             }
                             $redirectUrl .= 'webscr?cmd=_express-checkout';
                             $redirectUrl .= '&token=' . urlencode($details['TOKEN']);

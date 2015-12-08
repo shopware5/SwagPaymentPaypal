@@ -707,8 +707,11 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
 
         $currencyFactor = null;
         $currencyService = Shopware()->Container()->get('paypalCurrency');
+
+        $supportedCurrencies = $currencyService->getSupportedCurrencies();
         $currencyData = $currencyService->getCurrencyData();
-        if ($currencyData) {
+
+        if ($currencyData && !in_array($params['CURRENCYCODE'], $supportedCurrencies)) {
             $currencyFactor = $currencyData->getFactor();
             $params['CURRENCYCODE'] = $currencyData->getCurrency();
         }

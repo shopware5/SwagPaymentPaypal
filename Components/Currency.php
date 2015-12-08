@@ -4,9 +4,41 @@ class Shopware_Components_Paypal_Currency extends Enlight_Class
 {
     protected $currencyId;
 
+    private $currencies = array(
+        'AUD',
+        'CAD',
+        'CZK',
+        'DKK',
+        'EUR',
+        'HKD',
+        'ILS',
+        'MXN',
+        'NZD',
+        'NOK',
+        'PHP',
+        'PLN',
+        'GBP',
+        'RUB',
+        'SGD',
+        'SEK',
+        'CHF',
+        'THB',
+        'USD'
+    );
+
     public function __construct($config)
     {
         $this->currencyId = $config->get('paypalCurrency');
+    }
+
+    /**
+     * Return list with supported currencies by paypal
+     *
+     * @return array
+     */
+    public function getSupportedCurrencies()
+    {
+        return $this->currencies;
     }
 
     /**

@@ -705,6 +705,14 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
 
         $params['CURRENCYCODE'] = $this->getCurrencyShortName();
 
+        $currencyFactor = null;
+        $currencyService = Shopware()->Container()->get('paypalCurrency');
+        $currencyData = $currencyService->getCurrencyData();
+        if ($currencyData) {
+            $currencyFactor = $currencyData->getFactor();
+            $params['CURRENCYCODE'] = $currencyData->getCurrency();
+        }
+
         if ($user !== null) {
             $basket = $this->getBasket();
             if (!empty($basket['sShippingcosts'])) {
@@ -741,6 +749,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                     $amount = $amount / $item['quantity'];
                 }
                 $amount = round($amount, 2);
+                $amount = $currencyService->priceConvert($amount, $currencyFactor);
                 $article = array(
                     'L_NUMBER' . $key => $item['ordernumber'],
                     'L_NAME' . $key => $item['articlename'],
@@ -755,6 +764,10 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             $params['ITEMAMT'] = $params['SHIPPINGAMT'];
             $params['SHIPPINGAMT'] = '0.00';
         }
+
+        $params['AMT'] = $currencyService->priceConvert($params['AMT'], $currencyFactor);
+        $params['ITEMAMT'] = $currencyService->priceConvert($params['ITEMAMT'], $currencyFactor);
+        $params['SHIPPINGAMT'] = $currencyService->priceConvert($params['SHIPPINGAMT'], $currencyFactor);
 
         return $params;
     }

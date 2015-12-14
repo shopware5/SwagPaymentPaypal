@@ -19,7 +19,7 @@
                 {s name='PaypalLinkChangeCart'}{/s}
             </a>
             <a class="btn is--primary"
-               href="{url controller=account action=payment sTarget=checkout sChange=1}"
+               href="{url controller=checkout action=shippingPayment sTarget=checkout}"
                title="{s name='PaypalLinkChangePaymentMethod'}{/s}">
                 {s name='PaypalLinkChangePaymentMethod'}{/s}
             </a>

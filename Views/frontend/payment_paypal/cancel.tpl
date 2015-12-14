@@ -15,7 +15,7 @@
             <a class="button-left large left" href="{url controller=checkout action=cart}" title="{s name=PaymentLinkChangeBasket}Warenkorb ändern{/s}">
                 {se name=PaymentLinkChangeBasket}{/se}
             </a>
-            <a class="button-right large right" href="{url controller=account action=payment sTarget=checkout sChange=1}" title="{s name=PaymentLinkChange}Zahlungsart ändern{/s}">
+            <a class="button-right large right" href="{url controller=checkout action=shippingPayment sTarget=checkout}" title="{s name=PaymentLinkChange}Zahlungsart ändern{/s}">
                 {se name=PaymentLinkChange}{/se}
             </a>
         </div>

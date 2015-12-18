@@ -87,7 +87,7 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.List', {
         },{
             text: '{s name=list/columns/payment_status_text}Payment status{/s}',
             flex: 2,
-            dataIndex: 'cleardID',
+            dataIndex: 'cleared',
             renderer : function(value, column, model) {
                 return model.data.clearedDescription;
             }

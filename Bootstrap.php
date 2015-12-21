@@ -265,6 +265,11 @@ EOD;
         );
 
         $this->subscribeEvent(
+            'Enlight_Bootstrap_InitResource_paypalCurrency',
+            'onInitResourceCurrency'
+        );
+
+        $this->subscribeEvent(
             'Enlight_Controller_Action_PostDispatch_Backend_Index',
             'onExtendBackendIndex'
         );
@@ -639,6 +644,27 @@ EOD;
                 'vtype' => 'alphanum'
             )
         );
+
+        //Currencies
+        $currenciesArray = array();
+        $currencyRepository = Shopware()->Models()->getRepository('\Shopware\Models\Shop\Currency');
+        $currencies = $currencyRepository->findAll();
+        foreach ($currencies as $currency) {
+            $currenciesArray[] = array($currency->getId(), $currency->getName());
+        }
+
+        $form->setElement(
+            'select',
+            'paypalCurrency',
+            array(
+                'label' => 'Convert to currency',
+                'description' => 'Convert prices to selected one and send to paypal. This is used when paypal do not support used shopware currency.',
+                'store' => $currenciesArray,
+                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+                'required' => false,
+                'multiSelect' => false
+            )
+        );
     }
 
     private function createMyTranslations()
@@ -662,7 +688,8 @@ EOD;
                 'paypalStatusId' => 'Payment state after completing the payment',
                 'paypalPendingStatusId' => 'Payment state after being authorized',
                 'paypalSendInvoiceId' => 'Transfer invoice id to paypal',
-                'paypalPrefixInvoiceId' => 'Add shop prefix to the invoice id'
+                'paypalPrefixInvoiceId' => 'Add shop prefix to the invoice id',
+                'paypalCurrency' => 'Convert to currency'
             )
         );
         $shopRepository = Shopware()->Models()->getRepository('\Shopware\Models\Shop\Locale');
@@ -949,6 +976,19 @@ EOD;
         $client = new Shopware_Components_Paypal_RestClient($this->Config());
 
         return $client;
+    }
+
+    /**
+     * Creates and returns the currency converter component.
+     *
+     * @return \Shopware_Components_Currency
+     */
+    public function onInitResourceCurrency()
+    {
+        require_once __DIR__ . '/Components/Currency.php';
+        $currency = new Shopware_Components_Paypal_Currency($this->Config());
+
+        return $currency;
     }
 
     /**

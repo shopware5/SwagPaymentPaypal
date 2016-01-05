@@ -733,7 +733,8 @@ EOD;
      */
     public function onGetControllerPathFrontend()
     {
-        $this->registerMyTemplateDir();
+        $templateVersion = $this->get('shop')->getTemplate()->getVersion();
+        $this->registerMyTemplateDir($templateVersion >= 3);
 
         return __DIR__ . '/Controllers/Frontend/PaymentPaypal.php';
     }

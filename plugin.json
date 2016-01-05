@@ -8,10 +8,11 @@
     "link": "http://store.shopware.com",
     "author": "shopware AG",
 
-    "currentVersion": "3.3.5",
+    "currentVersion": "3.3.6",
 
     "changelog": {
         "de": {
+            "3.3.6": "PT-4548 - Bugfix: Weiterleitung nach Paypal-Abbruch geändert; PT-4713 - Bugfix: Sortierung nach Zahlungsstatus im Backend Modul;",
             "3.3.5": "PT-4284 - Bugfix: Paypal Logo in Bestätigungsmail; PT-4542 - Bugfix: Redirect URL;",
             "3.3.4": "PT-3819 - Bugfix: Shopware 5.1 Kompatibilität;",
             "3.3.3": "PT-3077 - Bugfix: Unterstützung für „Login mit PayPal“ entfernt",
@@ -25,6 +26,7 @@
             "3.0.0": "Allgemeine Verbesserungen; API-Update"
         },
         "en": {
+            "3.3.6": "PT-4548 - Bugfix: Changed the redirect after cancelling a paypal-payment; PT-4713 - Bugfix: Sort for payment status in backend module;",
             "3.3.5": "PT-4284 - Bugfix: Paypal logo in confirmation mail; PT-4542 - Bugfix: Redirect URL;",
             "3.3.4": "PT-3819 - Bugfix: Shopware 5.1 compatibility;",
             "3.3.3": "PT-3077 - Bugfix: Support for „Login with PayPal“ removed",

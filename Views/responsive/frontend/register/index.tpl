@@ -19,7 +19,7 @@
                         "scopes": "openid profile email address phone https://uri.paypal.com/services/paypalattributes{if $PaypalSeamlessCheckout} https://uri.paypal.com/services/expresscheckout{/if}",
                         "containerid": "paypal-login--button",
                         "locale": "{$PaypalLocale|replace:'_':'-'|strtolower}",
-                        "returnurl": "{url controller=payment_paypal action=login}"
+                        "returnurl": "{url controller=payment_paypal action=login forceSecure}"
                     });
                 });
             }

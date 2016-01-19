@@ -120,8 +120,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         }
         $logoImage = 'string:{link file=' . var_export($logoImage, true) . ' fullPath}';
         $logoImage = $this->View()->fetch($logoImage);
-        $shopName = Shopware()->Config()->get('shopName');
-        $shopName = $config->get('paypalBrandName', $shopName);
+        $shopName = $config->get('paypalBrandName') ?: Shopware()->Config()->get('shopName');
 
         $borderColor = ltrim($config->get('paypalCartBorderColor'), '#');
 

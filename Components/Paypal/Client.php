@@ -107,6 +107,7 @@ class Shopware_Components_Paypal_Client extends Zend_Http_Client
         $body = $response->getBody();
         $params = array();
         parse_str($body, $params);
+
         return $params;
     }
 }

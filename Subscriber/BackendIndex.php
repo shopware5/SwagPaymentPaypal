@@ -12,13 +12,24 @@ use Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap as Bootstrap;
 
 class BackendIndex
 {
+    /**
+     * @var Bootstrap $bootstrap
+     */
     protected $bootstrap;
 
+    /**
+     * BackendIndex constructor.
+     *
+     * @param Bootstrap $bootstrap
+     */
     public function __construct(Bootstrap $bootstrap)
     {
         $this->bootstrap = $bootstrap;
     }
 
+    /**
+     * @return array
+     */
     public static function getSubscribedEvents()
     {
         return array(

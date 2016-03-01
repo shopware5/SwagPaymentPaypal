@@ -17,7 +17,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
     private $plugin;
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     public function init()
     {
@@ -26,7 +26,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     public function get($name)
     {
@@ -258,7 +258,8 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
                     'currency' => $balance['L_CURRENCYCODE' . $i]
                 );
                 $data['balanceFormat'] = Shopware()->Currency()->toCurrency(
-                    $data['balance'], array('currency' => $data['currency'])
+                    $data['balance'],
+                    array('currency' => $data['currency'])
                 );
                 $rows[] = $data;
             }
@@ -299,7 +300,6 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             return;
         }
 
-
         $row = array(
             'accountEmail' => $details['EMAIL'],
             'accountName' =>
@@ -330,7 +330,8 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         $sql = 'SELECT `countryname` FROM `s_core_countries` WHERE `countryiso` LIKE ?';
         $row['addressCountry'] = $this->get('db')->fetchOne($sql, array($row['addressCountry']));
         $row['paymentAmountFormat'] = Shopware()->Currency()->toCurrency(
-            $row['paymentAmount'], array('currency' => $row['paymentCurrency'])
+            $row['paymentAmount'],
+            array('currency' => $row['paymentCurrency'])
         );
 
         if (strpos($transactionId, 'O-') === 0) {
@@ -364,7 +365,8 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
                 'currency' => $transactionsData['L_CURRENCYCODE' . $i],
             );
             $transaction['amountFormat'] = Shopware()->Currency()->toCurrency(
-                $transaction['amount'], array('currency' => $transaction['currency'])
+                $transaction['amount'],
+                array('currency' => $transaction['currency'])
             );
             $row['transactions'][] = $transaction;
         }
@@ -526,7 +528,8 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             "An error occured: %s: %s - %s",
             $data['L_ERRORCODE0'],
             $data['L_SHORTMESSAGE0'],
-            $data['L_LONGMESSAGE0']);
+            $data['L_LONGMESSAGE0']
+        );
     }
 
     public function testClientAction()

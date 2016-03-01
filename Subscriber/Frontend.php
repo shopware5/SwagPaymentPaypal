@@ -12,15 +12,30 @@ use Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap as Bootstrap;
 
 class Frontend
 {
+    /**
+     * @var Bootstrap $bootstrap
+     */
     protected $bootstrap;
+
+    /**
+     * @var \Enlight_Config $config
+     */
     protected $config;
 
+    /**
+     * Frontend constructor.
+     *
+     * @param Bootstrap $bootstrap
+     */
     public function __construct(Bootstrap $bootstrap)
     {
         $this->bootstrap = $bootstrap;
         $this->config = $bootstrap->Config();
     }
 
+    /**
+     * @return array
+     */
     public static function getSubscribedEvents()
     {
         return array(
@@ -89,7 +104,8 @@ class Frontend
         }
 
         if (!empty($config->paypalExpressButton)
-            && $request->getControllerName() == 'checkout' && $request->getActionName() == 'cart'
+            && $request->getControllerName() == 'checkout'
+            && $request->getActionName() == 'cart'
         ) {
             $view->PaypalShowButton = true;
             if ($templateVersion < 3) {
@@ -139,7 +155,8 @@ class Frontend
             $view->extendsTemplate('frontend/payment_paypal/change_payment.tpl');
         }
 
-        if ($request->getControllerName() == 'checkout' && $request->getActionName() == 'confirm'
+        if ($request->getControllerName() == 'checkout'
+            && $request->getActionName() == 'confirm'
             && !empty($session->PaypalResponse)
         ) {
             $view->sRegisterFinished = false;

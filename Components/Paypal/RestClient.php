@@ -77,7 +77,6 @@ class Shopware_Components_Paypal_RestClient extends Zend_Http_Client
             ));
         }
         return $adapter;
-
     }
 
     protected function getBaseUri()

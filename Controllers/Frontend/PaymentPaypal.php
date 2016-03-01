@@ -515,7 +515,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
 
         if (empty($orderNumber)) {
             $orderNumber = $this->saveOrder(
-                $result['PAYMENTREQUEST_0_TRANSACTIONID'],
+                $result['PAYMENTINFO_0_TRANSACTIONID'],
                 $result['PAYMENTREQUEST_0_CUSTOM']
             );
         }
@@ -557,7 +557,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $this->get('db')->query(
             $sql,
             array(
-                $result['PAYMENTREQUEST_0_TRANSACTIONID'],
+                $result['PAYMENTINFO_0_TRANSACTIONID'],
                 isset($details['EMAIL']) ? "{$details['EMAIL']} ({$details['PAYERSTATUS']})\r\n" : null,
                 isset($details['NOTE']) ? $details['NOTE'] : '',
                 $orderNumber
@@ -565,13 +565,13 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         );
 
         // Sets payment status
-        $paymentStatus = $result['PAYMENTSTATUS'];
-        $ppAmount = floatval($result['PAYMENTREQUEST_0_AMT']);
+        $paymentStatus = $result['PAYMENTINFO_0_PAYMENTSTATUS'];
+        $ppAmount = floatval($result['PAYMENTINFO_0_AMT']);
         $swAmount = $this->getAmount();
         if (abs($swAmount - $ppAmount) >= 0.01) {
             $paymentStatus = 'AmountMissMatch'; //Überprüfung notwendig
         }
-        $this->plugin->setPaymentStatus($result['PAYMENTREQUEST_0_TRANSACTIONID'], $paymentStatus);
+        $this->plugin->setPaymentStatus($result['PAYMENTINFO_0_TRANSACTIONID'], $paymentStatus);
 
         $result['PAYMENTREQUEST_0_INVNUM'] = $orderNumber;
 
@@ -584,6 +584,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
      */
     protected function createAccount($details, $finish = true)
     {
+        /** @var sAdmin $module */
         $module = $this->get('modules')->Admin();
         $session = $this->session;
 

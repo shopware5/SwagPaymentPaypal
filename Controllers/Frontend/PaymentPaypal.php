@@ -503,7 +503,16 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         //$params['SOFTDESCRIPTOR'] = $orderNumber;
 
         if (!empty($params['REFERENCEID'])) {
+            foreach ($params as $key => $param) {
+                unset($params[$key]);
+                $newKey = str_replace('PAYMENTREQUEST_0_', '', $key);
+                $params[$newKey] = $param;
+            }
             $result = $client->doReferenceTransaction($params);
+            $params['PAYMENTREQUEST_0_CUSTOM'] = $params['CUSTOM'];
+            $result['PAYMENTINFO_0_TRANSACTIONID'] = $result['TRANSACTIONID'];
+            $result['PAYMENTINFO_0_PAYMENTSTATUS'] = $result['PAYMENTSTATUS'];
+            $result['PAYMENTINFO_0_AMT'] = $result['AMT'];
         } else {
             $result = $client->doExpressCheckoutPayment($params);
         }

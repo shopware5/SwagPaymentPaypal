@@ -8,10 +8,11 @@
     "link": "http://store.shopware.com",
     "author": "shopware AG",
 
-    "currentVersion": "3.3.7",
+    "currentVersion": "3.3.8",
 
     "changelog": {
         "de": {
+            "3.3.8": "PT-5371 - Bugfix: Problem mit AboCommerce;",
             "3.3.7": "PT-5242 - Bugfix: Veraltete Felder ersetzt;",
             "3.3.6": "PT-4548 - Bugfix: Weiterleitung nach Paypal-Abbruch geändert; PT-4713 - Bugfix: Sortierung nach Zahlungsstatus im Backend Modul;",
             "3.3.5": "PT-4284 - Bugfix: Paypal Logo in Bestätigungsmail; PT-4542 - Bugfix: Redirect URL;",
@@ -27,6 +28,7 @@
             "3.0.0": "Allgemeine Verbesserungen; API-Update"
         },
         "en": {
+            "3.3.8": "PT-5371 - Bugfix: Problem with AboCommerce;",
             "3.3.7": "PT-5242 - Bugfix: Replaced deprecated fields;",
             "3.3.6": "PT-4548 - Bugfix: Changed the redirect after cancelling a paypal-payment; PT-4713 - Bugfix: Sort for payment status in backend module;",
             "3.3.5": "PT-4284 - Bugfix: Paypal logo in confirmation mail; PT-4542 - Bugfix: Redirect URL;",

@@ -475,7 +475,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             $params['BUTTONSOURCE'] = 'Shopware_Cart_5';
         }
 
-        if (empty($params['TOKEN'])) {
+        if (empty($params['TOKEN']) && empty($params['REFERENCEID'])) {
             $params['PAYMENTREQUEST_0_PAYMENTACTION'] = 'Authorization';
         } else {
             $params['PAYMENTREQUEST_0_PAYMENTACTION'] = $config->get('paypalPaymentAction', 'Sale');

@@ -231,7 +231,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                 $this->View()->PaypalConfig = $this->plugin->Config();
                 $this->View()->PaypalResponse = $response;
             } else {
-                $this->forward('finish', 'checkout', array(
+                $this->forward('finish', 'checkout', 'frontend', array(
                     'sUniqueID' => $response['PAYMENTREQUEST_0_CUSTOM']
                 ));
             }

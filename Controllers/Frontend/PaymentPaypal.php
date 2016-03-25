@@ -79,7 +79,6 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         } elseif ($this->getPaymentShortName() == 'paypal') {
             $this->forward('gateway');
         } else {
-            $this->redirect(array('controller' => 'checkout'));
             $this->forward('index', 'checkout');
         }
     }

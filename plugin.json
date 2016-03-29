@@ -8,10 +8,11 @@
     "link": "http://store.shopware.com",
     "author": "shopware AG",
 
-    "currentVersion": "3.3.8",
+    "currentVersion": "3.3.9",
 
     "changelog": {
         "de": {
+            "3.3.9": "PT-5462 - Bugfix: Abo-Commerce führt nicht mehr zu Zahlungsstatus 'Pending';",
             "3.3.8": "PT-5371 - Bugfix: Problem mit AboCommerce;",
             "3.3.7": "PT-5242 - Bugfix: Veraltete Felder ersetzt;",
             "3.3.6": "PT-4548 - Bugfix: Weiterleitung nach Paypal-Abbruch geändert; PT-4713 - Bugfix: Sortierung nach Zahlungsstatus im Backend Modul;",
@@ -28,6 +29,7 @@
             "3.0.0": "Allgemeine Verbesserungen; API-Update"
         },
         "en": {
+            "3.3.9": "PT-5462 - Bugfix: Abo-commerce won't result in payment-status 'pending' anymore;",
             "3.3.8": "PT-5371 - Bugfix: Problem with AboCommerce;",
             "3.3.7": "PT-5242 - Bugfix: Replaced deprecated fields;",
             "3.3.6": "PT-4548 - Bugfix: Changed the redirect after cancelling a paypal-payment; PT-4713 - Bugfix: Sort for payment status in backend module;",

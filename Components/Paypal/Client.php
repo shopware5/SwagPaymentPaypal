@@ -92,7 +92,7 @@ class Shopware_Components_Paypal_Client extends Zend_Http_Client
     {
         $name = ucfirst($name);
         $this->resetParameters();
-        $this->setParameterGet(array(
+        $this->setParameterPost(array(
             'METHOD' => $name,
             'VERSION' => $this->apiVersion,
             'PWD' => $this->apiPassword,
@@ -100,9 +100,9 @@ class Shopware_Components_Paypal_Client extends Zend_Http_Client
             'SIGNATURE' => $this->apiSignature
         ));
         if (!empty($args[0])) {
-            $this->setParameterGet($args[0]);
+            $this->setParameterPost($args[0]);
         }
-        $response = $this->request('GET');
+        $response = $this->request('POST');
 
         $body = $response->getBody();
         $params = array();

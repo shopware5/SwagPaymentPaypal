@@ -445,22 +445,6 @@ EOD;
                 'value' => true
             )
         );
-        $form->setElement(
-            'select',
-            'paypalSslVersion',
-            array(
-                'label' => 'SSL-Version (<a href="http://curl.haxx.se/libcurl/c/CURLOPT_SSLVERSION.html" target="_blank">CURLOPT_SSLVERSION</a>)',
-                'value' => 0,
-                'store' => array(
-                    array(0, 'Default (Keine Vorgabe)'),
-                    array(1, 'TLSv1'),
-                    array(4, 'TLSv1_0 (Available since PHP 5.5.19 and 5.6.3)'),
-                    array(5, 'TLSv1_1 (Available since PHP 5.5.19 and 5.6.3)'),
-                    array(6, 'TLSv1_2 (Available since PHP 5.5.19 and 5.6.3)'),
-                ),
-                'description' => 'Funktioniert nur zusammen mit Curl',
-            )
-        );
 
         if (is_file(__DIR__ . '/Views/backend/plugins/paypal/test.js')) {
             $form->setElement(

@@ -293,7 +293,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                     unset($this->session->PaypalResponse);
                     $response = $this->finishCheckout($details);
                     if ($response['ACK'] != 'Success') {
-                        if ($response['PAYMENTINFO_0_ERRORCODE'] == 10486) {
+                        if ($response['L_ERRORCODE0'] == 10486) {
                             if (!empty($config->paypalSandbox)) {
                                 $redirectUrl = 'https://www.sandbox.paypal.com/cgi-bin/';
                             } else {

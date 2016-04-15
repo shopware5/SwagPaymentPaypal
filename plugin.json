@@ -8,10 +8,11 @@
     "link": "http://store.shopware.com",
     "author": "shopware AG",
 
-    "currentVersion": "3.3.10",
+    "currentVersion": "3.3.11",
 
     "changelog": {
         "de": {
+            "3.3.11": "PT-5607 - Bugfix: Problem mit Paypal Express;",
             "3.3.10": "PT-5392 - Bugfix: Umstellung auf POST Methode beim API Client (<a href=\"https://www.paypal-knowledge.com/infocenter/index?page=content&widgetview=true&id=FAQ1927&viewlocale=en_US\">siehe Papyaldokumenation</a>). Plugin Konfiguration 'SSL-Version (CURLOPT-SSLVERSION)' entfernt;",
             "3.3.9": "PT-5462 - Bugfix: Abo-Commerce führt nicht mehr zu Zahlungsstatus 'Pending';",
             "3.3.8": "PT-5371 - Bugfix: Problem mit AboCommerce;",
@@ -30,6 +31,7 @@
             "3.0.0": "Allgemeine Verbesserungen; API-Update"
         },
         "en": {
+            "3.3.11": "PT-5607 - Bugfix: Problem with Paypal Express;",
             "3.3.10": "PT-5392 - Bugfix: Change to POST method in API Client (<a href=\"https://www.paypal-knowledge.com/infocenter/index?page=content&widgetview=true&id=FAQ1927&viewlocale=en_US\">see Papyal documentation</a>). Removed plugin configuration 'SSL-Version (CURLOPT-SSLVERSION)';",
             "3.3.9": "PT-5462 - Bugfix: Abo-commerce won't result in payment-status 'pending' anymore;",
             "3.3.8": "PT-5371 - Bugfix: Problem with AboCommerce;",

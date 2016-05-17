@@ -939,8 +939,16 @@ EOD;
     /**
      * @return bool
      */
+    public function isAtLeastShopware42()
+    {
+        return $this->assertMinimumVersion('4.2.0');
+    }
+
+    /**
+     * @return bool
+     */
     public function isShopware51()
     {
-        return $this->assertMinimumVersion("5.1.0");
+        return $this->assertMinimumVersion('5.1.0');
     }
 }

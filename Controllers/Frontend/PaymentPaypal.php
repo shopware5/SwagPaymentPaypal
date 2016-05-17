@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+use Psr\Log\LogLevel;
+
 class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_Frontend_Payment
 {
     /**
@@ -271,6 +273,10 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             return $this->forward('gateway');
         }
 
+        if ($initialResponse['ACK'] === 'Failure') {
+            $this->logError($initialResponse);
+        }
+
         switch (!empty($details['CHECKOUTSTATUS']) ? $details['CHECKOUTSTATUS'] : null) {
             case 'PaymentActionCompleted':
             case 'PaymentCompleted':
@@ -305,6 +311,8 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                         } else {
                             $this->View()->PaypalConfig = $config;
                             $this->View()->PaypalResponse = $response;
+
+                            $this->logError($response);
                         }
                     } elseif ($response['REDIRECTREQUIRED'] === 'true') {
                         if (!empty($config->paypalSandbox)) {
@@ -346,6 +354,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                 $this->View()->PaypalResponse = $initialResponse;
                 $this->View()->PaypalDetails = $details;
                 unset($this->session->PaypalResponse);
+
                 break;
         }
     }
@@ -768,6 +777,21 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         }
 
         return $params;
+    }
+
+    /**
+     * Helper method to log an error
+     *
+     * @param array $response
+     */
+    private function logError($response)
+    {
+        if (!$this->plugin->Config()->get('paypalErrorMode') || !$this->plugin->isAtLeastShopware42()) {
+            return;
+        }
+
+        $message = '[' . $response['L_ERRORCODE0'] . '] - ' . $response['L_SHORTMESSAGE0'] . '. ' . $response['L_LONGMESSAGE0'];
+        Shopware()->Container()->get('pluginlogger')->log(LogLevel::ERROR, $message);
     }
 
     /**

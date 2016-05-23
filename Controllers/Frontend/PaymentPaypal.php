@@ -786,12 +786,14 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
      */
     private function logError($response)
     {
-        if (!$this->plugin->Config()->get('paypalErrorMode') || !$this->plugin->isAtLeastShopware42()) {
+        if (!$this->plugin->isAtLeastShopware42()) {
             return;
         }
 
         $message = '[' . $response['L_ERRORCODE0'] . '] - ' . $response['L_SHORTMESSAGE0'] . '. ' . $response['L_LONGMESSAGE0'];
-        Shopware()->Container()->get('pluginlogger')->log(LogLevel::ERROR, $message);
+        /** @var \Shopware\Components\Logger $pluginLogger */
+        $pluginLogger = Shopware()->Container()->get('pluginlogger');
+        $pluginLogger->error($message);
     }
 
     /**

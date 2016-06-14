@@ -683,8 +683,15 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
 
         // Check login status
         if ($module->sCheckUser()) {
-            $module->sSYSTEM->_POST = $data['shipping'];
-            $module->sUpdateShipping();
+            //Save the new address.
+            if (Shopware::VERSION === '___VERSION___' || version_compare(Shopware::VERSION, '5.2.0', '>=')) {
+                $userId = $this->session->offsetGet('sUserId');
+                $this->updateShipping($userId, $data['shipping']);
+            } else {
+                $module->sSYSTEM->_POST = $data['shipping'];
+                $module->sUpdateShipping();
+            }
+
             $module->sSYSTEM->_POST = array('sPayment' => $paymentId);
             $module->sUpdatePayment();
         } else {
@@ -702,15 +709,74 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                 }
             }
             $session->sRegisterFinished = false;
-            if (version_compare(Shopware::VERSION, '4.3.0', '>=') || Shopware::VERSION == '___VERSION___') {
+            if (version_compare(Shopware::VERSION, '4.3.0', '>=') && version_compare(Shopware::VERSION, '5.2.0', '<')) {
                 $session->sRegister = $data;
-            } else {
+            } elseif (version_compare(Shopware::VERSION, '4.3.0', '<')) {
                 $session->sRegister = new ArrayObject($data, ArrayObject::ARRAY_AS_PROPS);
             }
             if ($finish) {
-                $module->sSaveRegister();
+                if (Shopware::VERSION === '___VERSION___' || version_compare(Shopware::VERSION, '5.2.0', '>=')) {
+                    $this->saveUser($data);
+                    $module->sSYSTEM->_POST = $data['auth'];
+                    $module->sLogin(true);
+                    $this->returnAction();
+                } else {
+                    $module->sSaveRegister();
+                }
             }
         }
+    }
+
+    /**
+     * Saves a new user to the system.
+     *
+     * @param array $data
+     */
+    private function saveUser($data)
+    {
+        $plain = array_merge($data['auth'], $data['shipping']);
+
+        //Create forms and validate the input
+        $customer = new Shopware\Models\Customer\Customer();
+        $form = $this->createForm(Shopware\Bundle\AccountBundle\Form\Account\PersonalFormType::class, $customer);
+        $form->submit($plain);
+
+        $address = new Shopware\Models\Customer\Address();
+        $form = $this->createForm(Shopware\Bundle\AccountBundle\Form\Account\AddressFormType::class, $address);
+        $form->submit($plain);
+
+        /** @var Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface $context */
+        $context = $this->get('shopware_storefront.context_service')->getShopContext();
+
+        /** @var Shopware\Bundle\StoreFrontBundle\Struct\Shop $shop */
+        $shop = $context->getShop();
+
+        /** @var Shopware\Bundle\AccountBundle\Service\RegisterServiceInterface $registerService */
+        $registerService = $this->get('shopware_account.register_service');
+        $registerService->register($shop, $customer, $address, $address);
+    }
+
+    /**
+     * Updates the shipping address to the latest address that has been provided by PayPal.
+     *
+     * @param int $userId
+     * @param array $shippingData
+     */
+    private function updateShipping($userId, $shippingData)
+    {
+        /** @var \Shopware\Components\Model\ModelManager $em */
+        $em = $this->get('models');
+
+        /** @var \Shopware\Models\Customer\Customer $customer */
+        $customer = $em->getRepository('Shopware\Models\Customer\Customer')->findOneBy(array('id' => $userId));
+
+        /** @var \Shopware\Models\Customer\Address $address */
+        $address = $customer->getDefaultShippingAddress();
+
+        $form = $this->createForm(Shopware\Bundle\AccountBundle\Form\Account\AddressFormType::class, $address);
+        $form->submit($shippingData);
+
+        $this->get('shopware_account.address_service')->update($address);
     }
 
     /**

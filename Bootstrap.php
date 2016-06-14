@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+use Shopware\Plugins\SwagPaymentPaypal\Components\Paypal\AddressValidator;
+
 class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Components_Plugin_Bootstrap
 {
     /**
@@ -273,6 +275,23 @@ EOD;
             'Theme_Compiler_Collect_Plugin_Less',
             'addLessFiles'
         );
+
+        $this->subscribeEvent('Enlight_Bootstrap_AfterInitResource_shopware_account.address_validator', 'decorateAddressValidator');
+    }
+
+    /**
+     * Modifies the default address validator to be able to allow values which were not provided by paypal but may be required in shopware.
+     *
+     * @param Enlight_Event_EventArgs $args
+     */
+    public function decorateAddressValidator(Enlight_Event_EventArgs $args)
+    {
+        require_once __DIR__ . '/Components/Paypal/AddressValidator.php';
+
+        $innerValidator = $this->get('shopware_account.address_validator');
+        $validator = new AddressValidator($innerValidator, Shopware()->Container());
+
+        Shopware()->Container()->set('shopware_account.address_validator', $validator);
     }
 
     /**

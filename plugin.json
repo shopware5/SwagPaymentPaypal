@@ -8,10 +8,11 @@
     "link": "http://store.shopware.com",
     "author": "shopware AG",
 
-    "currentVersion": "3.3.12",
+    "currentVersion": "3.4.0",
 
     "changelog": {
         "de": {
+            "3.4.0": "PT-5645 - Bugfix: Template Vererbung; PT-5834 - Feature: Shopware 5.2 Kompatibilität;",
             "3.3.12": "PT-5578 - Feature: Fehlermeldungen werden im Shopware Log gespeichert;",
             "3.3.11": "PT-5607 - Bugfix: Problem mit Paypal Express;",
             "3.3.10": "PT-5392 - Bugfix: Umstellung auf POST Methode beim API Client (<a href=\"https://www.paypal-knowledge.com/infocenter/index?page=content&widgetview=true&id=FAQ1927&viewlocale=en_US\">siehe Papyaldokumenation</a>). Plugin Konfiguration 'SSL-Version (CURLOPT-SSLVERSION)' entfernt;",
@@ -32,6 +33,7 @@
             "3.0.0": "Allgemeine Verbesserungen; API-Update"
         },
         "en": {
+            "3.4.0": "PT-5645 - Bugfix: Template inheritance; PT-5834 - Feature: Shopware 5.2 compatibility;",
             "3.3.12": "PT-5578 - Feature: Error messages are logged in the Shopware log;",
             "3.3.11": "PT-5607 - Bugfix: Problem with Paypal Express;",
             "3.3.10": "PT-5392 - Bugfix: Change to POST method in API Client (<a href=\"https://www.paypal-knowledge.com/infocenter/index?page=content&widgetview=true&id=FAQ1927&viewlocale=en_US\">see Papyal documentation</a>). Removed plugin configuration 'SSL-Version (CURLOPT-SSLVERSION)';",

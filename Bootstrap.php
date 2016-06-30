@@ -950,7 +950,15 @@ EOD;
     public function onInitResourcePaypalRestClient()
     {
         require_once __DIR__ . '/Components/Paypal/RestClient.php';
-        $client = new Shopware_Components_Paypal_RestClient($this->Config());
+
+
+        $rootDir = Shopware()->Container()->getParameter('kernel.root_dir');
+        $caPath = $rootDir.'/engine/Shopware/Components/HttpClient/cacert.pem';
+        if (!is_readable($caPath)) {
+            $caPath = null;
+        }
+
+        $client = new Shopware_Components_Paypal_RestClient($this->Config(), $caPath);
 
         return $client;
     }

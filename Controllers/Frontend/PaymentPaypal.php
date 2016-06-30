@@ -738,11 +738,11 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
 
         //Create forms and validate the input
         $customer = new Shopware\Models\Customer\Customer();
-        $form = $this->createForm(Shopware\Bundle\AccountBundle\Form\Account\PersonalFormType::class, $customer);
+        $form = $this->createForm('Shopware\Bundle\AccountBundle\Form\Account\PersonalFormType', $customer);
         $form->submit($plain);
 
         $address = new Shopware\Models\Customer\Address();
-        $form = $this->createForm(Shopware\Bundle\AccountBundle\Form\Account\AddressFormType::class, $address);
+        $form = $this->createForm('Shopware\Bundle\AccountBundle\Form\Account\AddressFormType', $address);
         $form->submit($plain);
 
         /** @var Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface $context */
@@ -773,7 +773,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         /** @var \Shopware\Models\Customer\Address $address */
         $address = $customer->getDefaultShippingAddress();
 
-        $form = $this->createForm(Shopware\Bundle\AccountBundle\Form\Account\AddressFormType::class, $address);
+        $form = $this->createForm('Shopware\Bundle\AccountBundle\Form\Account\AddressFormType', $address);
         $form->submit($shippingData);
 
         $this->get('shopware_account.address_service')->update($address);

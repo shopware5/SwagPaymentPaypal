@@ -1,6 +1,6 @@
 // Login with PayPal button
 #paypal-login--button {
-    .unitize(10, 16, margin-top);
+    .unitize(margin-top, 10);
     width: 100%;
 }
 
@@ -16,16 +16,16 @@
     float: right;
 
     .paypal-express--delimiter {
-        .unitize(30, 16, line-height);
-        .unitize(10, 16, margin-right);
+        .unitize(line-height, 30);
+        .unitize(margin-right, 10);
         width: auto;
         display: block;
         float: left;
     }
 
     .paypal-express--btn {
-        .unitize-width(170, 16);
-        .unitize-height(32, 16);
+        .unitize-width(170);
+        .unitize-height(32);
         display: block;
         float: left;
     }
@@ -35,14 +35,14 @@
 .container--ajax-cart {
     .paypal-express,
     .paypal-express-de {
-        .unitize(10, 16, margin-top);
+        .unitize(margin-top, 10);
     }
 }
 
 // Modify table actions spacing in checkout cart
 .is--ctl-checkout.is--act-cart .product--table {
     .paypal-express {
-        .unitize(20, 16, margin-bottom);
+        .unitize(margin-bottom, 20);
     }
 
     .table--actions {
@@ -55,18 +55,18 @@
     }
 
     .btn--inquiry {
-        .unitize(10, 16, margin-bottom);
+        .unitize(margin-bottom, 10);
     }
 }
 
 @media screen and (min-width: @phoneLandscapeViewportWidth) {
     .is--ctl-checkout.is--act-cart .product--table {
         .table--actions {
-            .unitize(10, 16, margin-bottom);
+            .unitize(margin-bottom, 10);
         }
 
         .btn--inquiry {
-            .unitize(10, 16, margin-top);
+            .unitize(margin-top, 10);
             margin-bottom: 0;
         }
     }
@@ -75,7 +75,7 @@
 @media screen and (min-width: @tabletViewportWidth) {
     .is--ctl-checkout.is--act-cart .product--table {
         .table--actions {
-            .unitize(20, 16, margin-bottom);
+            .unitize(margin-bottom, 20);
         }
 
         .btn--inquiry {

@@ -101,8 +101,15 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
             //always remove unneeded settings
             $em = $this->get('models');
             $form = $this->Form();
-            $em->remove($form->getElement('paypalLogInApi'));
-            $em->remove($form->getElement('paypalSeamlessCheckout'));
+            $paypalLogInApi = $form->getElement('paypalLogInApi');
+            if ($paypalLogInApi !== null) {
+                $em->remove($paypalLogInApi);
+            }
+            $paypalSeamlessCheckout = $form->getElement('paypalSeamlessCheckout');
+            if ($paypalSeamlessCheckout !== null) {
+                $em->remove($paypalSeamlessCheckout);
+
+            }
             $em->flush();
         }
         if (version_compare($version, '3.3.4', '<')) {

@@ -7,9 +7,9 @@
  * file that was distributed with this source code.
  */
 
-use Psr\Log\LogLevel;
+require_once __DIR__ . '/../../Components/CSRFWhitelistAware.php';
 
-class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_Frontend_Payment
+class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_Frontend_Payment implements \Shopware\Components\CSRFWhitelistAware
 {
     /**
      * @var Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap $plugin
@@ -20,6 +20,17 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
      * @var Enlight_Components_Session_Namespace $session
      */
     private $session;
+
+    /**
+     * Whitelist notify- and webhook-action for paypal
+     */
+    public function getWhitelistedCSRFActions()
+    {
+        return [
+            'notify',
+            'webhook'
+        ];
+    }
 
     /**
      * {@inheritdoc}

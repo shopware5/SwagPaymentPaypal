@@ -8,10 +8,11 @@
     "link": "http://store.shopware.com",
     "author": "shopware AG",
 
-    "currentVersion": "3.4.0",
+    "currentVersion": "3.4.1",
 
     "changelog": {
         "de": {
+            "3.4.1": "PT-6218 - Bugfix: Update Methode; PT-6366 - Bugfix: CSRF-Token Fehler;",
             "3.4.0": "PT-5645 - Bugfix: Template Vererbung; PT-5834 - Feature: Shopware 5.2 Kompatibilität;",
             "3.3.12": "PT-5578 - Feature: Fehlermeldungen werden im Shopware Log gespeichert;",
             "3.3.11": "PT-5607 - Bugfix: Problem mit Paypal Express;",
@@ -33,6 +34,7 @@
             "3.0.0": "Allgemeine Verbesserungen; API-Update"
         },
         "en": {
+            "3.4.1": "PT-6218 - Bugfix: Update method; PT-6366 - Bugfix: CSRF token error;",
             "3.4.0": "PT-5645 - Bugfix: Template inheritance; PT-5834 - Feature: Shopware 5.2 compatibility;",
             "3.3.12": "PT-5578 - Feature: Error messages are logged in the Shopware log;",
             "3.3.11": "PT-5607 - Bugfix: Problem with Paypal Express;",

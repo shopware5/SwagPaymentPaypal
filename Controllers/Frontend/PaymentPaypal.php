@@ -26,10 +26,10 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
      */
     public function getWhitelistedCSRFActions()
     {
-        return [
+        return array(
             'notify',
             'webhook'
-        ];
+        );
     }
 
     /**

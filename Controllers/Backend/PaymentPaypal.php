@@ -8,8 +8,10 @@
 
 use Shopware_Components_Paypal_RestClient as RestClient;
 use Shopware_Components_Paypal_Client as Client;
+use Shopware\Components\CSRFWhitelistAware;
+require_once __DIR__ . '/../../Components/CSRFWhitelistAware.php';
 
-class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Backend_ExtJs
+class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Backend_ExtJs implements CSRFWhitelistAware
 {
     /**
      * @var Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap
@@ -588,5 +590,17 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         }
 
         $this->View()->assign($data);
+    }
+
+    /**
+     * Returns a list with actions which should not be validated for CSRF protection
+     *
+     * @return string[]
+     */
+    public function getWhitelistedCSRFActions()
+    {
+        return [
+            'downloadRestDocument'
+        ];
     }
 }

@@ -952,7 +952,7 @@ EOD;
     /**
      * Creates and returns the paypal rest client for an event.
      *
-     * @return \Shopware_Components_Paypal_Client
+     * @return \Shopware_Components_Paypal_RestClient
      */
     public function onInitResourcePaypalRestClient()
     {

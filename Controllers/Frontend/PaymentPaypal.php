@@ -513,7 +513,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             if (!empty($prefix)) {
                 // Set prefixed invoice id - Remove special chars and spaces
                 $prefix = str_replace(' ', '', $prefix);
-                $prefix = preg_replace('/[^A-Za-z0-9\-]/', '', $prefix);
+                $prefix = preg_replace('/[^A-Za-z0-9\_]/', '', $prefix);
                 $params['PAYMENTREQUEST_0_INVNUM'] = $prefix . $orderNumber;
             } else {
                 $params['PAYMENTREQUEST_0_INVNUM'] = $orderNumber;

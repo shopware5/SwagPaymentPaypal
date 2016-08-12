@@ -46,10 +46,11 @@ class AddressValidator implements AddressValidatorInterface
             $this->innerValidator->validate($address);
         } catch (ValidationException $exception) {
             $violations = $exception->getViolations();
+            $allowedViolations = array('state', 'phone', 'additionalAddressLine1', 'additionalAddressLine2');
 
             /** @var $violation ConstraintViolationInterface */
             foreach ($violations->getIterator() as $violation) {
-                if (!in_array($violation->getPropertyPath(), array('state', 'phone'))) {
+                if (!in_array($violation->getPropertyPath(), $allowedViolations)) {
                     throw $exception;
                 }
             }

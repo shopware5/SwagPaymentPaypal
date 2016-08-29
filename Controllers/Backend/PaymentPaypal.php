@@ -599,8 +599,8 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
      */
     public function getWhitelistedCSRFActions()
     {
-        return [
+        return array(
             'downloadRestDocument'
-        ];
+        );
     }
 }

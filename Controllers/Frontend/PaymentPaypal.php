@@ -831,12 +831,12 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             foreach ($basket['content'] as $key => $item) {
                 if (!empty($user['additional']['charge_vat']) && !empty($item['amountWithTax'])) {
                     $amount = round($item['amountWithTax'], 2);
-                    $quantity = 1;
                 } else {
                     $amount = str_replace(',', '.', $item['amount']);
-                    $quantity = $item['quantity'];
                     $amount = $amount / $item['quantity'];
                 }
+
+                $quantity = $item['quantity'];
                 $amount = round($amount, 2);
                 $article = array(
                     'L_PAYMENTREQUEST_0_NUMBER' . $key => $item['ordernumber'],

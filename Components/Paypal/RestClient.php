@@ -33,20 +33,22 @@ class Shopware_Components_Paypal_RestClient extends Zend_Http_Client
      * Expects a configuration parameter.
      *
      * @param Enlight_Config $config
+     * @param string $caPath path to Bundle of CA Root Certificates (see: https://curl.haxx.se/ca/cacert.pem)
      */
-    public function __construct($config)
+    public function __construct($config, $caPath = null)
     {
         $this->pluginConfig = $config;
         parent::__construct($this->getBaseUri());
-        $this->setAdapter(self::createAdapterFromConfig($config));
+        $this->setAdapter(self::createAdapterFromConfig($config, $caPath));
     }
 
     /**
      * @param Enlight_Config $config
+     * @param string $caPath path to Bundle of CA Root Certificates (see: https://curl.haxx.se/ca/cacert.pem)
      * @see https://github.com/paypal/sdk-core-php
      * @return Zend_Http_Client_Adapter_Curl|Zend_Http_Client_Adapter_Socket
      */
-    public static function createAdapterFromConfig($config)
+    public static function createAdapterFromConfig($config, $caPath = null)
     {
         $curl = $config->get('paypalCurl', true);
         $timeout = $config->get('paypalTimeout') ?: 60;
@@ -62,6 +64,11 @@ class Shopware_Components_Paypal_RestClient extends Zend_Http_Client
                 $adapter->setCurlOption(CURLOPT_SSL_VERIFYPEER, false);
                 $adapter->setCurlOption(CURLOPT_SSL_VERIFYHOST, false);
             }
+
+            if ($caPath) {
+                $adapter->setCurlOption(CURLOPT_CAINFO, $caPath);
+            }
+
             $adapter->setCurlOption(CURLOPT_TIMEOUT, $timeout);
             //$adapter->setCurlOption(CURLOPT_SSL_CIPHER_LIST, 'TLSv1');
             //$adapter->setCurlOption(CURLOPT_SSL_VERIFYPEER, 1);

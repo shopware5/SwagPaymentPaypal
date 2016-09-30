@@ -644,7 +644,7 @@ EOD;
             array(
                 'label' => 'Bestellnummer für PayPal mit einem Shop-Prefix versehen',
                 'description' => 'Wenn Sie Ihren PayPal-Account für mehrere Shops nutzen, können Sie vermeiden, dass es Überschneidungen bei den Bestellnummern gibt, indem Sie hier ein eindeutiges Prefix definieren.',
-                'value' => 'MeinShop_',
+                'emptyText' => 'MeinShop_',
                 'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
                 'vtype' => 'alphanum'
             )

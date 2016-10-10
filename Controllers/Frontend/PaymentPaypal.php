@@ -678,16 +678,18 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $paymentId = $this->get('db')->fetchOne($sql, array('paypal'));
         $data['payment']['object'] = $module->sGetPaymentMeanById($paymentId);
 
-        //if(!$finish) {
         $shop = $this->get('shop');
         $shop = $shop->getMain() ?: $shop;
         $sql = 'SELECT `password` FROM `s_user` WHERE `email` LIKE ? AND `active` = 1 ';
         if ($shop->getCustomerScope()) {
             $sql .= "AND `subshopID` = {$shop->getId()} ";
         }
-        $sql .= 'ORDER BY `accountmode`';
+
+        //Always use the latest account. It is possible, that the account already exists but the password may be invalid.
+        //The plugin then creates a new account and uses that one instead.
+        $sql .= 'ORDER BY `id` DESC';
         $data['auth']['passwordMD5'] = $this->get('db')->fetchOne($sql, array($data['auth']['email']));
-        //}
+
         // First try login / Reuse paypal account
         $module->sSYSTEM->_POST = $data['auth'];
         $module->sLogin(true);

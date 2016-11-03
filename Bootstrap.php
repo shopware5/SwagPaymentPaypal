@@ -31,7 +31,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
     }
 
     /**
-     * @return bool
+     * @return array|bool
      */
     public function uninstall()
     {
@@ -178,6 +178,7 @@ EOD;
         $logo = 'paypal_logo.png';
         $mediaPath = $this->Application()->DocPath() . 'media/image/' . $logo;
 
+	    /** @var Shopware\Models\Media\Repository $mediaRepo */
         $mediaRepo = $this->get('models')->getRepository('Shopware\Models\Media\Media');
         $image = $mediaRepo->findOneBy(array('name' => 'paypal_logo'));
         if ($image) {
@@ -207,7 +208,7 @@ EOD;
      * Activate the plugin paypal plugin.
      * Sets the active flag in the payment row.
      *
-     * @return bool
+     * @return array|bool
      */
     public function enable()
     {
@@ -226,7 +227,7 @@ EOD;
     /**
      * Disable plugin method and sets the active flag in the payment row
      *
-     * @return bool
+     * @return array|bool
      */
     public function disable()
     {

@@ -178,7 +178,7 @@ EOD;
         $logo = 'paypal_logo.png';
         $mediaPath = $this->Application()->DocPath() . 'media/image/' . $logo;
 
-	    /** @var Shopware\Models\Media\Repository $mediaRepo */
+	    /** @var \Shopware\Models\Media\Repository $mediaRepo */
         $mediaRepo = $this->get('models')->getRepository('Shopware\Models\Media\Media');
         $image = $mediaRepo->findOneBy(array('name' => 'paypal_logo'));
         if ($image) {

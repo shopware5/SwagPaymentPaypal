@@ -337,17 +337,28 @@ EOD;
      */
     private function createMyMenu()
     {
+        /** @var \Shopware\Models\Menu\Menu $parent */
         $parent = $this->Menu()->findOneBy(array('label' => 'Zahlungen'));
-        $this->createMenuItem(
-            array(
-                'label' => 'PayPal',
-                'controller' => 'PaymentPaypal',
-                'action' => 'Index',
-                'class' => 'paypal--icon',
-                'active' => 1,
-                'parent' => $parent
-            )
-        );
+	    /** @var \Shopware\Models\Menu\Menu $oldMenuEntry */
+        $oldMenuEntry = $this->Menu()->findOneBy(array('controller' => 'PaymentPaypal', 'action' => 'Index'));
+        if ( $oldMenuEntry ) {
+            $oldMenuEntry->setClass('paypal--icon');
+	        $oldMenuEntry->setLabel('PayPal');
+	        $oldMenuEntry->setActive(1);
+	        $oldMenuEntry->setParent($parent);
+            $this->Application()->Models()->flush($oldMenuEntry);
+        } else {
+            $this->createMenuItem(
+                array(
+                    'label' => 'PayPal',
+                    'controller' => 'PaymentPaypal',
+                    'action' => 'Index',
+                    'class' => 'paypal--icon',
+                    'active' => 1,
+                    'parent' => $parent
+                )
+            );
+        }
     }
 
     /**

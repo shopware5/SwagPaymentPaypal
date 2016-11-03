@@ -343,10 +343,10 @@ EOD;
         $oldMenuEntry = $this->Menu()->findOneBy(array('controller' => 'PaymentPaypal', 'action' => 'Index'));
         if ( $oldMenuEntry ) {
             $oldMenuEntry->setClass('paypal--icon');
-	        $oldMenuEntry->setLabel('PayPal');
-	        $oldMenuEntry->setActive(1);
-	        $oldMenuEntry->setParent($parent);
-            $this->Application()->Models()->flush($oldMenuEntry);
+            $oldMenuEntry->setLabel('PayPal');
+            $oldMenuEntry->setActive(1);
+            $oldMenuEntry->setParent($parent);
+            $this->get('models')->flush($oldMenuEntry);
         } else {
             $this->createMenuItem(
                 array(

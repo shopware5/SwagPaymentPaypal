@@ -178,7 +178,7 @@ EOD;
         $logo = 'paypal_logo.png';
         $mediaPath = $this->Application()->DocPath() . 'media/image/' . $logo;
 
-	    /** @var \Shopware\Models\Media\Repository $mediaRepo */
+        /** @var \Shopware\Models\Media\Repository $mediaRepo */
         $mediaRepo = $this->get('models')->getRepository('Shopware\Models\Media\Media');
         $image = $mediaRepo->findOneBy(array('name' => 'paypal_logo'));
         if ($image) {
@@ -339,7 +339,7 @@ EOD;
     {
         /** @var \Shopware\Models\Menu\Menu $parent */
         $parent = $this->Menu()->findOneBy(array('label' => 'Zahlungen'));
-	    /** @var \Shopware\Models\Menu\Menu $oldMenuEntry */
+        /** @var \Shopware\Models\Menu\Menu $oldMenuEntry */
         $oldMenuEntry = $this->Menu()->findOneBy(array('controller' => 'PaymentPaypal', 'action' => 'Index'));
         if ( $oldMenuEntry ) {
             $oldMenuEntry->setClass('paypal--icon');

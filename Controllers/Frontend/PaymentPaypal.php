@@ -571,7 +571,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                     SELECT id, 1 FROM s_order WHERE ordernumber = ?
                     ON DUPLICATE KEY UPDATE swag_payal_express = 1
                 ';
-                $this->get('db')->query($sql, array($orderNumber, ));
+                $this->get('db')->query($sql, array($orderNumber,));
             } catch (Exception $e) {
             }
         }
@@ -831,18 +831,27 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $config = $this->plugin->Config();
         if ($config->get('paypalTransferCart') && $params['PAYMENTREQUEST_0_ITEMAMT'] != '0.00' && count($basket['content']) < 25) {
             foreach ($basket['content'] as $key => $item) {
+                $name = $item['articlename'];
+                $quantity = (int)$item['quantity'];
                 if (!empty($user['additional']['charge_vat']) && !empty($item['amountWithTax'])) {
                     $amount = round($item['amountWithTax'], 2);
                 } else {
                     $amount = str_replace(',', '.', $item['amount']);
-                    $amount = $amount / $item['quantity'];
                 }
 
-                $quantity = $item['quantity'];
-                $amount = round($amount, 2);
+                // If more than 2 decimal places
+                if (round($amount / $quantity, 2) * $quantity != $amount) {
+                    if ($quantity != 1) {
+                        $name = $quantity . 'x ' . $name;
+                    }
+                    $quantity = 1;
+                } else {
+                    $amount = round($amount / $quantity, 2);
+                }
+
                 $article = array(
                     'L_PAYMENTREQUEST_0_NUMBER' . $key => $item['ordernumber'],
-                    'L_PAYMENTREQUEST_0_NAME' . $key => $item['articlename'],
+                    'L_PAYMENTREQUEST_0_NAME' . $key => $name,
                     'L_PAYMENTREQUEST_0_AMT' . $key => $amount,
                     'L_PAYMENTREQUEST_0_QTY' . $key => $quantity
                 );

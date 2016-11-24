@@ -830,7 +830,9 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
 
         $config = $this->plugin->Config();
         if ($config->get('paypalTransferCart') && $params['PAYMENTREQUEST_0_ITEMAMT'] != '0.00' && count($basket['content']) < 25) {
-            foreach ($basket['content'] as $key => $item) {
+            $key = 0;
+            foreach ($basket['content'] as $item) {
+                $sku = $item['ordernumber'];
                 $name = $item['articlename'];
                 $quantity = (int)$item['quantity'];
                 if (!empty($user['additional']['charge_vat']) && !empty($item['amountWithTax'])) {
@@ -849,13 +851,28 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                     $amount = round($amount / $quantity, 2);
                 }
 
+                // Add support for custom products
+                if (!empty($item['customProductMode'])) {
+                    $last = $key - 1;
+                    if (isset($params['L_PAYMENTREQUEST_0_NUMBER' . $last])) {
+                        if ($item['customProductMode'] == 2) {
+                            $sku = $sku ?: $params['L_PAYMENTREQUEST_0_NUMBER' . $last];
+                        } elseif ($item['customProductMode'] == 3) {
+                            $params['L_PAYMENTREQUEST_0_NAME' . $last] .= ': ' . $name;
+                            $params['L_PAYMENTREQUEST_0_AMT' . $last] += $amount;
+                            continue;
+                        }
+                    }
+                }
+
                 $article = array(
-                    'L_PAYMENTREQUEST_0_NUMBER' . $key => $item['ordernumber'],
+                    'L_PAYMENTREQUEST_0_NUMBER' . $key => $sku,
                     'L_PAYMENTREQUEST_0_NAME' . $key => $name,
                     'L_PAYMENTREQUEST_0_AMT' . $key => $amount,
                     'L_PAYMENTREQUEST_0_QTY' . $key => $quantity
                 );
                 $params = array_merge($params, $article);
+                ++$key;
             }
         }
 

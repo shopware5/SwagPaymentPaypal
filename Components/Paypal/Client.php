@@ -59,7 +59,7 @@ class Shopware_Components_Paypal_Client extends Zend_Http_Client
     /**
      * @var string
      */
-    protected $apiVersion;
+    protected $apiVersion = '113.0';
 
     /**
      * Constructor method
@@ -78,7 +78,6 @@ class Shopware_Components_Paypal_Client extends Zend_Http_Client
         $this->apiUsername = $config->get('paypalUsername');
         $this->apiPassword = $config->get('paypalPassword');
         $this->apiSignature = $config->get('paypalSignature');
-        $this->apiVersion = $config->get('paypalVersion');
         parent::__construct($url);
         $this->setAdapter(RestClient::createAdapterFromConfig($config));
     }

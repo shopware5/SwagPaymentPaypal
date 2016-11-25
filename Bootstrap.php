@@ -116,6 +116,9 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
             $this->fixPaymentLogo();
             $this->fixPluginDescription();
         }
+        if (version_compare($version, '3.4.3', '<=')) {
+            $this->Form()->removeElement('paypalVersion');
+        }
 
         //Update form
         $this->createMyForm();
@@ -364,7 +367,7 @@ EOD;
                 'label' => 'API-Benutzername',
                 'required' => true,
                 'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
-                'stripCharsRe' => ' '
+                'stripCharsRe' => " \t"
             )
         );
         $form->setElement(
@@ -374,7 +377,7 @@ EOD;
                 'label' => 'API-Passwort',
                 'required' => true,
                 'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
-                'stripCharsRe' => ' '
+                'stripCharsRe' => " \t"
             )
         );
         $form->setElement(
@@ -384,18 +387,7 @@ EOD;
                 'label' => 'API-Unterschrift',
                 'required' => true,
                 'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
-                'stripCharsRe' => ' '
-            )
-        );
-        $form->setElement(
-            'text',
-            'paypalVersion',
-            array(
-                'label' => 'API-Version',
-                'value' => '113.0',
-                'required' => true,
-                'readOnly' => true,
-                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+                'stripCharsRe' => " \t"
             )
         );
         $form->setElement(
@@ -421,7 +413,8 @@ EOD;
             array(
                 'label' => 'REST-API Client ID',
                 'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
-                'stripCharsRe' => ' '
+                'stripCharsRe' => " \t",
+                'description' => 'Hinweis: Diese Zugangsdaten werden nur benötigt, wenn sie PayPal PLUS installieren und einrichten wollen. Weitere Informationen dazu erhalten sie von Ihrem PayPal-Ansprechpartner.',
             )
         );
         $form->setElement(
@@ -430,7 +423,7 @@ EOD;
             array(
                 'label' => 'REST-API Secret',
                 'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
-                'stripCharsRe' => ' '
+                'stripCharsRe' => " \t"
             )
         );
         $form->setElement(
@@ -458,7 +451,7 @@ EOD;
             'paypalTimeout',
             array(
                 'label' => 'API-Timeout in Sekunden',
-                'emptyText' => 'Default (60 Sekunden)',
+                'emptyText' => 'Default (60)',
                 'value' => null,
                 'scope' => 0
             )
@@ -499,7 +492,9 @@ EOD;
             'paypalBrandName',
             array(
                 'label' => 'Alternativer Shop-Name auf der PayPal-Seite',
-                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+                'maxLength' => 127,
+                'enforceMaxLength' => true
             )
         );
         $form->setElement(
@@ -543,17 +538,23 @@ EOD;
         );
 
         // Payment settings
+        $store = array(
+            array('Sale', array('en_GB' => 'Complete payment immediately (Sale)', 'de_DE' => 'Zahlung sofort abschließen (Sale)')),
+            array('Authorization', array('en_GB' => 'Delayed payment collection (Auth-Capture)', 'de_DE' => 'Zeitverzögerter Zahlungseinzug (Auth-Capture)')),
+            array('Order', array('en_GB' => 'Delayed payment collection (Order-Auth-Capture)', 'de_DE' => 'Zeitverzögerter Zahlungseinzug (Order-Auth-Capture)')),
+        );
+        if (!$this->assertMinimumVersion('4.3.0')) {
+            $store = array_map(function ($option) {
+                return [$option[0], $option[1]['de_DE']];
+            }, $store);
+        }
         $form->setElement(
             'select',
             'paypalPaymentAction',
             array(
                 'label' => 'Zahlungsabschluss',
                 'value' => 'Sale',
-                'store' => array(
-                    array('Sale', 'Zahlung sofort abschließen (Sale)'),
-                    array('Authorization', 'Zeitverzögerter Zahlungseinzug (Auth-Capture)'),
-                    array('Order', 'Zeitverzögerter Zahlungseinzug (Order-Auth-Capture)')
-                ),
+                'store' => $store,
                 'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
             )
         );
@@ -583,7 +584,8 @@ EOD;
             array(
                 'label' => 'Warenkorb an PayPal übertragen',
                 'value' => true,
-                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
+                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+                'description' => 'Hinweis: Die Anzahl der Positionen ist technisch auf 24 Stück beschränkt. Bei Netto-Bestellung werden teilweise keine Stückpreise übergeben, da diese mehr als zwei Nachkommastellen haben können.'
             )
         );
         $form->setElement(
@@ -633,7 +635,7 @@ EOD;
             'paypalSendInvoiceId',
             array(
                 'label' => 'Bestellnummer an PayPal übertragen',
-                'description' => 'Ist ggf. für einige Warenwirtschaften erforderlich. Stellen Sie in diesem Fall sicher, dass ihr Nummernkreis für Bestellnummern sich nicht mit anderen/vorherigen Shops überschneidet, die Sie ebenfalls über ihren PayPal-Account betreiben.',
+                'description' => 'Achtung: Aktivieren Sie diese Option nur in Absprache mit ihrem Shopware-Partner oder dem Shopware-Support. Durch diese Option wird die Bestellung vor der Weiterleitung an PayPal erzeugt und kann daher Bestellungen ohne gültige Zahlungen erzeugen. Zusätzlich kann es zu Abbrüchen führen, wenn Sie die Bestellnummer schon einmal in ihrem PayPal-Account benutzt haben.',
                 'value' => false,
                 'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
             )
@@ -659,24 +661,43 @@ EOD;
                 'paypalUsername' => 'API username',
                 'paypalPassword' => 'API password',
                 'paypalSignature' => 'API signature',
-                'paypalVersion' => 'API version',
+                'paypalButtonApi' => '<strong>Get API signature now</strong>',
+                'paypalClientId' => 'REST-API client ID',
+                'paypalSecret' => 'REST-API secret',
+                'paypalButtonRestApi' => '<strong>Get REST API data now</strong>',
                 'paypalSandbox' => 'Activate sandbox mode',
-                'paypalBrandName' => 'Alternative shop name on PayPal\'s site',
-                'paypalLogoImage' => 'Shop image for PayPal',
-                'paypalCartBorderColor' => 'Color of the basket on PayPal',
-                'paypalFrontendLogo' => 'Show payment logo on frontend',
-                'paypalBillingAgreement' => 'Billing agreement / Activate "Buy it now"',
-                'paypalTransferCart' => 'Transfer basket to PayPal',
-                'paypalExpressButton' => 'Show express-purchase button in basket',
-                'paypalExpressButtonLayer' => 'Show express-purchase button in modal box',
-                'paypalStatusId' => 'Payment state after completing the payment',
+                'paypalTimeout' => 'API timeout in seconds',
+                'paypalCurl' => 'Use CURL (if available)',
+                'paypalButtonClientTest' => '<strong>Test the API now</strong>',
+                'paypalErrorMode' => 'Display error mesages',
+                'paypalBrandName' => 'Alternative shop name for PayPal',
+                'paypalLocaleCode' => 'Alternative language (locale)',
+                'paypalLogoImage' => 'Shop logo for PayPal',
+                'paypalCartBorderColor' => 'Cart color for PayPal',
+                'paypalFrontendLogo' => 'Show payment logo in frontend',
+                'paypalPaymentAction' => 'Payment acquisition',
+                'paypalBillingAgreement' => 'Billing agreement / activate "Buy it now"',
+                'paypalTransferCart' => 'Transafer cart to PayPal',
+                'paypalExpressButton' => 'Show express purchase button in basket',
+                'paypalExpressButtonLayer' => 'Show express purchase button in modalbox',
+                'paypalStatusId' => 'Payment state after completing the transaction',
                 'paypalPendingStatusId' => 'Payment state after being authorized',
-                'paypalSendInvoiceId' => 'Transfer invoice id to paypal',
-                'paypalPrefixInvoiceId' => 'Add shop prefix to the invoice id'
+                'paypalSendInvoiceId' => 'Transfer order number to PayPal',
+                'paypalPrefixInvoiceId' => 'Add shop prefix to the order number'
             )
         );
-        $shopRepository = Shopware()->Models()->getRepository('\Shopware\Models\Shop\Locale');
+        $descriptionTranslations = array(
+            'en_GB' => array(
+                'paypalBillingAgreement' => 'Important: This function must first be activated in your PayPal account.',
+                'paypalClientId' => 'These credentials are only required if you want to install and use PayPal PLUS. For more information, please contact your PayPal representative.',
+                'paypalTransferCart' => 'Note: The number of positions is technically limited to 24 units. With net orders, it’s possible that pieces of unit prices will not be transferred, since these can have more than two decimal places in Shopware.',
+                'paypalSendInvoiceId' => 'Important: Only activate this option in consultation with your Shopware partner or Shopware support. This option places the order before forwarding to PayPal, which can lead to orders being placed without valid payment. In addition, it may lead to cancellations if the order number has already been used in your PayPal account.',
+                'paypalPrefixInvoiceId' => 'If your PayPal account is used for multiple shops, you can avoid overlapping any order numbers by defining a unique prefix here.',
+            )
+        );
+        $shopRepository = Shopware()->Models()->getRepository('Shopware\Models\Shop\Locale');
         foreach ($translations as $locale => $snippets) {
+            /** @var Shopware\Models\Shop\Locale $localeModel */
             $localeModel = $shopRepository->findOneBy(array('locale' => $locale));
             foreach ($snippets as $element => $snippet) {
                 if ($localeModel === null) {
@@ -689,6 +710,9 @@ EOD;
                 $translationModel = new \Shopware\Models\Config\ElementTranslation();
                 $translationModel->setLabel($snippet);
                 $translationModel->setLocale($localeModel);
+                if (isset($descriptionTranslations[$locale][$element])) {
+                    $translationModel->setDescription($descriptionTranslations[$locale][$element]);
+                }
                 $elementModel->addTranslation($translationModel);
             }
         }
@@ -960,7 +984,7 @@ EOD;
 
 
         $rootDir = Shopware()->Container()->getParameter('kernel.root_dir');
-        $caPath = $rootDir.'/engine/Shopware/Components/HttpClient/cacert.pem';
+        $caPath = $rootDir . '/engine/Shopware/Components/HttpClient/cacert.pem';
         if (!is_readable($caPath)) {
             $caPath = null;
         }

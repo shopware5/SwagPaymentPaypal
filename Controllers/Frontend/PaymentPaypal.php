@@ -831,14 +831,15 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $config = $this->plugin->Config();
         if ($config->get('paypalTransferCart') && $params['PAYMENTREQUEST_0_ITEMAMT'] != '0.00' && count($basket['content']) < 25) {
             $key = 0;
-            foreach ($basket['content'] as $item) {
-                $sku = $item['ordernumber'];
-                $name = $item['articlename'];
-                $quantity = (int)$item['quantity'];
-                if (!empty($user['additional']['charge_vat']) && !empty($item['amountWithTax'])) {
-                    $amount = round($item['amountWithTax'], 2);
+            $lastCustomProduct = null;
+            foreach ($basket['content'] as $basketItem) {
+                $sku = $basketItem['ordernumber'];
+                $name = $basketItem['articlename'];
+                $quantity = (int)$basketItem['quantity'];
+                if (!empty($user['additional']['charge_vat']) && !empty($basketItem['amountWithTax'])) {
+                    $amount = round($basketItem['amountWithTax'], 2);
                 } else {
-                    $amount = str_replace(',', '.', $item['amount']);
+                    $amount = str_replace(',', '.', $basketItem['amount']);
                 }
 
                 // If more than 2 decimal places
@@ -852,16 +853,29 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                 }
 
                 // Add support for custom products
-                if (!empty($item['customProductMode'])) {
-                    $last = $key - 1;
-                    if (isset($params['L_PAYMENTREQUEST_0_NUMBER' . $last])) {
-                        if ($item['customProductMode'] == 2) {
-                            $sku = $sku ?: $params['L_PAYMENTREQUEST_0_NUMBER' . $last];
-                        } elseif ($item['customProductMode'] == 3) {
-                            $params['L_PAYMENTREQUEST_0_NAME' . $last] .= ': ' . $name;
-                            $params['L_PAYMENTREQUEST_0_AMT' . $last] += $amount;
-                            continue;
-                        }
+                if (!empty($basketItem['customProductMode'])) {
+                    switch ($basketItem['customProductMode']) {
+                        case 1: // Product
+                            $lastCustomProduct = $key;
+                            break;
+                        case 2: // Option
+                            if (empty($sku) && isset($params['L_PAYMENTREQUEST_0_NUMBER' . $lastCustomProduct])) {
+                                $sku = $params['L_PAYMENTREQUEST_0_NUMBER' . $lastCustomProduct];
+                            }
+                            break;
+                        case 3; // Value
+                            $last = $key - 1;
+                            if (isset($params['L_PAYMENTREQUEST_0_NAME' . $last])) {
+                                if (strpos($params['L_PAYMENTREQUEST_0_NAME' . $last], ': ') === false) {
+                                    $params['L_PAYMENTREQUEST_0_NAME' . $last] .= ': ' . $name;
+                                } else {
+                                    $params['L_PAYMENTREQUEST_0_NAME' . $last] .= ', ' . $name;
+                                }
+                                $params['L_PAYMENTREQUEST_0_AMT' . $last] += $amount;
+                            }
+                            continue 2;
+                        default:
+                            break;
                     }
                 }
 

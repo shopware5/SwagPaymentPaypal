@@ -227,8 +227,6 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         $sql = '
             SELECT s_order.`subshopID`
             FROM s_order
-            LEFT JOIN s_order_attributes
-              ON s_order_attributes.orderID = s_order.id
             WHERE s_order.transactionID = ?
         ';
         $result = $this->get('db')->fetchOne($sql, array($transactionId));

@@ -8,10 +8,11 @@
     "link": "http://store.shopware.com",
     "author": "shopware AG",
 
-    "currentVersion": "3.4.4",
+    "currentVersion": "3.4.5",
 
     "changelog": {
         "de": {
+            "3.4.5": "PT-7038 - Bugfix: Bessere Unterstützung von Custom Products; PT-7039 - Bugfix: Beschreibungen der Einstellungen verbessert; PT-7096 - Bugfix: Abhängigkeiten im Adressvalidator. Vereinfachung einer SQL-Abfrage;",
             "3.4.4": "PT-7016 - Bugfix: Falsche Stückzahl bei Nettobestellungen;",
             "3.4.3": "PT-5913 - Bugfix: Prefix für die Bestellnummer, die zu PayPal gesendet wird; PT-6329 - Bugfix: Menge der Warenkorbpositionen im Express Checkout; PT-6443 - Bugfix: Benutzung von SSL Zertifikaten; PT-6651 - Bugfix: Logo in der Sidebar; PT-6841 - Bugfix: Accounterstellung im Express Checkout;",
             "3.4.2": "PT-6363 - Bugfix: Problem mit Adressvalidierung; PT-6367 - Bugfix: REST API Dokumentation herunterladen;",
@@ -37,6 +38,7 @@
             "3.0.0": "Allgemeine Verbesserungen; API-Update"
         },
         "en": {
+            "3.4.5": "PT-7038 - Bugfix: Improve support of Custom Products; PT-7039 - Bugfix: Improve descriptions of the settings; PT-7096 - Bugfix: Dependencies in address validator. Simplify a sql query;",
             "3.4.4": "PT-7016 - Bugfix: Wrong quantity in net orders;",
             "3.4.3": "PT-5913 - Bugfix: Prefix for order number, which is send to PayPal; PT-6329 - Bugfix: Quantity of cart items in Express Checkout; PT-6443 - Bugfix: Usage of SSL certificates; PT-6651 - Bugfix: Logo in sidebar; PT-6841 - Bugfix: Creation of accounts in Express Checkout;",
             "3.4.2": "PT-6363 - Bugfix: Problem with address validation; PT-6367 - Bugfix: Download REST API documentation;",

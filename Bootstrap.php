@@ -545,7 +545,7 @@ EOD;
         );
         if (!$this->assertMinimumVersion('4.3.0')) {
             $store = array_map(function ($option) {
-                return [$option[0], $option[1]['de_DE']];
+                return array($option[0], $option[1]['de_DE']);
             }, $store);
         }
         $form->setElement(

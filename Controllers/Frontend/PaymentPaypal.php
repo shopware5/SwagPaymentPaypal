@@ -625,7 +625,10 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $data['auth']['password'] = $details['PAYERID'];
         $data['auth']['accountmode'] = '1';
 
-        $data['billing']['salutation'] = 'mr';
+        $possibleSalutations = explode(',', $this->get('config')->get('shopsalutations'));
+
+        // as PayPal does not provide a salutation, we have to set one of the possible options
+        $data['billing']['salutation'] = $possibleSalutations[0];
         $data['billing']['firstname'] = $details['FIRSTNAME'];
         $data['billing']['lastname'] = $details['LASTNAME'];
 

@@ -59,25 +59,33 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
             return false;
         }
         if (strpos($version, '2.0.') === 0) {
-            try {
-                $this->get('models')->removeAttribute(
-                    's_user_attributes',
-                    'swag_payal',
-                    'billing_agreement_id'
-                );
-            } catch (Exception $e) {
-            }
-            try {
-                $this->get('models')->addAttribute(
-                    's_order_attributes',
-                    'swag_payal',
-                    'billing_agreement_id',
-                    'VARCHAR(255)'
-                );
-            } catch (Exception $e) {
+            if ($this->get('service_container')->has('shopware_attribute.crud_service')) {
+                /** @var \Shopware\Bundle\AttributeBundle\Service\CrudService $service */
+                $service = $this->get('shopware_attribute.crud_service');
+                $service->delete('s_user_attributes', 'swag_payal_billing_agreement_id');
+                $service->update('s_order_attributes', 'swag_payal_billing_agreement_id', 'text');
+            } else {
+                try {
+                    $this->get('models')->removeAttribute(
+                        's_user_attributes',
+                        'swag_payal',
+                        'billing_agreement_id'
+                    );
+                } catch (Exception $e) {
+                }
+                try {
+                    $this->get('models')->addAttribute(
+                        's_order_attributes',
+                        'swag_payal',
+                        'billing_agreement_id',
+                        'VARCHAR(255)'
+                    );
+                } catch (Exception $e) {
+                }
+
+                $this->get('models')->generateAttributeModels(array('s_order_attributes', 's_user_attributes'));
             }
 
-            $this->get('models')->generateAttributeModels(array('s_order_attributes', 's_user_attributes'));
             $this->Form()->removeElement('paypalAllowGuestCheckout');
         }
         if (version_compare($version, '2.1.5', '<=')) {
@@ -720,6 +728,15 @@ EOD;
 
     private function createMyAttributes()
     {
+        if ($this->get('service_container')->has('shopware_attribute.crud_service')) {
+            /** @var \Shopware\Bundle\AttributeBundle\Service\CrudService $service */
+            $service = $this->get('shopware_attribute.crud_service');
+            $service->update('s_order_attributes', 'swag_payal_billing_agreement_id', 'text');
+            $service->update('s_order_attributes', 'swag_payal_express', 'integer');
+
+            return;
+        }
+
         try {
             $this->get('models')->addAttribute(
                 's_order_attributes',
@@ -739,6 +756,15 @@ EOD;
 
     private function removeMyAttributes()
     {
+        if ($this->get('service_container')->has('shopware_attribute.crud_service')) {
+            /** @var \Shopware\Bundle\AttributeBundle\Service\CrudService $service */
+            $service = $this->get('shopware_attribute.crud_service');
+            $service->delete('s_order_attributes', 'swag_payal_billing_agreement_id');
+            $service->delete('s_order_attributes', 'swag_payal_express');
+
+            return;
+        }
+
         /** @var $modelManager \Shopware\Components\Model\ModelManager */
         $modelManager = $this->get('models');
         try {

@@ -734,6 +734,8 @@ EOD;
             $service->update('s_order_attributes', 'swag_payal_billing_agreement_id', 'text');
             $service->update('s_order_attributes', 'swag_payal_express', 'integer');
 
+            $this->get('models')->generateAttributeModels(array('s_order_attributes'));
+
             return;
         }
 
@@ -761,6 +763,8 @@ EOD;
             $service = $this->get('shopware_attribute.crud_service');
             $service->delete('s_order_attributes', 'swag_payal_billing_agreement_id');
             $service->delete('s_order_attributes', 'swag_payal_express');
+
+            $this->get('models')->generateAttributeModels(array('s_order_attributes'));
 
             return;
         }

@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+use Doctrine\DBAL\Connection;
+
 require_once __DIR__ . '/../../Components/CSRFWhitelistAware.php';
 
 class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_Frontend_Payment implements \Shopware\Components\CSRFWhitelistAware
@@ -141,6 +143,15 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             $paymentAction = 'Authorization';
         } else {
             $paymentAction = $config->get('paypalPaymentAction', 'Sale');
+        }
+
+        if ($config->get('paypalSendInvoiceId')) {
+            $preId = $this->createPaymentUniqueId();
+            $this->session->offsetSet('paypalPreIdentifier', $preId);
+
+            $orderNumber = $this->saveOrder($preId, $preId);
+
+            $this->session->offsetSet('paypalPreIdentifier_orderNumber', $orderNumber);
         }
 
         $params = array(
@@ -306,7 +317,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                  * Will ony be triggered during normal checkout as $this->session->sOrderVariables is
                  * filled during the checkout and not available during the express checkout
                  */
-                if ($this->getUser() && $this->getOrderNumber() === null) {
+                if ($this->getUser()) {
                     unset($this->session->PaypalResponse);
                     $response = $this->finishCheckout($details);
                     if ($response['ACK'] != 'Success') {
@@ -462,6 +473,29 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
     }
 
     /**
+     * @param string $ordernumber
+     * @param string $transactionId
+     * @param string $paymentUniqueId
+     * @return string
+     */
+    private function updateOrder($ordernumber, $transactionId, $paymentUniqueId)
+    {
+        /** @var Connection $connection */
+        $connection = $this->container->get('dbal_connection');
+        $queryBuilder = $connection->createQueryBuilder();
+        $queryBuilder->update('s_order')
+            ->set('transactionID', ':transactionId')
+            ->set('temporaryID', ':tempId')
+            ->where('ordernumber = :ordernumber')
+            ->setParameter('transactionId', $transactionId)
+            ->setParameter('tempId', $paymentUniqueId)
+            ->setParameter('ordernumber', $ordernumber)
+            ->execute();
+
+        return $ordernumber;
+    }
+
+    /**
      * @param $details
      * @return array
      */
@@ -505,10 +539,20 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $params = array_merge($params, $this->getCustomerParameter());
 
         if ($config->get('paypalSendInvoiceId')) {
-            $orderNumber = $this->saveOrder(
-                isset($params['TOKEN']) ? $params['TOKEN'] : $params['REFERENCEID'],
-                $params['PAYMENTREQUEST_0_CUSTOM']
-            );
+            if ($preId = $this->session->offsetGet('paypalPreIdentifier')) {
+                $orderNumber = $this->session->offsetGet('paypalPreIdentifier_orderNumber');
+                $this->updateOrder(
+                    $orderNumber,
+                    isset($params['TOKEN']) ? $params['TOKEN'] : $params['REFERENCEID'],
+                    $params['PAYMENTREQUEST_0_CUSTOM']
+                );
+            } else {
+                $orderNumber = $this->saveOrder(
+                    isset($params['TOKEN']) ? $params['TOKEN'] : $params['REFERENCEID'],
+                    $params['PAYMENTREQUEST_0_CUSTOM']
+                );
+            }
+
             $prefix = $config->get('paypalPrefixInvoiceId');
             if (!empty($prefix)) {
                 // Set prefixed invoice id - Remove special chars and spaces

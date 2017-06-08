@@ -94,7 +94,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         } elseif ($this->getPaymentShortName() == 'paypal') {
             $this->forward('gateway');
         } else {
-            $this->redirect(array('controller' => 'checkout'));
+            $this->forward('index', 'checkout');
         }
     }
 
@@ -213,7 +213,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
     public function recurringAction()
     {
         if (!$this->getAmount() || $this->getOrderNumber()) {
-            $this->redirect(array('controller' => 'checkout'));
+            $this->forward('index', 'checkout');
 
             return;
         }
@@ -255,13 +255,9 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                 $this->View()->PaypalConfig = $this->plugin->Config();
                 $this->View()->PaypalResponse = $response;
             } else {
-                $this->redirect(
-                    array(
-                        'controller' => 'checkout',
-                        'action' => 'finish',
-                        'sUniqueID' => $response['PAYMENTREQUEST_0_CUSTOM']
-                    )
-                );
+                $this->forward('finish', 'checkout', 'frontend', array(
+                    'sUniqueID' => $response['PAYMENTREQUEST_0_CUSTOM']
+                ));
             }
         }
     }
@@ -302,13 +298,9 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         switch (!empty($details['CHECKOUTSTATUS']) ? $details['CHECKOUTSTATUS'] : null) {
             case 'PaymentActionCompleted':
             case 'PaymentCompleted':
-                $this->redirect(
-                    array(
-                        'controller' => 'checkout',
-                        'action' => 'finish',
-                        'sUniqueID' => $details['PAYMENTREQUEST_0_CUSTOM']
-                    )
-                );
+                $this->forward('finish', 'checkout', 'frontend', array(
+                    'sUniqueID' => $details['PAYMENTREQUEST_0_CUSTOM']
+                ));
                 break;
             case 'PaymentActionNotInitiated':
                 /**
@@ -346,19 +338,15 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                         $redirectUrl .= '&token=' . urlencode($response['TOKEN']);
                         $this->redirect($redirectUrl);
                     } else {
-                        $this->redirect(
-                            array(
-                                'controller' => 'checkout',
-                                'action' => 'finish',
-                                'sUniqueID' => $response['PAYMENTREQUEST_0_CUSTOM']
-                            )
-                        );
+                        $this->forward('finish', 'checkout', 'frontend', array(
+                            'sUniqueID' => $response['PAYMENTREQUEST_0_CUSTOM']
+                        ));
                     }
                     /**
                      * If the user is logged in but using the express checkout, this condition will be run
                      */
                 } elseif ($this->isUserLoggedIn() && $this->getOrderNumber() === null) {
-                    $this->redirect(array('controller' => 'checkout'));
+                    $this->forward('index', 'checkout');
                     /**
                      * If the user is not logged in at all, he will be registered
                      */
@@ -366,7 +354,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                     if (!empty($details['PAYERID']) && !empty($details['PAYMENTREQUEST_0_SHIPTONAME'])) {
                         $this->createAccount($details);
                     }
-                    $this->redirect(array('controller' => 'checkout'));
+                    $this->forward('index', 'checkout');
                 }
                 break;
             case 'PaymentActionInProgress':

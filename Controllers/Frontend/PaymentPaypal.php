@@ -125,16 +125,17 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $client = $this->get('paypalClient');
 
         $logoImage = $config->get('paypalLogoImage');
-        if ($this->plugin->isShopware51()) {
-            /** @var \Shopware\Bundle\MediaBundle\MediaService $mediaService */
-            $mediaService = $this->get('shopware_media.media_service');
-            $logoImage = $mediaService->getUrl($logoImage);
+        if ($logoImage !== null) {
+            if ($this->plugin->isShopware51() && !$this->plugin->isShopware52()) {
+                /** @var \Shopware\Bundle\MediaBundle\MediaService $mediaService */
+                $mediaService = $this->get('shopware_media.media_service');
+                $logoImage = $mediaService->getUrl($logoImage);
+            }
+
+            $logoImage = 'string:{link file=' . var_export($logoImage, true) . ' fullPath}';
+            $logoImage = $this->View()->fetch($logoImage);
         }
-        if (empty($logoImage) && empty($this->View()->theme)) {
-            $logoImage = 'frontend/_resources/images/logo.jpg';
-        }
-        $logoImage = 'string:{link file=' . var_export($logoImage, true) . ' fullPath}';
-        $logoImage = $this->View()->fetch($logoImage);
+
         $shopName = $config->get('paypalBrandName') ?: Shopware()->Config()->get('shopName');
 
         $borderColor = ltrim($config->get('paypalCartBorderColor'), '#');

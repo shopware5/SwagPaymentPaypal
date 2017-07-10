@@ -110,7 +110,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             $this->session->sPaymentID = $payment->getId();
         }
 
-        $this->forward('gateway');
+        $this->forward('gateway', 'PaymentPaypal', 'frontend', ['express' => true]);
     }
 
     /**
@@ -123,6 +123,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $router = $this->Front()->Router();
         $config = $this->plugin->Config();
         $client = $this->get('paypalClient');
+        $isExpressCheckout = $this->Request()->getParam('express', false);
 
         $logoImage = $config->get('paypalLogoImage');
         if ($this->plugin->isShopware51()) {
@@ -156,7 +157,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
 
         $params = array(
             'PAYMENTREQUEST_0_PAYMENTACTION' => $paymentAction,
-            'RETURNURL' => $router->assemble(array('action' => 'return', 'forceSecure' => true)),
+            'RETURNURL' => $router->assemble(array('action' => 'return', 'forceSecure' => true, 'express' => $isExpressCheckout)),
             'CANCELURL' => $router->assemble(array('action' => 'cancel', 'forceSecure' => true)),
             'PAYMENTREQUEST_0_NOTIFYURL' => $router->assemble(array('action' => 'notify', 'forceSecure' => true, 'appendSession' => true)),
             'GIROPAYSUCCESSURL' => $router->assemble(array('action' => 'return', 'forceSecure' => true)),
@@ -277,6 +278,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $config = $this->plugin->Config();
         $client = $this->get('paypalClient');
         $initialResponse = $this->session->PaypalResponse;
+        $isExpressCheckout = $this->Request()->getParam('express', false);
 
         if ($token !== null) {
             $details = $client->getExpressCheckoutDetails(array('token' => $token));
@@ -311,6 +313,23 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                 );
                 break;
             case 'PaymentActionNotInitiated':
+                /**
+                 * This procedure will be executed if the user has been redirected from the PayPal page back to the shop.
+                 * It won't be executed if the customer confirms the payment on the shopware confirm page, because only the return link
+                 * has an express parameter.
+                 */
+                if ($isExpressCheckout) {
+                    if (!empty($details['PAYERID']) && !empty($details['PAYMENTREQUEST_0_SHIPTONAME'])) {
+                        if (!$this->isUserLoggedIn()) {
+                            $this->createAccount($details);
+                        }
+                    }
+
+                    $this->redirect(array('controller' => 'checkout'));
+
+                    break;
+                }
+
                 /**
                  * If the user exists and the order is not finished.
                  *
@@ -354,20 +373,8 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                             )
                         );
                     }
-                    /**
-                     * If the user is logged in but using the express checkout, this condition will be run
-                     */
-                } elseif ($this->isUserLoggedIn() && $this->getOrderNumber() === null) {
-                    $this->redirect(array('controller' => 'checkout'));
-                    /**
-                     * If the user is not logged in at all, he will be registered
-                     */
-                } else {
-                    if (!empty($details['PAYERID']) && !empty($details['PAYMENTREQUEST_0_SHIPTONAME'])) {
-                        $this->createAccount($details);
-                    }
-                    $this->redirect(array('controller' => 'checkout'));
                 }
+
                 break;
             case 'PaymentActionInProgress':
             case 'PaymentActionFailed':

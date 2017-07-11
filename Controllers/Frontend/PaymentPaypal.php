@@ -788,7 +788,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
     private function updateOrder($ordernumber, $transactionId, $paymentUniqueId)
     {
         /** @var Connection $connection */
-        $connection = $this->container->get('dbal_connection');
+        $connection = Shopware()->Container()->get('models')->getConnection();
         $queryBuilder = $connection->createQueryBuilder();
         $queryBuilder->update('s_order')
             ->set('transactionID', ':transactionId')

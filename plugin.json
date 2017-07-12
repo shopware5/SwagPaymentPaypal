@@ -8,10 +8,11 @@
     "link": "http://store.shopware.com",
     "author": "shopware AG",
 
-    "currentVersion": "3.4.6",
+    "currentVersion": "3.4.7",
 
     "changelog": {
         "de": {
+            "3.4.7": "PT-6882 - Korrekte Anzeige des Shop-Logos; PT-7876 - Bestellnummer senden korrigiert; PT-8092 - Weiterleitung zurück zum Shop bei PayPal Express korrigiert;",
             "3.4.6": "PT-7790 - Bugfix: Express Checkout funktioniert wieder korrekt, wenn die verfügbaren Anreden geändert wurden; PT-7631 - Bugfix: Shopware 5.3 Kompatibilität;",
             "3.4.5": "PT-7038 - Bugfix: Bessere Unterstützung von Custom Products; PT-7039 - Bugfix: Beschreibungen der Einstellungen verbessert; PT-7096 - Bugfix: Abhängigkeiten im Adressvalidator. Vereinfachung einer SQL-Abfrage;",
             "3.4.4": "PT-7016 - Bugfix: Falsche Stückzahl bei Nettobestellungen;",
@@ -39,6 +40,7 @@
             "3.0.0": "Allgemeine Verbesserungen; API-Update"
         },
         "en": {
+            "3.4.7": "PT-6882 - Fixed displaying of shop logo; PT-7876 - Fixed sending of order number; PT-8092 - Fixed redirect back to the shop on PayPal express;",
             "3.4.6": "PT-7790 - Bugfix: Express Checkout works correct again, if the available salutation were changed; PT-7631 - Bugfix: Shopware 5.3 compatibility;",
             "3.4.5": "PT-7038 - Bugfix: Improve support of Custom Products; PT-7039 - Bugfix: Improve descriptions of the settings; PT-7096 - Bugfix: Dependencies in address validator. Simplify a sql query;",
             "3.4.4": "PT-7016 - Bugfix: Wrong quantity in net orders;",

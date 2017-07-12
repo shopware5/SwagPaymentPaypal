@@ -110,7 +110,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             $this->session->sPaymentID = $payment->getId();
         }
 
-        $this->forward('gateway', 'PaymentPaypal', 'frontend', ['express' => true]);
+        $this->forward('gateway', 'PaymentPaypal', 'frontend', array('express' => true));
     }
 
     /**

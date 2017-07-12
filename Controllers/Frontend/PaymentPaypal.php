@@ -147,7 +147,9 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             $paymentAction = $config->get('paypalPaymentAction', 'Sale');
         }
 
-        if ($config->get('paypalSendInvoiceId')) {
+        //This won't work for express checkout because no payment method is selected in this case and no user can be
+        //referenced to the order.
+        if (!$isExpressCheckout && $config->get('paypalSendInvoiceId')) {
             $preId = $this->createPaymentUniqueId();
             $this->session->offsetSet('paypalPreIdentifier', $preId);
 
@@ -481,29 +483,6 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
     }
 
     /**
-     * @param string $ordernumber
-     * @param string $transactionId
-     * @param string $paymentUniqueId
-     * @return string
-     */
-    private function updateOrder($ordernumber, $transactionId, $paymentUniqueId)
-    {
-        /** @var Connection $connection */
-        $connection = $this->container->get('dbal_connection');
-        $queryBuilder = $connection->createQueryBuilder();
-        $queryBuilder->update('s_order')
-            ->set('transactionID', ':transactionId')
-            ->set('temporaryID', ':tempId')
-            ->where('ordernumber = :ordernumber')
-            ->setParameter('transactionId', $transactionId)
-            ->setParameter('tempId', $paymentUniqueId)
-            ->setParameter('ordernumber', $ordernumber)
-            ->execute();
-
-        return $ordernumber;
-    }
-
-    /**
      * @param $details
      * @return array
      */
@@ -798,6 +777,29 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                 }
             }
         }
+    }
+
+    /**
+     * @param string $ordernumber
+     * @param string $transactionId
+     * @param string $paymentUniqueId
+     * @return string
+     */
+    private function updateOrder($ordernumber, $transactionId, $paymentUniqueId)
+    {
+        /** @var Connection $connection */
+        $connection = $this->container->get('dbal_connection');
+        $queryBuilder = $connection->createQueryBuilder();
+        $queryBuilder->update('s_order')
+            ->set('transactionID', ':transactionId')
+            ->set('temporaryID', ':tempId')
+            ->where('ordernumber = :ordernumber')
+            ->setParameter('transactionId', $transactionId)
+            ->setParameter('tempId', $paymentUniqueId)
+            ->setParameter('ordernumber', $ordernumber)
+            ->execute();
+
+        return $ordernumber;
     }
 
     /**

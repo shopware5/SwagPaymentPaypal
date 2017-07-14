@@ -34,9 +34,16 @@ class AddressValidator implements AddressValidatorInterface
      */
     public function validate(Address $address)
     {
-        if (!$this->container->get('front')->Request()
-            || $this->container->get('front')->Request()->getControllerName() !== 'payment_paypal'
-        ) {
+        $request = $this->container->get('front')->Request();
+        if (!$request) {
+            $this->innerValidator->validate($address);
+
+            return;
+        }
+
+        $controllerName = $request->getControllerName();
+        $payPalController = array('payment_paypal', 'paymentpaypal');
+        if (!in_array(strtolower($controllerName), $payPalController, true)) {
             $this->innerValidator->validate($address);
 
             return;

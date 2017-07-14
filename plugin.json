@@ -8,10 +8,11 @@
     "link": "http://store.shopware.com",
     "author": "shopware AG",
 
-    "currentVersion": "3.4.8",
+    "currentVersion": "3.4.9",
 
     "changelog": {
         "de": {
+            "3.4.9": "PT-8092 - Behebt Problem beim Anlegen eines neuen Kunden über Express Checkout;",
             "3.4.8": "PT-7876 - Problem mit Express Checkout behoben;",
             "3.4.7": "PT-6882 - Korrekte Anzeige des Shop-Logos; PT-7876 - Bestellnummer senden korrigiert; PT-8092 - Weiterleitung zurück zum Shop bei PayPal Express korrigiert;",
             "3.4.6": "PT-7790 - Bugfix: Express Checkout funktioniert wieder korrekt, wenn die verfügbaren Anreden geändert wurden; PT-7631 - Bugfix: Shopware 5.3 Kompatibilität;",
@@ -41,6 +42,7 @@
             "3.0.0": "Allgemeine Verbesserungen; API-Update"
         },
         "en": {
+            "3.4.9": "PT-8092 - Fixed problem on creating a new customer via Express Checkout;",
             "3.4.8": "PT-7876 - Fixed problem with Express Checkout;",
             "3.4.7": "PT-6882 - Fixed displaying of shop logo; PT-7876 - Fixed sending of order number; PT-8092 - Fixed redirect back to the shop on PayPal express;",
             "3.4.6": "PT-7790 - Bugfix: Express Checkout works correct again, if the available salutation were changed; PT-7631 - Bugfix: Shopware 5.3 compatibility;",

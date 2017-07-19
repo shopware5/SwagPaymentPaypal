@@ -7,11 +7,11 @@
 
 Ext.define('Shopware.apps.PaymentPaypal.model.main.Detail', {
     extend: 'Ext.data.Model',
-	fields: [
+    fields: [
         { name: 'transactionId', type: 'string' },
         //{ name: 'orderNumber', type: 'string' },
 
-		{ name: 'addressStatus',  type: 'string' },
+        { name: 'addressStatus',  type: 'string' },
         { name: 'addressName',  type: 'string' },
         { name: 'addressStreet',  type: 'string' },
         { name: 'addressCity',  type: 'string' },
@@ -31,7 +31,7 @@ Ext.define('Shopware.apps.PaymentPaypal.model.main.Detail', {
         { name: 'paymentAmount',  type: 'string' },
         { name: 'paymentCurrency',  type: 'string' },
         { name: 'paymentAmountFormat', type: 'string' }
-	],
+    ],
 
     associations: [{
         type: 'hasMany', model: 'Shopware.apps.PaymentPaypal.model.main.Transaction',

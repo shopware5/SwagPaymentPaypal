@@ -53,7 +53,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         $subShopFilter = null;
         if ($filter && !empty($filter)) {
             $filter = array_pop($filter);
-            if ($filter['property'] == 'shopId') {
+            if ($filter['property'] === 'shopId') {
                 $subShopFilter = (int)$filter['value'];
             }
         }
@@ -61,125 +61,98 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         if ($sort = $this->Request()->getParam('sort')) {
             $sort = current($sort);
         }
-        $direction = empty($sort['direction']) || $sort['direction'] == 'DESC' ? 'DESC' : 'ASC';
+        $direction = empty($sort['direction']) || $sort['direction'] === 'DESC' ? 'DESC' : 'ASC';
         $property = empty($sort['property']) ? 'orderDate' : $sort['property'];
 
         if ($filter) {
-            if ($filter['property'] == 'search') {
+            if ($filter['property'] === 'search') {
                 $this->Request()->setParam('search', $filter['value']);
             }
         }
 
-        $select = $this->get('db')
-            ->select()
-            ->from(array('o' => 's_order'), array(
-                new Zend_Db_Expr('SQL_CALC_FOUND_ROWS o.id'),
-                'clearedId' => 'cleared',
-                'statusId' => 'status',
-                'amount' => 'invoice_amount', 'currency',
-                'orderDate' => 'ordertime', 'orderNumber' => 'ordernumber', 'shopId' => 'subshopID',
-                'transactionId',
-                'comment' => 'customercomment',
-                'clearedDate' => 'cleareddate',
-                'trackingId' => 'trackingcode',
-                'customerId' => 'u.userID',
-                'invoiceId' => new Zend_Db_Expr('(' . $this->get('db')
-                        ->select()
-                        ->from(array('s_order_documents'), array('ID'))
-                        ->where('orderID=o.id')
-                        ->order('ID DESC')
-                        ->limit(1) . ')'),
-                'invoiceHash' => new Zend_Db_Expr('(' . $this->get('db')
-                        ->select()
-                        ->from(array('s_order_documents'), array('hash'))
-                        ->where('orderID=o.id')
-                        ->order('ID DESC')
-                        ->limit(1) . ')')
-            ))
-            ->joinLeft(
-                array('shops' => 's_core_shops'),
-                'shops.id =  o.subshopID',
-                array(
-                    'shopName' => 'shops.name'
-                )
-            )
-            ->join(
-                array('p' => 's_core_paymentmeans'),
-                'p.id =  o.paymentID',
-                array(
-                    'paymentDescription' => 'p.description'
-                )
-            )
-            ->joinLeft(
-                array('so' => 's_core_states'),
-                'so.id =  o.status',
-                array(
-                    'statusDescription' => 'so.description'
-                )
-            )
-            ->joinLeft(
-                array('oa' => 's_order_attributes'),
-                'o.id =  oa.orderID',
-                array(
-                    'express' => 'oa.swag_payal_express'
-                )
-            )
-            ->joinLeft(
-                array('sc' => 's_core_states'),
-                'sc.id =  o.cleared',
-                array(
-                    'clearedDescription' => 'sc.description'
-                )
-            )
-            ->joinLeft(
-                array('u' => 's_user_billingaddress'),
-                'u.userID = o.userID',
-                array()
-            )
-            ->joinLeft(
-                array('b' => 's_order_billingaddress'),
-                'b.orderID = o.id',
-                new Zend_Db_Expr("
-					IF(b.id IS NULL,
-						IF(u.company='', CONCAT(u.firstname, ' ', u.lastname), u.company),
-						IF(b.company='', CONCAT(b.firstname, ' ', b.lastname), b.company)
-					) as customer
-				")
-            )
-            ->joinLeft(
-                array('d' => 's_premium_dispatch'),
-                'd.id = o.dispatchID',
-                array(
-                    'dispatchDescription' => 'd.name'
-                )
-            )
-            ->where('p.name LIKE ?', 'paypal')
-            ->where('o.status >= 0')
-            ->order(array($property . ' ' . $direction))
-            ->limit($limit, $start);
+        $dbalConnection = Shopware()->Container()->get('models')->getConnection();
+        $query = $dbalConnection->createQueryBuilder();
+
+        $invoiceIdQuery = $dbalConnection->createQueryBuilder()
+            ->select('ID')->from('s_order_documents')
+            ->where('orderID = o.id')->orderBy('ID', 'DESC')->setMaxResults(1);
+
+        $invoiceHashQuery = $dbalConnection->createQueryBuilder()
+            ->select('hash')->from('s_order_documents')
+            ->where('orderID = o.id')->orderBy('ID', 'DESC')->setMaxResults(1);
+
+
+        $query->select([
+            'SQL_CALC_FOUND_ROWS o.id',
+            'cleared as clearedId',
+            'status as statusId',
+            'invoice_amount as amount',
+            'currency',
+            'ordertime as orderDate',
+            'ordernumber as orderNumber',
+            'subshopID as shopId',
+            'transactionId',
+            'customercomment as comment',
+            'cleareddate as clearedDate',
+            'trackingcode as trackingId',
+            'u.userID as customerId',
+            '( ' . $invoiceIdQuery->getSQL() . ' ) as invoiceId',
+            '( ' . $invoiceHashQuery->getSQL() . ' ) as invoiceHash',
+            'shops.name as shopName',
+            'p.description as paymentDescription',
+            'so.description as statusDescription',
+            'oa.swag_payal_express as express',
+            'sc.description as clearedDescription',
+            'IF(b.id IS NULL,
+                IF(u.company=\'\', CONCAT(u.firstname, \' \', u.lastname), u.company),
+                IF(b.company=\'\', CONCAT(b.firstname, \' \', b.lastname), b.company)
+            ) as customer',
+            'd.name as dispatchDescription'
+        ])
+            ->from('s_order', 'o')
+            ->leftJoin('o', 's_core_shops', 'shops', 'shops.id = o.subShopID')
+            ->join('o', 's_core_paymentmeans', 'p', 'p.id = o.paymentID')
+            ->leftJoin('o', 's_core_states', 'so', 'so.id = o.status')
+            ->leftJoin('o', 's_order_attributes', 'oa', 'o.id = oa.orderID')
+            ->leftJoin('o', 's_core_states', 'sc', 'sc.id = o.cleared')
+            ->leftJoin('o', 's_user_billingaddress', 'u', 'u.userID = o.userID')
+            ->leftJoin('o', 's_order_billingaddress', 'b', 'b.orderID = o.id')
+            ->leftJoin('o', 's_premium_dispatch', 'd', 'd.id = o.dispatchID')
+            ->where('p.name LIKE \'paypal\'')
+            ->andWhere('o.status >= 0')
+            ->setFirstResult($start)
+            ->setMaxResults($limit);
+
+        if (in_array($property, $this->getColumnNameWhitelist())) {
+            $query->orderBy($property, $direction);
+        }
 
         if ($search = $this->Request()->getParam('search')) {
             $search = trim($search);
-            $search = $this->get('db')->quote($search);
 
-            $select->where('o.transactionID LIKE ' . $search
-                . ' OR o.ordernumber LIKE ' . $search
-                . ' OR u.firstname LIKE ' . $search
-                . ' OR u.lastname LIKE ' . $search
-                . ' OR b.firstname LIKE ' . $search
-                . ' OR b.lastname LIKE ' . $search
-                . ' OR b.company LIKE ' . $search
-                . ' OR u.company LIKE ' . $search);
+            $query->andWhere(
+                'o.transactionID LIKE :search' .
+                ' OR o.ordernumber LIKE :search' .
+                ' OR u.firstname LIKE :search' .
+                ' OR u.lastname LIKE :search' .
+                ' OR b.firstname LIKE :search' .
+                ' OR b.lastname LIKE :search' .
+                ' OR b.company LIKE :search' .
+                ' OR u.company LIKE :search'
+            );
+            $query->setParameter('search', trim($search));
         }
 
         if ($subShopFilter) {
-            $select->where('o.subshopID = ' . $subShopFilter);
+            $query->andWhere('o.subshopID = :subShopFilter');
+            $query->setParameter('subShopFilter', $subShopFilter);
         }
-        $rows = $this->get('db')->fetchAll($select);
-        $total = $this->get('db')->fetchOne('SELECT FOUND_ROWS()');
+
+        $rows = $query->execute()->fetchAll();
+        $total = $dbalConnection->fetchColumn('SELECT FOUND_ROWS()');
 
         foreach ($rows as &$row) {
-            if ($row['clearedDate'] == '0000-00-00 00:00:00') {
+            if ($row['clearedDate'] === '0000-00-00 00:00:00') {
                 $row['clearedDate'] = null;
             }
             if (isset($row['clearedDate'])) {
@@ -600,5 +573,41 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         return array(
             'downloadRestDocument'
         );
+    }
+
+    /**
+     * Returns allowed columns for group by condition
+     *
+     * @return array
+     */
+    private function getColumnNameWhitelist() {
+        return [
+            'id',
+            'userId',
+            'transactionId',
+            'clearedId',
+            'statusId',
+            'clearedDescription',
+            'statusDescription',
+            'currency',
+            'amount',
+            'amountFormat',
+            'customer',
+            'customerId',
+            'orderDate',
+            'clearedDate',
+            'orderNumber',
+            'shopId',
+            'shopName',
+            'paymentDescription',
+            'paymentKey',
+            'comment',
+            'invoiceId',
+            'invoiceHash',
+            'trackingId',
+            'dispatchId',
+            'dispatchDescription',
+            'express',
+        ];
     }
 }

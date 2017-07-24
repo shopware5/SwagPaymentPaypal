@@ -140,12 +140,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $shopName = $config->get('paypalBrandName') ?: Shopware()->Config()->get('shopName');
 
         $borderColor = ltrim($config->get('paypalCartBorderColor'), '#');
-
-        if ($this->getUser() === null) {
-            $paymentAction = 'Authorization';
-        } else {
-            $paymentAction = $config->get('paypalPaymentAction', 'Sale');
-        }
+	    $paymentAction = $config->get('paypalPaymentAction', 'Sale');
 
         //This won't work for express checkout because no payment method is selected in this case and no user can be
         //referenced to the order.

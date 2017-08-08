@@ -1,6 +1,5 @@
 <?php
-
-/*
+/**
  * (c) shopware AG <info@shopware.com>
  *
  * For the full copyright and license information, please view the LICENSE
@@ -14,12 +13,12 @@ require_once __DIR__ . '/../../Components/CSRFWhitelistAware.php';
 class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_Frontend_Payment implements \Shopware\Components\CSRFWhitelistAware
 {
     /**
-     * @var Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap $plugin
+     * @var Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap
      */
     private $plugin;
 
     /**
-     * @var Enlight_Components_Session_Namespace $session
+     * @var Enlight_Components_Session_Namespace
      */
     private $session;
 
@@ -30,7 +29,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
     {
         return array(
             'notify',
-            'webhook'
+            'webhook',
         );
     }
 
@@ -77,7 +76,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
      */
     public function isUserLoggedIn()
     {
-        return (isset($this->session->sUserId) && !empty($this->session->sUserId));
+        return isset($this->session->sUserId) && !empty($this->session->sUserId);
     }
 
     /**
@@ -140,7 +139,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $shopName = $config->get('paypalBrandName') ?: Shopware()->Config()->get('shopName');
 
         $borderColor = ltrim($config->get('paypalCartBorderColor'), '#');
-	    $paymentAction = $config->get('paypalPaymentAction', 'Sale');
+        $paymentAction = $config->get('paypalPaymentAction', 'Sale');
 
         //This won't work for express checkout because no payment method is selected in this case and no user can be
         //referenced to the order.
@@ -170,7 +169,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             'CARTBORDERCOLOR' => $borderColor,
             'PAYMENTREQUEST_0_CUSTOM' => $this->createPaymentUniqueId(),
 //            'SOLUTIONTYPE' => $config->get('paypalAllowGuestCheckout') ? 'Sole' : 'Mark',
-            'TOTALTYPE' => $this->getUser() !== null ? 'Total' : 'EstimatedTotal'
+            'TOTALTYPE' => $this->getUser() !== null ? 'Total' : 'EstimatedTotal',
         );
         if ($config->get('paypalBillingAgreement') && $this->getUser() !== null) {
             $params['BILLINGTYPE'] = 'MerchantInitiatedBilling';
@@ -234,7 +233,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             if ($response['ACK'] != 'Success') {
                 $data = array(
                     'success' => false,
-                    'message' => "[{$response['PAYMENTINFO_0_ERRORCODE']}] - {$response['PAYMENTINFO_0_SHORTMESSAGE']}"
+                    'message' => "[{$response['PAYMENTINFO_0_ERRORCODE']}] - {$response['PAYMENTINFO_0_SHORTMESSAGE']}",
                 );
             } else {
                 $data = array(
@@ -243,8 +242,8 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                         array(
                             'orderNumber' => $response['PAYMENTREQUEST_0_INVNUM'],
                             'transactionId' => $response['PAYMENTREQUEST_0_TRANSACTIONID'],
-                        )
-                    )
+                        ),
+                    ),
                 );
             }
             echo Zend_Json::encode($data);
@@ -258,7 +257,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                     array(
                         'controller' => 'checkout',
                         'action' => 'finish',
-                        'sUniqueID' => $response['PAYMENTREQUEST_0_CUSTOM']
+                        'sUniqueID' => $response['PAYMENTREQUEST_0_CUSTOM'],
                     )
                 );
             }
@@ -306,12 +305,12 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                     array(
                         'controller' => 'checkout',
                         'action' => 'finish',
-                        'sUniqueID' => $details['PAYMENTREQUEST_0_CUSTOM']
+                        'sUniqueID' => $details['PAYMENTREQUEST_0_CUSTOM'],
                     )
                 );
                 break;
             case 'PaymentActionNotInitiated':
-                /**
+                /*
                  * This procedure will be executed if the user has been redirected from the PayPal page back to the shop.
                  * It won't be executed if the customer confirms the payment on the shopware confirm page, because only the return link
                  * has an express parameter.
@@ -367,7 +366,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                             array(
                                 'controller' => 'checkout',
                                 'action' => 'finish',
-                                'sUniqueID' => $response['PAYMENTREQUEST_0_CUSTOM']
+                                'sUniqueID' => $response['PAYMENTREQUEST_0_CUSTOM'],
                             )
                         );
                     }
@@ -407,7 +406,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             $details = $client->getTransactionDetails(array('TRANSACTIONID' => $txnId));
         } catch (Exception $e) {
             $message = sprintf(
-                "PayPal-Notify: Exception %s",
+                'PayPal-Notify: Exception %s',
                 $e->getMessage()
             );
             $context = array('exception' => $e);
@@ -416,7 +415,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
 
         if (empty($details['PAYMENTSTATUS']) || empty($details['ACK']) || $details['ACK'] != 'Success') {
             $message = sprintf(
-                "PayPal-Notify: Could not find TRANSACTIONID %s",
+                'PayPal-Notify: Could not find TRANSACTIONID %s',
                 $txnId
             );
             $context = array('details' => $details);
@@ -479,6 +478,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
 
     /**
      * @param $details
+     *
      * @return array
      */
     protected function finishCheckout($details)
@@ -495,7 +495,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                 'IPADDRESS' => $this->Request()->getClientIp(false),
                 'PAYMENTREQUEST_0_NOTIFYURL' => $notifyUrl,
                 'PAYMENTREQUEST_0_CUSTOM' => $this->createPaymentUniqueId(),
-                'BUTTONSOURCE' => 'Shopware_Cart_ECM'
+                'BUTTONSOURCE' => 'Shopware_Cart_ECM',
             );
         } else {
             $params = array(
@@ -503,7 +503,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                 'PAYERID' => $details['PAYERID'],
                 'PAYMENTREQUEST_0_NOTIFYURL' => $notifyUrl,
                 'PAYMENTREQUEST_0_CUSTOM' => $details['PAYMENTREQUEST_0_CUSTOM'],
-                'BUTTONSOURCE' => 'Shopware_Cart_ECS'
+                'BUTTONSOURCE' => 'Shopware_Cart_ECS',
             );
         }
 
@@ -597,7 +597,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                     SELECT id, 1 FROM s_order WHERE ordernumber = ?
                     ON DUPLICATE KEY UPDATE swag_payal_express = 1
                 ';
-                $this->get('db')->query($sql, array($orderNumber,));
+                $this->get('db')->query($sql, array($orderNumber));
             } catch (Exception $e) {
             }
         }
@@ -615,7 +615,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                 $result['PAYMENTINFO_0_TRANSACTIONID'],
                 isset($details['EMAIL']) ? "{$details['EMAIL']} ({$details['PAYERSTATUS']})\r\n" : null,
                 isset($details['NOTE']) ? $details['NOTE'] : '',
-                $orderNumber
+                $orderNumber,
             )
         );
 
@@ -743,9 +743,9 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             $module->sUpdatePayment();
         } else {
             if (isset($encoderName)) {
-                $data["auth"]["encoderName"] = $encoderName;
-                $data["auth"]["password"] = $this->get('passwordEncoder')
-                    ->encodePassword($data["auth"]["password"], $encoderName);
+                $data['auth']['encoderName'] = $encoderName;
+                $data['auth']['password'] = $this->get('passwordEncoder')
+                    ->encodePassword($data['auth']['password'], $encoderName);
             } else {
                 $data['auth']['password'] = md5($data['auth']['password']);
             }
@@ -775,9 +775,165 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
     }
 
     /**
+     * Returns the article list parameter data.
+     *
+     * @return array
+     */
+    protected function getBasketParameter()
+    {
+        $params = array();
+        $user = $this->getUser();
+
+        $params['PAYMENTREQUEST_0_CURRENCYCODE'] = $this->getCurrencyShortName();
+
+        if ($user !== null) {
+            $basket = $this->getBasket();
+            if (!empty($basket['sShippingcosts'])) {
+                $params['PAYMENTREQUEST_0_SHIPPINGAMT'] = $this->getShipment();
+            }
+            $params['PAYMENTREQUEST_0_AMT'] = $this->getAmount();
+        } else {
+            $basket = $this->get('modules')->Basket()->sGetBasket();
+            if (!empty($basket['sShippingcosts'])) {
+                $params['PAYMENTREQUEST_0_SHIPPINGAMT'] = !empty($basket['sShippingcostsWithTax']) ? $basket['sShippingcostsWithTax'] : $basket['sShippingcosts'];
+                $params['PAYMENTREQUEST_0_SHIPPINGAMT'] = str_replace(',', '.', $params['PAYMENTREQUEST_0_SHIPPINGAMT']);
+            }
+            if (!empty($user['additional']['charge_vat']) && !empty($item['AmountWithTaxNumeric'])) {
+                $params['PAYMENTREQUEST_0_AMT'] = $basket['AmountWithTaxNumeric'];
+            } else {
+                $params['PAYMENTREQUEST_0_AMT'] = $basket['AmountNumeric'];
+            }
+            $params['PAYMENTREQUEST_0_AMT'] = $basket['AmountNumeric'];
+        }
+        $params['PAYMENTREQUEST_0_AMT'] = number_format($params['PAYMENTREQUEST_0_AMT'], 2, '.', '');
+        $params['PAYMENTREQUEST_0_SHIPPINGAMT'] = number_format($params['PAYMENTREQUEST_0_SHIPPINGAMT'], 2, '.', '');
+        $params['PAYMENTREQUEST_0_ITEMAMT'] = number_format($params['PAYMENTREQUEST_0_AMT'] - $params['PAYMENTREQUEST_0_SHIPPINGAMT'], 2, '.', '');
+        $params['PAYMENTREQUEST_0_TAXAMT'] = number_format(0, 2, '.', '');
+
+        $config = $this->plugin->Config();
+        if ($config->get('paypalTransferCart') && $params['PAYMENTREQUEST_0_ITEMAMT'] != '0.00' && count($basket['content']) < 25) {
+            $key = 0;
+            $lastCustomProduct = null;
+            foreach ($basket['content'] as $basketItem) {
+                $sku = $basketItem['ordernumber'];
+                $name = $basketItem['articlename'];
+                $quantity = (int) $basketItem['quantity'];
+                if (!empty($user['additional']['charge_vat']) && !empty($basketItem['amountWithTax'])) {
+                    $amount = round($basketItem['amountWithTax'], 2);
+                } else {
+                    $amount = str_replace(',', '.', $basketItem['amount']);
+                }
+
+                // If more than 2 decimal places
+                if (round($amount / $quantity, 2) * $quantity != $amount) {
+                    if ($quantity != 1) {
+                        $name = $quantity . 'x ' . $name;
+                    }
+                    $quantity = 1;
+                } else {
+                    $amount = round($amount / $quantity, 2);
+                }
+
+                // Add support for custom products
+                if (!empty($basketItem['customProductMode'])) {
+                    switch ($basketItem['customProductMode']) {
+                        case 1: // Product
+                            $lastCustomProduct = $key;
+                            break;
+                        case 2: // Option
+                            if (empty($sku) && isset($params['L_PAYMENTREQUEST_0_NUMBER' . $lastCustomProduct])) {
+                                $sku = $params['L_PAYMENTREQUEST_0_NUMBER' . $lastCustomProduct];
+                            }
+                            break;
+                        case 3: // Value
+                            $last = $key - 1;
+                            if (isset($params['L_PAYMENTREQUEST_0_NAME' . $last])) {
+                                if (strpos($params['L_PAYMENTREQUEST_0_NAME' . $last], ': ') === false) {
+                                    $params['L_PAYMENTREQUEST_0_NAME' . $last] .= ': ' . $name;
+                                } else {
+                                    $params['L_PAYMENTREQUEST_0_NAME' . $last] .= ', ' . $name;
+                                }
+                                $params['L_PAYMENTREQUEST_0_AMT' . $last] += $amount;
+                            }
+                            continue 2;
+                        default:
+                            break;
+                    }
+                }
+
+                $article = array(
+                    'L_PAYMENTREQUEST_0_NUMBER' . $key => $sku,
+                    'L_PAYMENTREQUEST_0_NAME' . $key => $name,
+                    'L_PAYMENTREQUEST_0_AMT' . $key => $amount,
+                    'L_PAYMENTREQUEST_0_QTY' . $key => $quantity,
+                );
+                $params = array_merge($params, $article);
+                ++$key;
+            }
+        }
+
+        if ($params['PAYMENTREQUEST_0_ITEMAMT'] == '0.00') {
+            $params['PAYMENTREQUEST_0_ITEMAMT'] = $params['PAYMENTREQUEST_0_SHIPPINGAMT'];
+            $params['PAYMENTREQUEST_0_SHIPPINGAMT'] = '0.00';
+        }
+
+        return $params;
+    }
+
+    /**
+     * Returns the prepared customer parameter data.
+     *
+     * @return array
+     */
+    protected function getCustomerParameter()
+    {
+        $user = $this->getUser();
+        if (empty($user)) {
+            return array(
+                'LOCALECODE' => $this->plugin->getLocaleCode(true),
+            );
+        }
+        $shipping = $user['shippingaddress'];
+        $name = $shipping['firstname'] . ' ' . $shipping['lastname'];
+        if (!empty($shipping['company'])) {
+            $name = $shipping['company'] . ' - ' . $name;
+        }
+        if (!empty($shipping['streetnumber'])) {
+            $shipping['street'] .= ' ' . $shipping['streetnumber'];
+        }
+        if (!empty($shipping['additional_address_line1'])) {
+            $shipping['street2'] = $shipping['additional_address_line1'];
+            if (!empty($shipping['additional_address_line2'])) {
+                $shipping['street2'] .= ' ' . $shipping['additional_address_line2'];
+            }
+        } else {
+            $shipping['street2'] = '';
+        }
+        $customer = array(
+            'CUSTOMERSERVICENUMBER' => $user['billingaddress']['customernumber'],
+            //'gender' => $shipping['salutation'] == 'ms' ? 'f' : 'm',
+            'PAYMENTREQUEST_0_SHIPTONAME' => $name,
+            'PAYMENTREQUEST_0_SHIPTOSTREET' => $shipping['street'],
+            'PAYMENTREQUEST_0_SHIPTOSTREET2' => $shipping['street2'],
+            'PAYMENTREQUEST_0_SHIPTOZIP' => $shipping['zipcode'],
+            'PAYMENTREQUEST_0_SHIPTOCITY' => $shipping['city'],
+            'PAYMENTREQUEST_0_SHIPTOCOUNTRYCODE' => $user['additional']['countryShipping']['countryiso'],
+            'EMAIL' => $user['additional']['user']['email'],
+            'PAYMENTREQUEST_0_SHIPTOPHONENUM' => $user['billingaddress']['phone'],
+            'LOCALECODE' => $this->plugin->getLocaleCode(true),
+        );
+        if (!empty($user['additional']['stateShipping']['shortcode'])) {
+            $customer['PAYMENTREQUEST_0_SHIPTOSTATE'] = $user['additional']['stateShipping']['shortcode'];
+        }
+
+        return $customer;
+    }
+
+    /**
      * @param string $ordernumber
      * @param string $transactionId
      * @param string $paymentUniqueId
+     *
      * @return string
      */
     private function updateOrder($ordernumber, $transactionId, $paymentUniqueId)
@@ -829,7 +985,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
     /**
      * Updates the shipping address to the latest address that has been provided by PayPal.
      *
-     * @param int $userId
+     * @param int   $userId
      * @param array $shippingData
      */
     private function updateShipping($userId, $shippingData)
@@ -850,112 +1006,6 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
     }
 
     /**
-     * Returns the article list parameter data.
-     *
-     * @return array
-     */
-    protected function getBasketParameter()
-    {
-        $params = array();
-        $user = $this->getUser();
-
-        $params['PAYMENTREQUEST_0_CURRENCYCODE'] = $this->getCurrencyShortName();
-
-        if ($user !== null) {
-            $basket = $this->getBasket();
-            if (!empty($basket['sShippingcosts'])) {
-                $params['PAYMENTREQUEST_0_SHIPPINGAMT'] = $this->getShipment();
-            }
-            $params['PAYMENTREQUEST_0_AMT'] = $this->getAmount();
-        } else {
-            $basket = $this->get('modules')->Basket()->sGetBasket();
-            if (!empty($basket['sShippingcosts'])) {
-                $params['PAYMENTREQUEST_0_SHIPPINGAMT'] = !empty($basket['sShippingcostsWithTax']) ? $basket['sShippingcostsWithTax'] : $basket['sShippingcosts'];
-                $params['PAYMENTREQUEST_0_SHIPPINGAMT'] = str_replace(',', '.', $params['PAYMENTREQUEST_0_SHIPPINGAMT']);
-            }
-            if (!empty($user['additional']['charge_vat']) && !empty($item['AmountWithTaxNumeric'])) {
-                $params['PAYMENTREQUEST_0_AMT'] = $basket['AmountWithTaxNumeric'];
-            } else {
-                $params['PAYMENTREQUEST_0_AMT'] = $basket['AmountNumeric'];
-            }
-            $params['PAYMENTREQUEST_0_AMT'] = $basket['AmountNumeric'];
-        }
-        $params['PAYMENTREQUEST_0_AMT'] = number_format($params['PAYMENTREQUEST_0_AMT'], 2, '.', '');
-        $params['PAYMENTREQUEST_0_SHIPPINGAMT'] = number_format($params['PAYMENTREQUEST_0_SHIPPINGAMT'], 2, '.', '');
-        $params['PAYMENTREQUEST_0_ITEMAMT'] = number_format($params['PAYMENTREQUEST_0_AMT'] - $params['PAYMENTREQUEST_0_SHIPPINGAMT'], 2, '.', '');
-        $params['PAYMENTREQUEST_0_TAXAMT'] = number_format(0, 2, '.', '');
-
-        $config = $this->plugin->Config();
-        if ($config->get('paypalTransferCart') && $params['PAYMENTREQUEST_0_ITEMAMT'] != '0.00' && count($basket['content']) < 25) {
-            $key = 0;
-            $lastCustomProduct = null;
-            foreach ($basket['content'] as $basketItem) {
-                $sku = $basketItem['ordernumber'];
-                $name = $basketItem['articlename'];
-                $quantity = (int)$basketItem['quantity'];
-                if (!empty($user['additional']['charge_vat']) && !empty($basketItem['amountWithTax'])) {
-                    $amount = round($basketItem['amountWithTax'], 2);
-                } else {
-                    $amount = str_replace(',', '.', $basketItem['amount']);
-                }
-
-                // If more than 2 decimal places
-                if (round($amount / $quantity, 2) * $quantity != $amount) {
-                    if ($quantity != 1) {
-                        $name = $quantity . 'x ' . $name;
-                    }
-                    $quantity = 1;
-                } else {
-                    $amount = round($amount / $quantity, 2);
-                }
-
-                // Add support for custom products
-                if (!empty($basketItem['customProductMode'])) {
-                    switch ($basketItem['customProductMode']) {
-                        case 1: // Product
-                            $lastCustomProduct = $key;
-                            break;
-                        case 2: // Option
-                            if (empty($sku) && isset($params['L_PAYMENTREQUEST_0_NUMBER' . $lastCustomProduct])) {
-                                $sku = $params['L_PAYMENTREQUEST_0_NUMBER' . $lastCustomProduct];
-                            }
-                            break;
-                        case 3; // Value
-                            $last = $key - 1;
-                            if (isset($params['L_PAYMENTREQUEST_0_NAME' . $last])) {
-                                if (strpos($params['L_PAYMENTREQUEST_0_NAME' . $last], ': ') === false) {
-                                    $params['L_PAYMENTREQUEST_0_NAME' . $last] .= ': ' . $name;
-                                } else {
-                                    $params['L_PAYMENTREQUEST_0_NAME' . $last] .= ', ' . $name;
-                                }
-                                $params['L_PAYMENTREQUEST_0_AMT' . $last] += $amount;
-                            }
-                            continue 2;
-                        default:
-                            break;
-                    }
-                }
-
-                $article = array(
-                    'L_PAYMENTREQUEST_0_NUMBER' . $key => $sku,
-                    'L_PAYMENTREQUEST_0_NAME' . $key => $name,
-                    'L_PAYMENTREQUEST_0_AMT' . $key => $amount,
-                    'L_PAYMENTREQUEST_0_QTY' . $key => $quantity
-                );
-                $params = array_merge($params, $article);
-                ++$key;
-            }
-        }
-
-        if ($params['PAYMENTREQUEST_0_ITEMAMT'] == '0.00') {
-            $params['PAYMENTREQUEST_0_ITEMAMT'] = $params['PAYMENTREQUEST_0_SHIPPINGAMT'];
-            $params['PAYMENTREQUEST_0_SHIPPINGAMT'] = '0.00';
-        }
-
-        return $params;
-    }
-
-    /**
      * Helper method to log an error
      *
      * @param array $response
@@ -970,54 +1020,5 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         /** @var \Shopware\Components\Logger $pluginLogger */
         $pluginLogger = Shopware()->Container()->get('pluginlogger');
         $pluginLogger->error($message);
-    }
-
-    /**
-     * Returns the prepared customer parameter data.
-     *
-     * @return array
-     */
-    protected function getCustomerParameter()
-    {
-        $user = $this->getUser();
-        if (empty($user)) {
-            return array(
-                'LOCALECODE' => $this->plugin->getLocaleCode(true)
-            );
-        }
-        $shipping = $user['shippingaddress'];
-        $name = $shipping['firstname'] . ' ' . $shipping['lastname'];
-        if (!empty($shipping['company'])) {
-            $name = $shipping['company'] . ' - ' . $name;
-        }
-        if (!empty($shipping['streetnumber'])) {
-            $shipping['street'] .= ' ' . $shipping['streetnumber'];
-        }
-        if (!empty($shipping['additional_address_line1'])) {
-            $shipping['street2'] = $shipping['additional_address_line1'];
-            if (!empty($shipping['additional_address_line2'])) {
-                $shipping['street2'] .= ' ' . $shipping['additional_address_line2'];
-            }
-        } else {
-            $shipping['street2'] = '';
-        }
-        $customer = array(
-            'CUSTOMERSERVICENUMBER' => $user['billingaddress']['customernumber'],
-            //'gender' => $shipping['salutation'] == 'ms' ? 'f' : 'm',
-            'PAYMENTREQUEST_0_SHIPTONAME' => $name,
-            'PAYMENTREQUEST_0_SHIPTOSTREET' => $shipping['street'],
-            'PAYMENTREQUEST_0_SHIPTOSTREET2' => $shipping['street2'],
-            'PAYMENTREQUEST_0_SHIPTOZIP' => $shipping['zipcode'],
-            'PAYMENTREQUEST_0_SHIPTOCITY' => $shipping['city'],
-            'PAYMENTREQUEST_0_SHIPTOCOUNTRYCODE' => $user['additional']['countryShipping']['countryiso'],
-            'EMAIL' => $user['additional']['user']['email'],
-            'PAYMENTREQUEST_0_SHIPTOPHONENUM' => $user['billingaddress']['phone'],
-            'LOCALECODE' => $this->plugin->getLocaleCode(true)
-        );
-        if (!empty($user['additional']['stateShipping']['shortcode'])) {
-            $customer['PAYMENTREQUEST_0_SHIPTOSTATE'] = $user['additional']['stateShipping']['shortcode'];
-        }
-
-        return $customer;
     }
 }

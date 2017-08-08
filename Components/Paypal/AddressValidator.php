@@ -1,4 +1,10 @@
 <?php
+/**
+ * (c) shopware AG <info@shopware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
 namespace Shopware\Plugins\SwagPaymentPaypal\Components\Paypal;
 
@@ -10,17 +16,17 @@ use Symfony\Component\Validator\ConstraintViolationInterface;
 
 class AddressValidator implements AddressValidatorInterface
 {
-    /** @var  AddressValidatorInterface */
+    /** @var AddressValidatorInterface */
     private $innerValidator;
 
-    /** @var  DIContainer $container */
+    /** @var DIContainer $container */
     private $container;
 
     /**
      * PaypalAddressValidator constructor.
      *
      * @param AddressValidatorInterface $innerValidator
-     * @param DIContainer $container
+     * @param DIContainer               $container
      */
     public function __construct(AddressValidatorInterface $innerValidator, DIContainer $container)
     {
@@ -30,6 +36,7 @@ class AddressValidator implements AddressValidatorInterface
 
     /**
      * @param Address $address
+     *
      * @throws ValidationException
      */
     public function validate(Address $address)
@@ -68,6 +75,7 @@ class AddressValidator implements AddressValidatorInterface
 
     /**
      * @param Address $address
+     *
      * @return bool
      */
     public function isValid(Address $address)

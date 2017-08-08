@@ -1,5 +1,5 @@
 <?php
-/*
+/**
  * (c) shopware AG <info@shopware.com>
  *
  * For the full copyright and license information, please view the LICENSE
@@ -85,6 +85,7 @@ class Shopware_Components_Paypal_Client extends Zend_Http_Client
     /**
      * @param $name
      * @param array $args
+     *
      * @return array|bool
      */
     public function __call($name, $args = array())
@@ -96,7 +97,7 @@ class Shopware_Components_Paypal_Client extends Zend_Http_Client
             'VERSION' => $this->apiVersion,
             'PWD' => $this->apiPassword,
             'USER' => $this->apiUsername,
-            'SIGNATURE' => $this->apiSignature
+            'SIGNATURE' => $this->apiSignature,
         ));
         if (!empty($args[0])) {
             $this->setParameterPost($args[0]);

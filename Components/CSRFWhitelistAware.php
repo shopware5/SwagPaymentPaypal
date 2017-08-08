@@ -1,6 +1,5 @@
 <?php
-
-/*
+/**
  * (c) shopware AG <info@shopware.com>
  *
  * For the full copyright and license information, please view the LICENSE
@@ -10,5 +9,7 @@
 namespace Shopware\Components;
 
 if (!interface_exists('\Shopware\Components\CSRFWhitelistAware')) {
-    interface CSRFWhitelistAware {}
+    interface CSRFWhitelistAware
+    {
+    }
 }

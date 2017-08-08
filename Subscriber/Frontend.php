@@ -1,5 +1,5 @@
 <?php
-/*
+/**
  * (c) shopware AG <info@shopware.com>
  *
  * For the full copyright and license information, please view the LICENSE
@@ -13,12 +13,12 @@ use Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap as Bootstrap;
 class Frontend
 {
     /**
-     * @var Bootstrap $bootstrap
+     * @var Bootstrap
      */
     protected $bootstrap;
 
     /**
-     * @var \Enlight_Config $config
+     * @var \Enlight_Config
      */
     protected $config;
 
@@ -39,7 +39,7 @@ class Frontend
     public static function getSubscribedEvents()
     {
         return array(
-            'Enlight_Controller_Action_PostDispatch' => 'onPostDispatch'
+            'Enlight_Controller_Action_PostDispatch' => 'onPostDispatch',
         );
     }
 

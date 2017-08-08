@@ -1,5 +1,5 @@
 <?php
-/*
+/**
  * (c) shopware AG <info@shopware.com>
  *
  * For the full copyright and license information, please view the LICENSE
@@ -13,7 +13,7 @@ use Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap as Bootstrap;
 class BackendIndex
 {
     /**
-     * @var Bootstrap $bootstrap
+     * @var Bootstrap
      */
     protected $bootstrap;
 
@@ -33,7 +33,7 @@ class BackendIndex
     public static function getSubscribedEvents()
     {
         return array(
-            'Enlight_Controller_Action_PostDispatch_Backend_Index' => 'onPostDispatchBackendIndex'
+            'Enlight_Controller_Action_PostDispatch_Backend_Index' => 'onPostDispatchBackendIndex',
         );
     }
 

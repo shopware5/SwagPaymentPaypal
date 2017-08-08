@@ -1,5 +1,5 @@
 <?php
-/*
+/**
  * (c) shopware AG <info@shopware.com>
  *
  * For the full copyright and license information, please view the LICENSE
@@ -33,7 +33,7 @@ class Shopware_Components_Paypal_RestClient extends Zend_Http_Client
      * Expects a configuration parameter.
      *
      * @param Enlight_Config $config
-     * @param string $caPath path to Bundle of CA Root Certificates (see: https://curl.haxx.se/ca/cacert.pem)
+     * @param string         $caPath path to Bundle of CA Root Certificates (see: https://curl.haxx.se/ca/cacert.pem)
      */
     public function __construct($config, $caPath = null)
     {
@@ -44,8 +44,10 @@ class Shopware_Components_Paypal_RestClient extends Zend_Http_Client
 
     /**
      * @param Enlight_Config $config
-     * @param string $caPath path to Bundle of CA Root Certificates (see: https://curl.haxx.se/ca/cacert.pem)
+     * @param string         $caPath path to Bundle of CA Root Certificates (see: https://curl.haxx.se/ca/cacert.pem)
+     *
      * @see https://github.com/paypal/sdk-core-php
+     *
      * @return Zend_Http_Client_Adapter_Curl|Zend_Http_Client_Adapter_Socket
      */
     public static function createAdapterFromConfig($config, $caPath = null)
@@ -77,19 +79,11 @@ class Shopware_Components_Paypal_RestClient extends Zend_Http_Client
             $adapter = new Zend_Http_Client_Adapter_Socket();
             $adapter->setConfig(array(
                 'useragent' => $userAgent,
-                'timeout' => $timeout
+                'timeout' => $timeout,
             ));
         }
-        return $adapter;
-    }
 
-    protected function getBaseUri()
-    {
-        if (!empty($this->pluginConfig->paypalSandbox)) {
-            return self::URL_SANDBOX;
-        } else {
-            return self::URL_LIVE;
-        }
+        return $adapter;
     }
 
     public function setAuthBase()
@@ -117,6 +111,7 @@ class Shopware_Components_Paypal_RestClient extends Zend_Http_Client
         }
         $this->setAuth(false);
         $this->setHeaders('Authorization', "{$auth['token_type']} {$auth['access_token']}");
+
         return $auth;
     }
 
@@ -129,6 +124,7 @@ class Shopware_Components_Paypal_RestClient extends Zend_Http_Client
             'redirect_uri' => $redirectUri,
         );
         $this->setAuthBase();
+
         return $this->post($uri, $params);
     }
 
@@ -137,18 +133,21 @@ class Shopware_Components_Paypal_RestClient extends Zend_Http_Client
         $uri = 'identity/openidconnect/userinfo/';
         $params = array('schema' => 'openid');
         $this->setAuthToken($auth);
+
         return $this->get($uri, $params);
     }
 
     public function create($uri, $params)
     {
         $this->setRawData(json_encode($params), 'application/json');
+
         return $this->post($uri);
     }
 
     public function update($uri, $params)
     {
         $this->setRawData(json_encode($params), 'application/json');
+
         return $this->put($uri);
     }
 
@@ -173,7 +172,32 @@ class Shopware_Components_Paypal_RestClient extends Zend_Http_Client
             }
         }
         $response = parent::request();
+
         return $this->filterResponse($response);
+    }
+
+    public function get($uri = null, $params = null)
+    {
+        return $this->request(self::GET, $uri, $params);
+    }
+
+    public function post($uri = null, $params = null)
+    {
+        return $this->request(self::POST, $uri, $params);
+    }
+
+    public function put($uri = null, $params = null)
+    {
+        return $this->request(self::PUT, $uri, $params);
+    }
+
+    protected function getBaseUri()
+    {
+        if (!empty($this->pluginConfig->paypalSandbox)) {
+            return self::URL_SANDBOX;
+        }
+
+        return self::URL_LIVE;
     }
 
     private function filterResponse($response)
@@ -190,21 +214,7 @@ class Shopware_Components_Paypal_RestClient extends Zend_Http_Client
         if (!is_array($body)) {
             $body = array('body' => $body);
         }
+
         return $data + $body;
-    }
-
-    public function get($uri = null, $params = null)
-    {
-        return $this->request(self::GET, $uri, $params);
-    }
-
-    public function post($uri = null, $params = null)
-    {
-        return $this->request(self::POST, $uri, $params);
-    }
-
-    public function put($uri = null, $params = null)
-    {
-        return $this->request(self::PUT, $uri, $params);
     }
 }

@@ -6,8 +6,6 @@
  * file that was distributed with this source code.
  */
 
-use Doctrine\DBAL\Connection;
-
 require_once __DIR__ . '/../../Components/CSRFWhitelistAware.php';
 
 class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_Frontend_Payment implements \Shopware\Components\CSRFWhitelistAware
@@ -140,17 +138,6 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
 
         $borderColor = ltrim($config->get('paypalCartBorderColor'), '#');
         $paymentAction = $config->get('paypalPaymentAction', 'Sale');
-
-        //This won't work for express checkout because no payment method is selected in this case and no user can be
-        //referenced to the order.
-        if (!$isExpressCheckout && $config->get('paypalSendInvoiceId')) {
-            $preId = $this->createPaymentUniqueId();
-            $this->session->offsetSet('paypalPreIdentifier', $preId);
-
-            $orderNumber = $this->saveOrder($preId, $preId);
-
-            $this->session->offsetSet('paypalPreIdentifier_orderNumber', $orderNumber);
-        }
 
         $params = array(
             'PAYMENTREQUEST_0_PAYMENTACTION' => $paymentAction,
@@ -333,7 +320,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                  * Will ony be triggered during normal checkout as $this->session->sOrderVariables is
                  * filled during the checkout and not available during the express checkout
                  */
-                if ($this->getUser()) {
+                if ($this->getUser() && $this->getOrderNumber() === null) {
                     unset($this->session->PaypalResponse);
                     $response = $this->finishCheckout($details);
                     if ($response['ACK'] != 'Success') {
@@ -521,20 +508,10 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $params = array_merge($params, $this->getCustomerParameter());
 
         if ($config->get('paypalSendInvoiceId')) {
-            if ($preId = $this->session->offsetGet('paypalPreIdentifier')) {
-                $orderNumber = $this->session->offsetGet('paypalPreIdentifier_orderNumber');
-                $this->updateOrder(
-                    $orderNumber,
-                    isset($params['TOKEN']) ? $params['TOKEN'] : $params['REFERENCEID'],
-                    $params['PAYMENTREQUEST_0_CUSTOM']
-                );
-            } else {
-                $orderNumber = $this->saveOrder(
-                    isset($params['TOKEN']) ? $params['TOKEN'] : $params['REFERENCEID'],
-                    $params['PAYMENTREQUEST_0_CUSTOM']
-                );
-            }
-
+            $orderNumber = $this->saveOrder(
+                isset($params['TOKEN']) ? $params['TOKEN'] : $params['REFERENCEID'],
+                $params['PAYMENTREQUEST_0_CUSTOM']
+            );
             $prefix = $config->get('paypalPrefixInvoiceId');
             if (!empty($prefix)) {
                 // Set prefixed invoice id - Remove special chars and spaces

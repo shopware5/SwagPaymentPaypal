@@ -6,8 +6,6 @@
  * file that was distributed with this source code.
  */
 
-use Doctrine\DBAL\Connection;
-
 require_once __DIR__ . '/../../Components/CSRFWhitelistAware.php';
 
 class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_Frontend_Payment implements \Shopware\Components\CSRFWhitelistAware
@@ -47,8 +45,8 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
      */
     public function get($name)
     {
-        if (version_compare(Shopware::VERSION, '4.2.0', '<') && Shopware::VERSION != '___VERSION___') {
-            if ($name == 'pluginlogger') {
+        if (version_compare(Shopware::VERSION, '4.2.0', '<') && Shopware::VERSION !== '___VERSION___') {
+            if ($name === 'pluginlogger') {
                 $name = 'log';
             }
             $name = ucfirst($name);
@@ -90,7 +88,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         if (!empty($this->session->PaypalResponse['TOKEN'])) {
             $this->forward('return');
             // Paypal Basis || PayPal Express
-        } elseif ($this->getPaymentShortName() == 'paypal') {
+        } elseif ($this->getPaymentShortName() === 'paypal') {
             $this->forward('gateway');
         } else {
             $this->redirect(array('controller' => 'checkout'));
@@ -141,17 +139,6 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $borderColor = ltrim($config->get('paypalCartBorderColor'), '#');
         $paymentAction = $config->get('paypalPaymentAction', 'Sale');
 
-        //This won't work for express checkout because no payment method is selected in this case and no user can be
-        //referenced to the order.
-        if (!$isExpressCheckout && $config->get('paypalSendInvoiceId')) {
-            $preId = $this->createPaymentUniqueId();
-            $this->session->offsetSet('paypalPreIdentifier', $preId);
-
-            $orderNumber = $this->saveOrder($preId, $preId);
-
-            $this->session->offsetSet('paypalPreIdentifier_orderNumber', $orderNumber);
-        }
-
         $params = array(
             'PAYMENTREQUEST_0_PAYMENTACTION' => $paymentAction,
             'RETURNURL' => $router->assemble(array('action' => 'return', 'forceSecure' => true, 'express' => $isExpressCheckout)),
@@ -185,10 +172,10 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
 
         $this->session->PaypalResponse = $response;
 
-        if ($response['ACK'] == 'SuccessWithWarning') {
+        if ($response['ACK'] === 'SuccessWithWarning') {
             $response['ACK'] = 'Success';
         }
-        if (!empty($response['ACK']) && $response['ACK'] == 'Success') {
+        if (!empty($response['ACK']) && $response['ACK'] === 'Success') {
             if (!empty($config->paypalSandbox)) {
                 $gatewayUrl = 'https://www.sandbox.paypal.com/cgi-bin/';
             } else {
@@ -230,7 +217,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $response = $this->finishCheckout($details);
 
         if ($this->Request()->isXmlHttpRequest()) {
-            if ($response['ACK'] != 'Success') {
+            if ($response['ACK'] !== 'Success') {
                 $data = array(
                     'success' => false,
                     'message' => "[{$response['PAYMENTINFO_0_ERRORCODE']}] - {$response['PAYMENTINFO_0_SHORTMESSAGE']}",
@@ -248,7 +235,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             }
             echo Zend_Json::encode($data);
         } else {
-            if ($response['ACK'] != 'Success') {
+            if ($response['ACK'] !== 'Success') {
                 $this->View()->loadTemplate('frontend/payment_paypal/return.tpl');
                 $this->View()->PaypalConfig = $this->plugin->Config();
                 $this->View()->PaypalResponse = $response;
@@ -333,10 +320,10 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                  * Will ony be triggered during normal checkout as $this->session->sOrderVariables is
                  * filled during the checkout and not available during the express checkout
                  */
-                if ($this->getUser()) {
+                if ($this->getUser() && $this->getOrderNumber() === null) {
                     unset($this->session->PaypalResponse);
                     $response = $this->finishCheckout($details);
-                    if ($response['ACK'] != 'Success') {
+                    if ($response['ACK'] !== 'Success') {
                         if ($response['L_ERRORCODE0'] == 10486) {
                             if (!empty($config->paypalSandbox)) {
                                 $redirectUrl = 'https://www.sandbox.paypal.com/cgi-bin/';
@@ -413,7 +400,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             $this->get('pluginlogger')->error($message, $context);
         }
 
-        if (empty($details['PAYMENTSTATUS']) || empty($details['ACK']) || $details['ACK'] != 'Success') {
+        if (empty($details['PAYMENTSTATUS']) || empty($details['ACK']) || $details['ACK'] !== 'Success') {
             $message = sprintf(
                 'PayPal-Notify: Could not find TRANSACTIONID %s',
                 $txnId
@@ -492,7 +479,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         if (!empty($details['REFERENCEID'])) {
             $params = array(
                 'REFERENCEID' => $details['REFERENCEID'],
-                'IPADDRESS' => $this->Request()->getClientIp(false),
+                'IPADDRESS' => $this->Request()->getClientIp(),
                 'PAYMENTREQUEST_0_NOTIFYURL' => $notifyUrl,
                 'PAYMENTREQUEST_0_CUSTOM' => $this->createPaymentUniqueId(),
                 'BUTTONSOURCE' => 'Shopware_Cart_ECM',
@@ -507,7 +494,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             );
         }
 
-        if (Shopware::VERSION == '___VERSION___' || version_compare(Shopware::VERSION, '4.4.0') >= 0) {
+        if (Shopware::VERSION === '___VERSION___' || version_compare(Shopware::VERSION, '4.4.0') >= 0) {
             $params['BUTTONSOURCE'] = 'Shopware_Cart_5';
         }
 
@@ -521,20 +508,10 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $params = array_merge($params, $this->getCustomerParameter());
 
         if ($config->get('paypalSendInvoiceId')) {
-            if ($preId = $this->session->offsetGet('paypalPreIdentifier')) {
-                $orderNumber = $this->session->offsetGet('paypalPreIdentifier_orderNumber');
-                $this->updateOrder(
-                    $orderNumber,
-                    isset($params['TOKEN']) ? $params['TOKEN'] : $params['REFERENCEID'],
-                    $params['PAYMENTREQUEST_0_CUSTOM']
-                );
-            } else {
-                $orderNumber = $this->saveOrder(
-                    isset($params['TOKEN']) ? $params['TOKEN'] : $params['REFERENCEID'],
-                    $params['PAYMENTREQUEST_0_CUSTOM']
-                );
-            }
-
+            $orderNumber = $this->saveOrder(
+                isset($params['TOKEN']) ? $params['TOKEN'] : $params['REFERENCEID'],
+                $params['PAYMENTREQUEST_0_CUSTOM']
+            );
             $prefix = $config->get('paypalPrefixInvoiceId');
             if (!empty($prefix)) {
                 // Set prefixed invoice id - Remove special chars and spaces
@@ -564,7 +541,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         }
         $result['PAYMENTREQUEST_0_CUSTOM'] = $params['PAYMENTREQUEST_0_CUSTOM'];
 
-        if ($result['ACK'] != 'Success') {
+        if ($result['ACK'] !== 'Success') {
             return $result;
         }
 
@@ -621,7 +598,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
 
         // Sets payment status
         $paymentStatus = $result['PAYMENTINFO_0_PAYMENTSTATUS'];
-        $ppAmount = floatval($result['PAYMENTINFO_0_AMT']);
+        $ppAmount = (float) $result['PAYMENTINFO_0_AMT'];
         $swAmount = $this->getAmount();
         if (abs($swAmount - $ppAmount) >= 0.01) {
             $paymentStatus = 'AmountMissMatch'; //Überprüfung notwendig
@@ -643,7 +620,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $module = $this->get('modules')->Admin();
         $session = $this->session;
 
-        if (version_compare(Shopware::VERSION, '4.1.0', '>=') || Shopware::VERSION == '___VERSION___') {
+        if (version_compare(Shopware::VERSION, '4.1.0', '>=') || Shopware::VERSION === '___VERSION___') {
             $encoderName = $this->get('passwordEncoder')->getDefaultPasswordEncoderName();
         }
 
@@ -663,7 +640,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $data['billing']['firstname'] = $details['FIRSTNAME'];
         $data['billing']['lastname'] = $details['LASTNAME'];
 
-        if (version_compare(Shopware::VERSION, '4.4.0', '>=') || Shopware::VERSION == '___VERSION___') {
+        if (version_compare(Shopware::VERSION, '4.4.0', '>=') || Shopware::VERSION === '___VERSION___') {
             $data['billing']['street'] = $details['PAYMENTREQUEST_0_SHIPTOSTREET'];
             if (!empty($details['PAYMENTREQUEST_0_SHIPTOSTREET2'])) {
                 $data['billing']['additional_address_line1'] = $details['PAYMENTREQUEST_0_SHIPTOSTREET2'];
@@ -686,7 +663,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $sql = 'SELECT id FROM s_core_countries WHERE countryiso=?';
         $countryId = $this->get('db')->fetchOne($sql, array($details['PAYMENTREQUEST_0_SHIPTOCOUNTRYCODE']));
         $data['billing']['country'] = $countryId;
-        if (!empty($details['PAYMENTREQUEST_0_SHIPTOSTATE']) && $details['PAYMENTREQUEST_0_SHIPTOSTATE'] != 'Empty') {
+        if (!empty($details['PAYMENTREQUEST_0_SHIPTOSTATE']) && $details['PAYMENTREQUEST_0_SHIPTOSTATE'] !== 'Empty') {
             $sql = 'SELECT id FROM s_core_countries_states WHERE countryID=? AND shortcode=?';
             $stateId = $this->get('db')->fetchOne($sql, array($countryId, $details['PAYMENTREQUEST_0_SHIPTOSTATE']));
             $data['billing']['stateID'] = $stateId;
@@ -811,7 +788,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $params['PAYMENTREQUEST_0_TAXAMT'] = number_format(0, 2, '.', '');
 
         $config = $this->plugin->Config();
-        if ($config->get('paypalTransferCart') && $params['PAYMENTREQUEST_0_ITEMAMT'] != '0.00' && count($basket['content']) < 25) {
+        if ($config->get('paypalTransferCart') && $params['PAYMENTREQUEST_0_ITEMAMT'] !== '0.00' && count($basket['content']) < 25) {
             $key = 0;
             $lastCustomProduct = null;
             foreach ($basket['content'] as $basketItem) {
@@ -872,7 +849,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             }
         }
 
-        if ($params['PAYMENTREQUEST_0_ITEMAMT'] == '0.00') {
+        if ($params['PAYMENTREQUEST_0_ITEMAMT'] === '0.00') {
             $params['PAYMENTREQUEST_0_ITEMAMT'] = $params['PAYMENTREQUEST_0_SHIPPINGAMT'];
             $params['PAYMENTREQUEST_0_SHIPPINGAMT'] = '0.00';
         }
@@ -927,30 +904,6 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         }
 
         return $customer;
-    }
-
-    /**
-     * @param string $ordernumber
-     * @param string $transactionId
-     * @param string $paymentUniqueId
-     *
-     * @return string
-     */
-    private function updateOrder($ordernumber, $transactionId, $paymentUniqueId)
-    {
-        /** @var Connection $connection */
-        $connection = Shopware()->Container()->get('models')->getConnection();
-        $queryBuilder = $connection->createQueryBuilder();
-        $queryBuilder->update('s_order')
-            ->set('transactionID', ':transactionId')
-            ->set('temporaryID', ':tempId')
-            ->where('ordernumber = :ordernumber')
-            ->setParameter('transactionId', $transactionId)
-            ->setParameter('tempId', $paymentUniqueId)
-            ->setParameter('ordernumber', $ordernumber)
-            ->execute();
-
-        return $ordernumber;
     }
 
     /**

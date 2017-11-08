@@ -643,7 +643,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         if (version_compare(Shopware::VERSION, '4.4.0', '>=') || Shopware::VERSION === '___VERSION___') {
             $data['billing']['street'] = $details['PAYMENTREQUEST_0_SHIPTOSTREET'];
             if (!empty($details['PAYMENTREQUEST_0_SHIPTOSTREET2'])) {
-                $data['billing']['additional_address_line1'] = $details['PAYMENTREQUEST_0_SHIPTOSTREET2'];
+                $data['billing']['additionalAddressLine1'] = $details['PAYMENTREQUEST_0_SHIPTOSTREET2'];
             }
         } else {
             $street = explode(' ', $details['PAYMENTREQUEST_0_SHIPTOSTREET']);

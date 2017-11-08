@@ -885,23 +885,23 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         if (!empty($shipping['streetnumber'])) {
             $shipping['street'] .= ' ' . $shipping['streetnumber'];
         }
-		if (version_compare(Shopware::VERSION, '4.4.0', '>=') && version_compare(Shopware::VERSION, '5.2.0', '<')) {
+	if (version_compare(Shopware::VERSION, '4.4.0', '>=') && version_compare(Shopware::VERSION, '5.2.0', '<')) {
 
-	        if (!empty($shipping['additional_address_line1'])) {
-	            $shipping['street2'] = $shipping['additional_address_line1'];
-	            if (!empty($shipping['additional_address_line2'])) {
-	                $shipping['street2'] .= ' ' . $shipping['additional_address_line2'];
-	            }
-	        }
+		if (!empty($shipping['additional_address_line1'])) {
+		    $shipping['street2'] = $shipping['additional_address_line1'];
+		    if (!empty($shipping['additional_address_line2'])) {
+			$shipping['street2'] .= ' ' . $shipping['additional_address_line2'];
+		    }
+		}
 
-	    } elseif (version_compare(Shopware::VERSION, '5.2.0', '>=') || Shopware::VERSION === '___VERSION___') {
+    	} elseif (version_compare(Shopware::VERSION, '5.2.0', '>=') || Shopware::VERSION === '___VERSION___') {
 
-	    	if (!empty($shipping['additionalAddressLine1'])) {
-	            $shipping['street2'] = $shipping['additionalAddressLine1'];
-	            if (!empty($shipping['additionalAddressLine2'])) {
-	                $shipping['street2'] .= ' ' . $shipping['additionalAddressLine2'];
-	            }
-	        }
+		if (!empty($shipping['additionalAddressLine1'])) {
+		    $shipping['street2'] = $shipping['additionalAddressLine1'];
+		    if (!empty($shipping['additionalAddressLine2'])) {
+			$shipping['street2'] .= ' ' . $shipping['additionalAddressLine2'];
+		    }
+		}
 
         } else {
             $shipping['street2'] = '';

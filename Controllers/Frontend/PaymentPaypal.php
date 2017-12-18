@@ -167,6 +167,12 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
 
         $params = array_merge($params, $this->getBasketParameter());
         $params = array_merge($params, $this->getCustomerParameter());
+        
+        $params = $this->get('events')->filter(
+            'Shopware_Controllers_Frontend_PaymentPaypal_Gateway_Params',
+            $params,
+            ['config' => $config, 'user' => $this->getUser()]
+        );
 
         $response = $client->setExpressCheckout($params);
 

@@ -79,7 +79,7 @@
 
     "compatibility": {
         "minimumVersion": "4.2.0",
-        "maximumVersion": null,
+        "maximumVersion": "5.3.100",
         "blacklist": [
         ]
     }

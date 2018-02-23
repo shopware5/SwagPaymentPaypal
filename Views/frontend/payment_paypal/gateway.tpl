@@ -3,7 +3,8 @@
 {block name='frontend_index_content_left'}{/block}
 
 {* Breadcrumb *}
-{block name='frontend_index_start' append}
+{block name='frontend_index_start'}
+    {$smarty.block.parent}
     {$sBreadcrumb = [['name'=>"{s name=PaymentTitle}Zahlung mit PayPal{/s}"]]}
 {/block}
 
@@ -18,6 +19,7 @@
     <div class="doublespace">&nbsp;</div>
 {/block}
 
-{block name="frontend_index_header_meta_http_tags" append}
+{block name="frontend_index_header_meta_http_tags"}
+    {$smarty.block.parent}
     <meta http-equiv="refresh" content="0; url={$PaypalGatewayUrl}">
 {/block}

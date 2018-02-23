@@ -1,11 +1,11 @@
-{block name="frontend_account_ajax_login_error_messages" append}
+{block name="frontend_account_ajax_login_error_messages"}
+    {$smarty.block.parent}
     <div class="paypal_login_container">
         <div id="paypal_login_button"></div>
     </div>
-
     <script>
         if (paypal) {
-            paypal.use(["login"], function (login) {
+            paypal.use(["login"], function(login) {
                 var r = login.render({
                     "appid": "{$PaypalClientId}",
                     {if $PaypalSandbox}

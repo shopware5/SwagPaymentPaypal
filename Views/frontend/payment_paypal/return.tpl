@@ -1,7 +1,8 @@
 {extends file='frontend/index/index.tpl'}
 
 {* Breadcrumb *}
-{block name='frontend_index_start' append}
+{block name='frontend_index_start'}
+    {$smarty.block.parent}
     {$sBreadcrumb = [['name'=>"{s name=PaymentTitle}Zahlung durchführen{/s}"]]}
 {/block}
 
@@ -13,7 +14,7 @@
         && ($PaypalConfig.paypalSandbox || $PaypalConfig.paypalErrorMode)}
             <h2>{se name=PaymentDebugErrorMessage}Ein Fehler ist aufgetreten.{/se}</h2>
             {$i=0}{while isset($PaypalResponse["L_LONGMESSAGE{$i}"])}
-                <h3>[{$PaypalResponse["L_ERRORCODE{$i}"]}] - {$PaypalResponse["L_SHORTMESSAGE{$i}"]|escape|nl2br}. {$PaypalResponse["L_LONGMESSAGE{$i}"]|escape|nl2br}</h3>
+            <h3>[{$PaypalResponse["L_ERRORCODE{$i}"]}] - {$PaypalResponse["L_SHORTMESSAGE{$i}"]|escape|nl2br}. {$PaypalResponse["L_LONGMESSAGE{$i}"]|escape|nl2br}</h3>
             {$i=$i+1}{/while}
         {else}
             <h2>{se name=PaymentErrorMessage}Es ist ein Problem aufgetreten und die Bestellung konnte nicht abgeschlossen werden.{/se}</h2>

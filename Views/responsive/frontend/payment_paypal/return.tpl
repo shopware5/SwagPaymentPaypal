@@ -1,7 +1,8 @@
 {extends file='frontend/index/index.tpl'}
 
 {* Breadcrumb *}
-{block name='frontend_index_start' append}
+{block name='frontend_index_start'}
+    {$smarty.block.parent}
     {$sBreadcrumb = [['name'=>"{s name='PaypalBreadcrumbTitle'}{/s}"]]}
 {/block}
 
@@ -16,7 +17,7 @@
             {include file="frontend/_includes/messages.tpl" type="error" content="{$debugErrorMessage}"}
 
             {$i=0}{while isset($PaypalResponse["L_LONGMESSAGE{$i}"])}
-                <p>[{$PaypalResponse["L_ERRORCODE{$i}"]}] - {$PaypalResponse["L_SHORTMESSAGE{$i}"]|escape|nl2br}. {$PaypalResponse["L_LONGMESSAGE{$i}"]|escape|nl2br}</p>
+            <p>[{$PaypalResponse["L_ERRORCODE{$i}"]}] - {$PaypalResponse["L_SHORTMESSAGE{$i}"]|escape|nl2br}. {$PaypalResponse["L_LONGMESSAGE{$i}"]|escape|nl2br}</p>
             {$i=$i+1}{/while}
         {else}
             {$errorMessage = "{s name='PaypalErrorMessage'}{/s}"}

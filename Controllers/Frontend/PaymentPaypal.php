@@ -138,6 +138,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
 
         $borderColor = ltrim($config->get('paypalCartBorderColor'), '#');
         $paymentAction = $config->get('paypalPaymentAction', 'Sale');
+		$user = $this->getUser();
 
         $params = array(
             'PAYMENTREQUEST_0_PAYMENTACTION' => $paymentAction,
@@ -147,18 +148,15 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             'GIROPAYSUCCESSURL' => $router->assemble(array('action' => 'return', 'forceSecure' => true)),
             'GIROPAYCANCELURL' => $router->assemble(array('action' => 'cancel', 'forceSecure' => true)),
             'BANKTXNPENDINGURL' => $router->assemble(array('action' => 'return', 'forceSecure' => true)),
-//            'NOSHIPPING' => 0,
-//            'REQCONFIRMSHIPPING' => 0,
             'ALLOWNOTE' => 1,
-            'ADDROVERRIDE' => $this->getUser() === null ? 0 : 1,
+            'ADDROVERRIDE' => $user === null ? 0 : 1,
             'BRANDNAME' => $shopName,
             'LOGOIMG' => $logoImage,
             'CARTBORDERCOLOR' => $borderColor,
             'PAYMENTREQUEST_0_CUSTOM' => $this->createPaymentUniqueId(),
-//            'SOLUTIONTYPE' => $config->get('paypalAllowGuestCheckout') ? 'Sole' : 'Mark',
-            'TOTALTYPE' => $this->getUser() !== null ? 'Total' : 'EstimatedTotal',
+            'TOTALTYPE' => $user !== null ? 'Total' : 'EstimatedTotal',
         );
-        if ($config->get('paypalBillingAgreement') && $this->getUser() !== null) {
+        if ($config->get('paypalBillingAgreement') && $user !== null) {
             $params['BILLINGTYPE'] = 'MerchantInitiatedBilling';
         }
         if ($config->get('paypalSeamlessCheckout') && !empty($this->session->PaypalAuth)) {
@@ -171,7 +169,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $params = $this->get('events')->filter(
             'Shopware_Controllers_Frontend_PaymentPaypal_Gateway_Params',
             $params,
-            ['config' => $config, 'user' => $this->getUser()]
+            ['config' => $config, 'user' => $user]
         );
 
         $response = $client->setExpressCheckout($params);
@@ -188,7 +186,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                 $gatewayUrl = 'https://www.paypal.com/cgi-bin/';
             }
             $gatewayUrl .= 'webscr?cmd=_express-checkout';
-            if ($this->getUser() !== null) {
+            if ($user !== null) {
                 $gatewayUrl .= '&useraction=commit';
             }
             $gatewayUrl .= '&token=' . urlencode($response['TOKEN']);

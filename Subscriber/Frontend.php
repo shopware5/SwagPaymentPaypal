@@ -23,8 +23,6 @@ class Frontend
     protected $config;
 
     /**
-     * Frontend constructor.
-     *
      * @param Bootstrap $bootstrap
      */
     public function __construct(Bootstrap $bootstrap)
@@ -49,7 +47,7 @@ class Frontend
     public function onPostDispatch(\Enlight_Event_EventArgs $args)
     {
         /** @var $action \Enlight_Controller_Action */
-        $action = $args->getSubject();
+        $action = $args->get('subject');
         $request = $action->Request();
         $response = $action->Response();
         $view = $action->View();
@@ -57,7 +55,7 @@ class Frontend
 
         if (!$request->isDispatched()
             || $response->isException()
-            || $request->getModuleName() != 'frontend'
+            || $request->getModuleName() !== 'frontend'
             || !$view->hasTemplate()
         ) {
             return;
@@ -65,6 +63,8 @@ class Frontend
 
         $admin = Shopware()->Modules()->Admin();
         $session = Shopware()->Session();
+        $controllerName = $request->getControllerName();
+        $actionName = $request->getActionName();
 
         /** @var $shopContext \Shopware\Models\Shop\Shop */
         $shopContext = $this->bootstrap->get('shop');
@@ -76,7 +76,7 @@ class Frontend
             $this->bootstrap->registerMyTemplateDir();
         }
 
-        if (!empty($config->paypalFrontendLogo)) {
+        if ((bool) $config->get('paypalFrontendLogo')) {
             if ($templateVersion < 3) {
                 $view->extendsBlock(
                     $config->get('paypalFrontendLogoBlock', 'frontend_index_left_campaigns_bottom'),
@@ -84,30 +84,29 @@ class Frontend
                     'append'
                 );
             } else {
-                $view->PaypalShowLogo = true;
+                $view->assign('PaypalShowLogo', true);
             }
         }
 
-        if (!empty($config->paypalExpressButtonLayer)) {
-            if (($templateVersion < 3 && $request->getControllerName() == 'checkout' && $request->getActionName() == 'ajax_add_article')
-                || ($templateVersion >= 3 && $request->getControllerName() == 'checkout' && $request->getActionName() == 'ajaxCart')
-            ) {
-                $view->PaypalShowButton = true;
-                if ($templateVersion < 3) {
-                    $view->extendsBlock(
-                        'frontend_checkout_ajax_add_article_action_buttons',
-                        '{include file="frontend/payment_paypal/layer.tpl"}' . "\n",
-                        'prepend'
-                    );
-                }
-            }
-        }
-
-        if (!empty($config->paypalExpressButton)
-            && $request->getControllerName() == 'checkout'
-            && $request->getActionName() == 'cart'
+        if ((bool) $config->get('paypalExpressButtonLayer')
+            && (($templateVersion < 3 && $controllerName === 'checkout' && $actionName === 'ajax_add_article')
+                || ($templateVersion >= 3 && $controllerName === 'checkout' && $actionName === 'ajaxCart'))
         ) {
-            $view->PaypalShowButton = true;
+            $view->assign('PaypalShowButton', true);
+            if ($templateVersion < 3) {
+                $view->extendsBlock(
+                    'frontend_checkout_ajax_add_article_action_buttons',
+                    '{include file="frontend/payment_paypal/layer.tpl"}' . "\n",
+                    'prepend'
+                );
+            }
+        }
+
+        if ((bool) $config->get('paypalExpressButton')
+            && $controllerName === 'checkout'
+            && $actionName === 'cart'
+        ) {
+            $view->assign('PaypalShowButton', true);
             if ($templateVersion < 3) {
                 $view->extendsBlock(
                     'frontend_checkout_actions_confirm',
@@ -117,49 +116,47 @@ class Frontend
             }
         }
 
-        if (!empty($config->paypalLogIn)) {
-            if (($templateVersion < 3 && $request->getControllerName() == 'account' && $request->getActionName() == 'ajax_login')
-                || ($templateVersion >= 3 && $request->getControllerName() == 'register' && $request->getActionName() == 'index')
-            ) {
-                $view->PaypalShowButton = true;
-                $view->PaypalClientId = $config->get('paypalClientId');
-                $view->PaypalSandbox = $config->get('paypalSandbox');
-                if ($templateVersion < 3) {
-                    $view->PaypalSeamlessCheckout = $config->get('paypalSeamlessCheckout');
-                    $view->extendsTemplate('frontend/payment_paypal/ajax_login.tpl');
-                }
-            }
+        if ((bool) $config->get('paypalExpressButtonLogin')
+            && $controllerName === 'register'
+            && $actionName === 'index'
+            && $request->getParam('sTarget') === 'checkout'
+            && $request->getParam('sTargetAction') === 'confirm'
+        ) {
+            $view->assign('PaypalShowButton', true);
         }
 
-        if (isset($view->PaypalShowButton)) {
+        if ($view->getAssign('PaypalShowButton')) {
             $showButton = false;
-            $view->sPayments = isset($view->sPayments) ? $view->sPayments : $admin->sGetPaymentMeans();
-            foreach ($view->sPayments as $payment) {
-                if ($payment['name'] == 'paypal') {
+            $payments = $view->getAssign('sPayments');
+            if ($payments === null) {
+                $payments = $admin->sGetPaymentMeans();
+            }
+            $view->assign('sPayments', $payments);
+            foreach ($payments as $payment) {
+                if ($payment['name'] === 'paypal') {
                     $showButton = true;
                     break;
                 }
             }
-            $view->PaypalShowButton = $showButton;
+            $view->assign('PaypalShowButton', $showButton);
         }
 
-        if (!empty($view->PaypalShowButton) && !empty($session->sUserId)) {
-            $view->PaypalShowButton = false;
+        if ($view->getAssign('PaypalShowButton') && $session->offsetGet('sUserId')) {
+            $view->assign('PaypalShowButton', false);
         }
 
-        $view->PaypalLogIn = $config->get('paypalLogIn');
-        $view->PaypalLocale = $this->bootstrap->getLocaleCode();
+        $view->assign('PaypalLocale', $this->bootstrap->getLocaleCode());
 
         if ($templateVersion < 3) {
             $view->extendsTemplate('frontend/payment_paypal/header.tpl');
             $view->extendsTemplate('frontend/payment_paypal/change_payment.tpl');
         }
 
-        if ($request->getControllerName() == 'checkout'
-            && $request->getActionName() == 'confirm'
-            && !empty($session->PaypalResponse)
+        if ($controllerName === 'checkout'
+            && $actionName === 'confirm'
+            && $session->offsetGet('PaypalResponse')
         ) {
-            $view->sRegisterFinished = false;
+            $view->assign('sRegisterFinished', false);
         }
     }
 }

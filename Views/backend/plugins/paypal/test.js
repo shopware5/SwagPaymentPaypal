@@ -15,16 +15,16 @@ Ext.Ajax.request({
     params: vls,
     success: function (response) {
         var data = Ext.decode(response.responseText);
-        if (data.ACK && data.ACK == 'Success') {
+        if (data.ACK && data.ACK === 'Success') {
             data.ACK = '<span style=\"color: green;font-weight: bold;\">' + data.ACK + '</span>';
         }
-        if (data.ACK && data.ACK != 'Success') {
+        if (data.ACK && data.ACK !== 'Success') {
             data.ACK = '<span style=\"color: red;font-weight: bold;\">' + data.ACK + '</span>';
         }
-        if (data.message && data.message == 'OK') {
+        if (data.message && data.message === 'OK') {
             data.message = '<span style=\"color: green;font-weight: bold;\">' + data.message + '</span>';
         }
-        if (data.message && data.message != 'OK') {
+        if (data.message && data.message !== 'OK') {
             data.message = '<span style=\"color: red;font-weight: bold;\">' + data.message + '</span>';
         }
         var title = '<span style=\"font-weight: bold;\">' + btn.text + '</span>';

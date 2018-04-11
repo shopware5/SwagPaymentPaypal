@@ -33,7 +33,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
      */
     public function get($name)
     {
-        if (version_compare(Shopware::VERSION, '4.2.0', '<') && Shopware::VERSION != '___VERSION___') {
+        if (version_compare(Shopware::VERSION, '4.2.0', '<') && Shopware::VERSION !== '___VERSION___') {
             $name = ucfirst($name);
 
             return Shopware()->Bootstrap()->getResource($name);
@@ -67,10 +67,8 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         $direction = empty($sort['direction']) || $sort['direction'] === 'DESC' ? 'DESC' : 'ASC';
         $property = empty($sort['property']) ? 'orderDate' : $sort['property'];
 
-        if ($filter) {
-            if ($filter['property'] === 'search') {
-                $this->Request()->setParam('search', $filter['value']);
-            }
+        if ($filter && $filter['property'] === 'search') {
+            $this->Request()->setParam('search', $filter['value']);
         }
 
         $dbalConnection = Shopware()->Container()->get('models')->getConnection();
@@ -125,7 +123,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             ->setFirstResult($start)
             ->setMaxResults($limit);
 
-        if (in_array($property, $this->getColumnNameWhitelist())) {
+        if (in_array($property, $this->getColumnNameWhitelist(), true)) {
             $query->orderBy($property, $direction);
         }
 
@@ -163,6 +161,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             $row['orderDate'] = new DateTime($row['orderDate']);
             $row['amountFormat'] = Shopware()->Currency()->toCurrency($row['amount'], array('currency' => $row['currency']));
         }
+        unset($row);
 
         $this->View()->assign(array('data' => $rows, 'total' => $total, 'success' => true));
     }
@@ -192,7 +191,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
      */
     public function getBalanceAction()
     {
-        $shopId = (int) $this->Request()->getParam('shopId', null);
+        $shopId = (int) $this->Request()->getParam('shopId');
         $this->registerShopByShopId($shopId);
 
         $client = $this->get('paypalClient');
@@ -200,11 +199,11 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             'RETURNALLCURRENCIES' => 0,
         ));
 
-        if ($balance['ACK'] == 'Success') {
+        if ($balance['ACK'] === 'Success') {
             $rows = array();
             for ($i = 0; isset($balance['L_AMT' . $i]); ++$i) {
                 $data = array(
-                    'default' => $i == 0,
+                    'default' => $i === 0,
                     'balance' => $balance['L_AMT' . $i],
                     'currency' => $balance['L_CURRENCYCODE' . $i],
                 );
@@ -227,7 +226,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
     public function getDetailsAction()
     {
         $filter = $this->Request()->getParam('filter');
-        if (isset($filter[0]['property']) && $filter[0]['property'] == 'transactionId') {
+        if (isset($filter[0]['property']) && $filter[0]['property'] === 'transactionId') {
             $this->Request()->setParam('transactionId', $filter[0]['value']);
         }
         $transactionId = $this->Request()->getParam('transactionId');
@@ -245,7 +244,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             return;
         }
 
-        if ($details['ACK'] != 'Success') {
+        if ($details['ACK'] !== 'Success') {
             $error = sprintf('An error occured: %s: %s - %s', $details['L_ERRORCODE0'], $details['L_SHORTMESSAGE0'], $details['L_LONGMESSAGE0']);
             $this->View()->assign(array('success' => false, 'message' => $error, 'errorCode' => $details['L_ERRORCODE0']));
 
@@ -297,7 +296,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             ));
         }
 
-        if ($transactionsData['ACK'] != 'Success') {
+        if ($transactionsData['ACK'] !== 'Success') {
             $error = sprintf('An error occured: %s: %s - %s', $transactionsData['L_ERRORCODE0'], $transactionsData['L_SHORTMESSAGE0'], $transactionsData['L_LONGMESSAGE0']);
             $this->View()->assign(array('success' => false, 'message' => $error, 'errorCode' => $transactionsData['L_ERRORCODE0']));
 
@@ -349,15 +348,14 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         $note = $this->Request()->getParam('note');
 
         $invoiceId = null;
-        if ($config->get('paypalSendInvoiceId') === true) {
+        if ((bool) $config->get('paypalSendInvoiceId')) {
             $prefix = $config->get('paypalPrefixInvoiceId');
+            $invoiceId = $orderNumber;
             if (!empty($prefix)) {
                 // Set prefixed invoice id - Remove special chars and spaces
                 $prefix = str_replace(' ', '', $prefix);
                 $prefix = preg_replace('/[^A-Za-z0-9\-]/', '', $prefix);
                 $invoiceId = $prefix . $orderNumber;
-            } else {
-                $invoiceId = $orderNumber;
             }
         }
 
@@ -408,7 +406,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
                         'AMT' => $amount,
                         'CURRENCYCODE' => $currency,
                     ));
-                    if ($result['ACK'] == 'Success') {
+                    if ($result['ACK'] === 'Success') {
                         $data = array(
                             'AUTHORIZATIONID' => $result['TRANSACTIONID'],
                             'AMT' => $amount,
@@ -426,8 +424,8 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
                     return;
             }
 
-            if ($result['ACK'] != 'Success') {
-                throw new Exception(
+            if ($result['ACK'] !== 'Success') {
+                throw new RuntimeException(
                     '[' . $result['L_SEVERITYCODE0'] . '] ' .
                     $result['L_SHORTMESSAGE0'] . ' ' . $result['L_LONGMESSAGE0'] . "<br>\n"
                 );
@@ -446,14 +444,15 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
                 $transactionId = $result['TRANSACTIONID'];
             }
 
-            if ($action == 'void') {
+            $paymentStatus = null;
+            if ($action === 'void') {
                 $paymentStatus = 'Voided';
-            } elseif ($action == 'refund') {
+            } elseif ($action === 'refund') {
                 $paymentStatus = 'Refunded';
             } elseif (isset($result['PAYMENTSTATUS'])) {
                 $paymentStatus = $result['PAYMENTSTATUS'];
             }
-            if (isset($paymentStatus)) {
+            if ($paymentStatus !== null) {
                 try {
                     $this->plugin->setPaymentStatus($transactionId, $paymentStatus, $note);
                 } catch (Exception $e) {
@@ -489,7 +488,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         $client = null;
 
         try {
-            $client = new Client($config, true);
+            $client = new Client($config);
             $data = $client->getBalance();
             for ($i = 0; isset($data['L_AMT' . $i]); ++$i) {
                 unset($data['L_AMT' . $i], $data['L_CURRENCYCODE' . $i]);
@@ -502,7 +501,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
                 unset($data['L_ERRORCODE0'], $data['L_SHORTMESSAGE0'], $data['L_LONGMESSAGE0'], $data['L_SEVERITYCODE0']);
             }
 
-            if ($config->get('paypalClientId', false) && $data['ACK'] == 'Success') {
+            if ($config->get('paypalClientId', false) && $data['ACK'] === 'Success') {
                 $client = new RestClient($config);
                 $data = $client->setAuthToken();
                 $data = array('ACK' => 'Success') + $data;
@@ -519,7 +518,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         }
 
         $data['shopware_version'] = Shopware::VERSION;
-        $data['php_version'] = phpversion();
+        $data['php_version'] = PHP_VERSION;
 
         if ($config->get('paypalCurl', true) && function_exists('curl_version')) {
             $curlVersion = curl_version();
@@ -549,7 +548,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
      *
      * @param $shopId
      *
-     * @throws Exception
+     * @throws RuntimeException
      */
     private function registerShopByShopId($shopId)
     {
@@ -561,7 +560,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         } else {
             $shop = $repository->getActiveById($shopId);
             if (!$shop) {
-                throw new \Exception("Shop {$shopId} not found");
+                throw new RuntimeException("Shop {$shopId} not found");
             }
         }
 

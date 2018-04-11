@@ -70,11 +70,11 @@ class Shopware_Components_Paypal_Client extends Zend_Http_Client
      */
     public function __construct($config)
     {
-        if (!empty($config->paypalSandbox)) {
+        $url = self::URL_LIVE;
+        if ((bool) $config->get('paypalSandbox')) {
             $url = self::URL_SANDBOX;
-        } else {
-            $url = self::URL_LIVE;
         }
+
         $this->apiUsername = $config->get('paypalUsername');
         $this->apiPassword = $config->get('paypalPassword');
         $this->apiSignature = $config->get('paypalSignature');
@@ -88,7 +88,7 @@ class Shopware_Components_Paypal_Client extends Zend_Http_Client
      *
      * @return array|bool
      */
-    public function __call($name, $args = array())
+    public function __call($name, array $args = array())
     {
         $name = ucfirst($name);
         $this->resetParameters();

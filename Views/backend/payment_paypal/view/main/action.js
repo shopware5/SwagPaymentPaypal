@@ -59,17 +59,17 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.Action', {
             }, {
                 name: 'paymentCurrency',
                 readOnly: true,
-                hidden: action == 'void',
+                hidden: action === 'void',
                 fieldLabel: '{s name=action/field/currency}Currency{/s}'
             }, {
                 xtype: 'base-element-number',
                 name: 'paymentAmount',
-                hidden: action == 'void',
+                hidden: action === 'void',
                 fieldLabel: '{s name=action/field/amount}Book amount{/s}'
             }, {
                 xtype: 'base-element-boolean',
                 name: 'paymentFull',
-                hidden: action != 'refund',
+                hidden: action !== 'refund',
                 handler: function(btn, value) {
                     var field = me.down('[name=paymentAmount]');
                     field[value ? 'hide' : 'show']();
@@ -78,12 +78,12 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.Action', {
             }, {
                 xtype: 'base-element-boolean',
                 name: 'paymentLast',
-                hidden: action != 'capture' && action != 'book',
+                hidden: action !== 'capture' && action !== 'book',
                 fieldLabel: '{s name=action/field/last}Last capture{/s}'
             }, {
                 name: 'note',
                 xtype: 'textarea',
-                hidden: action == 'auth',
+                hidden: action === 'auth',
                 fieldLabel: '{s name=action/field/note}Note to the customer{/s}'
             }]
         }];
@@ -94,13 +94,13 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.Action', {
         return [{
             text: '{s name=action/abort_text}Abort{/s}',
             cls: 'secondary',
-            handler: function(btn) {
+            handler: function() {
                 me.close();
             }
         }, {
             text: '{s name=action/execute_text}Execute{/s}',
             cls: 'primary',
-            handler: function(btn) {
+            handler: function() {
                 var form = me.down('form');
                 if(!form.getForm().isValid()) {
                     return;
@@ -117,7 +117,7 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.Action', {
         }];
     },
 
-    onActionSuccess: function(form, action) {
+    onActionSuccess: function() {
         Ext.Msg.alert('{s name=action/success_title}Success{/s}', '{s name=action/success_message}The payment action completed successfully.{/s}');
     },
 

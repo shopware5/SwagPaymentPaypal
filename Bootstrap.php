@@ -30,7 +30,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
     }
 
     /**
-     * @return bool
+     * @return array
      */
     public function uninstall()
     {
@@ -55,7 +55,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
      */
     public function update($version)
     {
-        if ($version == '0.0.1') {
+        if ($version === '0.0.1') {
             return false;
         }
         if (strpos($version, '2.0.') === 0) {
@@ -144,7 +144,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
      */
     public function get($name)
     {
-        if (version_compare(Shopware::VERSION, '4.2.0', '<') && Shopware::VERSION != '___VERSION___') {
+        if (version_compare(Shopware::VERSION, '4.2.0', '<') && Shopware::VERSION !== '___VERSION___') {
             $name = ucfirst($name);
 
             return $this->Application()->Bootstrap()->getResource($name);
@@ -169,7 +169,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
      * Activate the plugin paypal plugin.
      * Sets the active flag in the payment row.
      *
-     * @return bool
+     * @return array
      */
     public function enable()
     {
@@ -188,7 +188,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
     /**
      * Disable plugin method and sets the active flag in the payment row
      *
-     * @return bool
+     * @return array
      */
     public function disable()
     {
@@ -205,11 +205,10 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
     }
 
     /**
-     * Modifies the default address validator to be able to allow values which were not provided by paypal but may be required in shopware.
-     *
-     * @param Enlight_Event_EventArgs $args
+     * Modifies the default address validator to be able to allow values
+     * which were not provided by paypal but may be required in shopware.
      */
-    public function decorateAddressValidator(Enlight_Event_EventArgs $args)
+    public function decorateAddressValidator()
     {
         require_once __DIR__ . '/Components/Paypal/AddressValidator.php';
 
@@ -262,7 +261,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
     public function onPostDispatch(Enlight_Event_EventArgs $args)
     {
         static $subscriber;
-        if (!isset($subscriber)) {
+        if ($subscriber === null) {
             require_once __DIR__ . '/Subscriber/Frontend.php';
             $subscriber = new \Shopware\SwagPaymentPaypal\Subscriber\Frontend($this);
         }
@@ -275,7 +274,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
     public function onExtendBackendIndex($args)
     {
         static $subscriber;
-        if (!isset($subscriber)) {
+        if ($subscriber === null) {
             require_once __DIR__ . '/Subscriber/BackendIndex.php';
             $subscriber = new \Shopware\SwagPaymentPaypal\Subscriber\BackendIndex($this);
         }
@@ -285,11 +284,9 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
     /**
      * Provide the file collection for less
      *
-     * @param Enlight_Event_EventArgs $args
-     *
      * @return \Doctrine\Common\Collections\ArrayCollection
      */
-    public function addLessFiles(Enlight_Event_EventArgs $args)
+    public function addLessFiles()
     {
         $less = new \Shopware\Components\Theme\LessDefinition(
             array(),
@@ -309,11 +306,11 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
     {
         switch ($paymentStatus) {
             case 'Completed':
-                $paymentStatusId = $this->Config()->get('paypalStatusId', 12);
+                $paymentStatusId = (int) $this->Config()->get('paypalStatusId', 12);
                 break;
             case 'Pending':
             case 'In-Progress':
-                $paymentStatusId = $this->Config()->get('paypalPendingStatusId', 18);
+                $paymentStatusId = (int) $this->Config()->get('paypalPendingStatusId', 18);
                 break; //Reserviert
             case 'Processed':
                 $paymentStatusId = 18;
@@ -355,7 +352,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
         $orderId = $this->get('db')->fetchOne($sql, array($transactionId));
         $order = Shopware()->Modules()->Order();
         $order->setPaymentStatus($orderId, $paymentStatusId, false, $note);
-        if ($paymentStatusId == 21) {
+        if ($paymentStatusId === 21) {
             $sql = 'UPDATE  s_order
                     SET internalcomment = CONCAT(internalcomment, :pStatus)
                     WHERE transactionID = :transactionId';
@@ -364,7 +361,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
                 array('pStatus' => "\nPayPal Status: " . $paymentStatus, 'transactionId' => $transactionId)
             );
         }
-        if ($paymentStatus == 'Completed') {
+        if ($paymentStatus === 'Completed') {
             $sql = '
                 UPDATE s_order SET cleareddate=NOW()
                 WHERE transactionID=?
@@ -387,7 +384,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
             list($l, $c) = explode('_', $locale);
             if ($short && $c !== null) {
                 $locale = $c;
-            } elseif ($l == 'de') {
+            } elseif ($l === 'de') {
                 $locale = 'de_DE';
             }
         }
@@ -406,7 +403,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
     /**
      * Returns the version of plugin as string.
      *
-     * @throws Exception
+     * @throws RuntimeException
      *
      * @return string
      */
@@ -416,7 +413,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
         if ($info) {
             return $info['currentVersion'];
         }
-        throw new Exception('The plugin has an invalid version file.');
+        throw new RuntimeException('The plugin has an invalid version file.');
     }
 
     /**
@@ -440,9 +437,8 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
     {
         require_once __DIR__ . '/Components/Paypal/RestClient.php';
         require_once __DIR__ . '/Components/Paypal/Client.php';
-        $client = new Shopware_Components_Paypal_Client($this->Config());
 
-        return $client;
+        return new Shopware_Components_Paypal_Client($this->Config());
     }
 
     /**
@@ -460,9 +456,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
             $caPath = null;
         }
 
-        $client = new Shopware_Components_Paypal_RestClient($this->Config(), $caPath);
-
-        return $client;
+        return new Shopware_Components_Paypal_RestClient($this->Config(), $caPath);
     }
 
     /**
@@ -844,17 +838,6 @@ EOD;
                 'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
             )
         );
-//        $form->setElement('boolean', 'paypalLogIn', array(
-//            'label' => '„Login mit PayPal“ aktivieren',
-//            'description' => 'Achtung: Für diese Funktion müssen Sie erst die Daten für die REST-API hinterlegen.',
-//            'value' => false,
-//            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
-//        ));
-//        $form->setElement('boolean', 'paypalFinishRegister', array(
-//            'label' => 'Nach dem ersten „Login mit PayPal“ auf die Registrierung umleiten',
-//            'value' => true,
-//            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP
-//        ));
         $form->setElement(
             'boolean',
             'paypalTransferCart',
@@ -870,6 +853,15 @@ EOD;
             'paypalExpressButton',
             array(
                 'label' => '„Direkt zu PayPal Button“ im Warenkorb anzeigen',
+                'value' => true,
+                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+            )
+        );
+        $form->setElement(
+            'boolean',
+            'paypalExpressButtonLogin',
+            array(
+                'label' => '„Direkt zu PayPal Button“ auf Login Seite anzeigen',
                 'value' => true,
                 'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
             )
@@ -946,7 +938,7 @@ EOD;
                 'paypalTimeout' => 'API timeout in seconds',
                 'paypalCurl' => 'Use CURL (if available)',
                 'paypalButtonClientTest' => '<strong>Test the API now</strong>',
-                'paypalErrorMode' => 'Display error mesages',
+                'paypalErrorMode' => 'Display error messages',
                 'paypalBrandName' => 'Alternative shop name for PayPal',
                 'paypalLocaleCode' => 'Alternative language (locale)',
                 'paypalLogoImage' => 'Shop logo for PayPal',
@@ -954,8 +946,9 @@ EOD;
                 'paypalFrontendLogo' => 'Show payment logo in frontend',
                 'paypalPaymentAction' => 'Payment acquisition',
                 'paypalBillingAgreement' => 'Billing agreement / activate "Buy it now"',
-                'paypalTransferCart' => 'Transafer cart to PayPal',
+                'paypalTransferCart' => 'Transfer cart to PayPal',
                 'paypalExpressButton' => 'Show express purchase button in basket',
+                'paypalExpressButtonLogin' => 'Show express purchase button on login page',
                 'paypalExpressButtonLayer' => 'Show express purchase button in modalbox',
                 'paypalStatusId' => 'Payment state after completing the transaction',
                 'paypalPendingStatusId' => 'Payment state after being authorized',

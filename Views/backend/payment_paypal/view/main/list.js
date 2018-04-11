@@ -13,11 +13,6 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.List', {
 
     store: 'main.List',
 
-//    layout: 'fit',
-//    viewConfig: {
-//        stripeRows: true
-//    },
-
     initComponent: function() {
         var me = this;
         Ext.applyIf(me, {
@@ -38,7 +33,6 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.List', {
     },
 
     getColumns: function() {
-        var me = this;
         return [{
             text: '{s name=list/columns/date_text}Order date{/s}',
             flex: 3,
@@ -99,7 +93,7 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.List', {
 
                 iconCls: 'sprite-user--pencil',
                 tooltip: '{s name=list/actioncolumn/customer_tooltip}Open customer details{/s}',
-                handler: function(grid, rowIndex, colIndex) {
+                handler: function(grid, rowIndex) {
                     var record = grid.getStore().getAt(rowIndex);
                     Shopware.app.Application.addSubApplication({
                         name: 'Shopware.apps.Customer',
@@ -112,7 +106,7 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.List', {
             }, {
                 iconCls: 'sprite-sticky-notes-pin',
                 tooltip: '{s name=list/actioncolumn/order_tooltip}Open order details{/s}',
-                handler: function(grid, rowIndex, colIndex) {
+                handler: function(grid, rowIndex) {
                     var record = grid.getStore().getAt(rowIndex);
                     Shopware.app.Application.addSubApplication({
                         name: 'Shopware.apps.Order',
@@ -129,7 +123,7 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.List', {
                         return 'x-hidden';
                     }
                 },
-                handler: function(grid, rowIndex, colIndex) {
+                handler: function(grid, rowIndex) {
                     var record = grid.getStore().getAt(rowIndex),
                         link = "{url controller=order action=openPdf}"
                             + "?id=" + record.get('invoiceHash');
@@ -186,7 +180,7 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.List', {
             flex: 2,
             name: 'shopId',
             listeners: {
-                change: function(combo, newValue, oldValue, eOpts) {
+                change: function(combo, newValue) {
                     me.fireEvent('shopSelectionChanged', newValue);
                 }
             }

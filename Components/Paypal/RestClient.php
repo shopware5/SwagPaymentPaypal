@@ -72,9 +72,6 @@ class Shopware_Components_Paypal_RestClient extends Zend_Http_Client
             }
 
             $adapter->setCurlOption(CURLOPT_TIMEOUT, $timeout);
-            //$adapter->setCurlOption(CURLOPT_SSL_CIPHER_LIST, 'TLSv1');
-            //$adapter->setCurlOption(CURLOPT_SSL_VERIFYPEER, 1);
-            //$adapter->setCurlOption(CURLOPT_SSL_VERIFYHOST, 2);
         } else {
             $adapter = new Zend_Http_Client_Adapter_Socket();
             $adapter->setConfig(array(
@@ -97,7 +94,7 @@ class Shopware_Components_Paypal_RestClient extends Zend_Http_Client
     public function setAuthToken($auth = null)
     {
         static $defaultAuth;
-        if (!isset($defaultAuth) && $auth === null) {
+        if ($defaultAuth === null && $auth === null) {
             $uri = 'oauth2/token';
             $params = array(
                 'grant_type' => 'client_credentials',
@@ -113,28 +110,6 @@ class Shopware_Components_Paypal_RestClient extends Zend_Http_Client
         $this->setHeaders('Authorization', "{$auth['token_type']} {$auth['access_token']}");
 
         return $auth;
-    }
-
-    public function getOpenIdAuth($code, $redirectUri)
-    {
-        $uri = 'identity/openidconnect/tokenservice';
-        $params = array(
-            'grant_type' => 'authorization_code',
-            'code' => $code,
-            'redirect_uri' => $redirectUri,
-        );
-        $this->setAuthBase();
-
-        return $this->post($uri, $params);
-    }
-
-    public function getOpenIdIdentity($auth)
-    {
-        $uri = 'identity/openidconnect/userinfo/';
-        $params = array('schema' => 'openid');
-        $this->setAuthToken($auth);
-
-        return $this->get($uri, $params);
     }
 
     public function create($uri, $params)
@@ -164,7 +139,7 @@ class Shopware_Components_Paypal_RestClient extends Zend_Http_Client
         }
         if ($params !== null) {
             $this->resetParameters();
-            if ($this->method == self::POST) {
+            if ($this->method === self::POST) {
                 $this->setMethod($this->method);
                 $this->setParameterPost($params);
             } else {
@@ -193,13 +168,18 @@ class Shopware_Components_Paypal_RestClient extends Zend_Http_Client
 
     protected function getBaseUri()
     {
-        if (!empty($this->pluginConfig->paypalSandbox)) {
+        if ((bool) $this->pluginConfig->get('paypalSandbox')) {
             return self::URL_SANDBOX;
         }
 
         return self::URL_LIVE;
     }
 
+    /**
+     * @param \Zend_Http_Response $response
+     *
+     * @return array
+     */
     private function filterResponse($response)
     {
         $body = $response->getBody();

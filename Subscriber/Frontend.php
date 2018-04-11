@@ -125,20 +125,6 @@ class Frontend
             $view->assign('PaypalShowButton', true);
         }
 
-        if ((bool) $config->get('paypalLogIn')) {
-            if (($templateVersion < 3 && $controllerName === 'account' && $actionName === 'ajax_login')
-                || ($templateVersion >= 3 && $controllerName === 'register' && $actionName === 'index')
-            ) {
-                $view->PaypalShowButton = true;
-                $view->PaypalClientId = $config->get('paypalClientId');
-                $view->PaypalSandbox = $config->get('paypalSandbox');
-                if ($templateVersion < 3) {
-                    $view->PaypalSeamlessCheckout = $config->get('paypalSeamlessCheckout');
-                    $view->extendsTemplate('frontend/payment_paypal/ajax_login.tpl');
-                }
-            }
-        }
-
         if ($view->getAssign('PaypalShowButton')) {
             $showButton = false;
             $payments = $view->getAssign('sPayments');

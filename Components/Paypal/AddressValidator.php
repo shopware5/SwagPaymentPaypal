@@ -64,7 +64,7 @@ class AddressValidator implements AddressValidatorInterface
 
             /** @var $violation ConstraintViolationInterface */
             foreach ($violations->getIterator() as $violation) {
-                if (!in_array($violation->getPropertyPath(), $allowedViolations)) {
+                if (!in_array($violation->getPropertyPath(), $allowedViolations, true)) {
                     throw $exception;
                 }
             }

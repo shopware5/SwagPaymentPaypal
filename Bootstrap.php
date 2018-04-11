@@ -261,7 +261,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
     public function onPostDispatch(Enlight_Event_EventArgs $args)
     {
         static $subscriber;
-        if (!isset($subscriber)) {
+        if ($subscriber === null) {
             require_once __DIR__ . '/Subscriber/Frontend.php';
             $subscriber = new \Shopware\SwagPaymentPaypal\Subscriber\Frontend($this);
         }
@@ -274,7 +274,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
     public function onExtendBackendIndex($args)
     {
         static $subscriber;
-        if (!isset($subscriber)) {
+        if ($subscriber === null) {
             require_once __DIR__ . '/Subscriber/BackendIndex.php';
             $subscriber = new \Shopware\SwagPaymentPaypal\Subscriber\BackendIndex($this);
         }

@@ -93,7 +93,7 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
             shopId = shopCombo.getValue(),
             first = shopCombo.store.first();
 
-        if (typeof(shopId) != "number") {
+        if (typeof(shopId) !== 'number') {
             if (first && first.get('id')) {
                 return first.get('id');
             }
@@ -113,7 +113,7 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
             grid = me.getList(),
             store = grid.store;
 
-        if (typeof(shopId) != "number" && shopId != '' && shopId != null) {
+        if (typeof(shopId) !== 'number' && shopId != '' && shopId != null) {
             return;
         }
         store.clearFilter(true);
@@ -211,7 +211,7 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
      * @param message
      */
     showGrowlMessage: function(title, message) {
-        if (typeof Shopware.Notification.createStickyGrowlMessage == 'function') {
+        if (typeof Shopware.Notification.createStickyGrowlMessage === 'function') {
             Shopware.Notification.createStickyGrowlMessage({
                 title: title,
                 text:  message
@@ -310,7 +310,7 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
                 break;
             case 'Pending':
             case 'In-Progress':
-                if(pending == 'order') {
+                if(pending === 'order') {
                     formPanel.down('[action=book]').show();
                 } else {
                     formPanel.down('[action=capture]').show();

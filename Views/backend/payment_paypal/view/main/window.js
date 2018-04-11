@@ -35,7 +35,6 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.Window', {
      * @return array
      */
     getItems: function() {
-        var me = this;
         return [{
             region: 'east',
             xtype: 'paypal-main-detail'

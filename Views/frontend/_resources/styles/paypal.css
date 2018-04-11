@@ -2,26 +2,22 @@
     margin-right: 225px;
     float: right;
 }
+
 .basket_button_paypal_de {
     margin-right: 225px;
     margin-top: 4px;
     float: right;
 }
+
 .modal_paypal_button {
     margin-right: 228px;
 }
+
 .modal_paypal_button_de {
     margin-right: 228px;
     margin-top: 4px;
 }
-.paypal_login_container {
-    position: relative;
-}
-#paypal_login_button {
-    position: absolute;
-    top: 168px;
-    left: 170px;
-}
+
 .paypal_button_delimiter {
     font-weight: bold;
     line-height: 40px;

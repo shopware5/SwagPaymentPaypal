@@ -50,7 +50,6 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.Detail', {
      * @return Array
      */
     getButtons: function() {
-        var me = this;
         return [{
             text: '{s name=detail/button/void_text}Cancel booking{/s}',
             cls: 'secondary', //DoVoid
@@ -209,7 +208,7 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.Detail', {
                     iconCls: 'sprite-minus-circle',
                     tooltip: '{s name=detail/button/refund_text}Refund{/s}',
                     getClass: function(value, metadata, record) {
-                        if(record.get('type') != 'Payment' || record.get('status') == 'Refunded') {
+                        if(record.get('type') !== 'Payment' || record.get('status') === 'Refunded') {
                             return 'x-hidden';
                         }
                     },

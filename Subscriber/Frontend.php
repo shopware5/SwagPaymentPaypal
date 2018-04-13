@@ -120,7 +120,6 @@ class Frontend
             && $controllerName === 'register'
             && $actionName === 'index'
             && $request->getParam('sTarget') === 'checkout'
-            && $request->getParam('sTargetAction') === 'confirm'
         ) {
             $view->assign('PaypalShowButton', true);
         }

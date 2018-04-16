@@ -8,10 +8,11 @@
     "link": "http://store.shopware.com",
     "author": "shopware AG",
 
-    "currentVersion": "3.4.12",
+    "currentVersion": "3.5.0",
 
     "changelog": {
         "de": {
+            "3.5.0": "PT-8229 - Template Vererbung verbessert; PT-8709 - Textbausteine für Fehlermeldungen überarbeitet; PT-8761 - Filter-Event für die Payment-Parameter hinzugefügt; PT-9028 - Express Checkout Button zur Login- und Registrierungsseite hinzugefügt;",
             "3.4.12": "PT-8612 - Fehler bei zusätzlichen Adresszeilen behoben; PT-8810 - Shopware 5.4 Kompatibilität;",
             "3.4.11": "PT-8240 - Warenkorb ist nach Bezahlabbruch nicht geleert, wenn Bestellnummer mitsenden aktiviert ist;",
             "3.4.10": "PT-8075 - Payment-Intent bei Express-Checkout korrigiert; PT-8137 - Optimierung der Datenbankabfragen;",
@@ -45,6 +46,7 @@
             "3.0.0": "Allgemeine Verbesserungen; API-Update"
         },
         "en": {
+            "3.5.0": "PT-8229 - Improve template inheritance; PT-8709 - Improve error snippets; PT-8761 - Add filter event for payment parameter; PT-9028 - Added Express Checkout Button to login and register page;",
             "3.4.12": "PT-8612 - Fix bug with additional address lines; PT-8810 - Shopware 5.4 compatibility;",
             "3.4.11": "PT-8240 - Cart is not empty after canceling the payment process, if Send order number is activated;",
             "3.4.10": "PT-8075 - Fix payment intent of express checkout; PT-8137 - Optimize database queries;",

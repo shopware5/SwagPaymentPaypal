@@ -5,7 +5,6 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-
 use Shopware\Plugins\SwagPaymentPaypal\Components\Paypal\AddressValidator;
 
 class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Components_Plugin_Bootstrap
@@ -397,7 +396,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
      */
     public function getLabel()
     {
-        return 'PayPal';
+        return 'PayPal Express';
     }
 
     /**

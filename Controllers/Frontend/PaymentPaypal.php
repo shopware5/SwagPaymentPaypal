@@ -645,6 +645,11 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $data['shipping']['lastname'] = implode(' ', array_slice($name, 1));
         if (!empty($details['PAYMENTREQUEST_0_SHIPTOPHONENUM'])) {
             $data['billing']['phone'] = $details['PAYMENTREQUEST_0_SHIPTOPHONENUM'];
+        } elseif (!empty($details['PHONENUM'])) {
+            $data['billing']['phone'] = $details['PHONENUM'];
+        }
+        if (!empty($data['billing']['phone'])) {
+            $data['shipping']['phone'] = $data['billing']['phone'];
         }
 
         $sql = 'SELECT id FROM s_core_paymentmeans WHERE name=?';

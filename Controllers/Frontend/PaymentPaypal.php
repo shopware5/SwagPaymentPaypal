@@ -154,7 +154,6 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             'PAYMENTREQUEST_0_NOTIFYURL' => $router->assemble(array(
                 'action' => 'notify',
                 'forceSecure' => true,
-                'appendSession' => true,
             )),
             'GIROPAYSUCCESSURL' => $router->assemble(array('action' => 'return', 'forceSecure' => true)),
             'GIROPAYCANCELURL' => $router->assemble(array('action' => 'cancel', 'forceSecure' => true)),
@@ -433,7 +432,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $config = $this->plugin->Config();
 
         $router = $this->Front()->Router();
-        $notifyUrl = $router->assemble(array('action' => 'notify', 'forceSecure' => true, 'appendSession' => true));
+        $notifyUrl = $router->assemble(array('action' => 'notify', 'forceSecure' => true));
 
         $params = array(
             'TOKEN' => $details['TOKEN'],

@@ -919,6 +919,23 @@ EOD;
                 'vtype' => 'alphanum',
             )
         );
+
+        $noShippingSettings = array(
+            array(0, array('en_GB' => 'PayPal displays the shipping address on the PayPal pages', 'de_DE' => 'Die Versandadresse wird auf der PayPal Seite zur Auswahl angeboten')),
+            array(1, array('en_GB' => 'PayPal does not display shipping address fields and removes shipping information from the transaction.', 'de_DE' => 'PayPal zeigt keine Versandadressenauswahl an und entfenert jeglich Daten bezüglich der Versandadresse aus der Transaktion')),
+            array(2, array('en_GB' => 'If you do not pass the shipping address, PayPal obtains it from the buyer\'s account profile', 'de_DE' => 'Wird keine Versandadresse zu der PayPal seite übermittelt, wird die des Paypal Benutzerkontos benutzt.')),
+        );
+
+        $form->setElement(
+            'select',
+            'paypalNoShipping',
+            array(
+                'label' => 'Versandadressenauswahl',
+                'value' => 0,
+                'store' => $noShippingSettings,
+                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+            )
+        );
     }
 
     private function createMyTranslations()

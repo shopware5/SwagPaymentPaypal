@@ -8,10 +8,11 @@
     "link": "http://store.shopware.com",
     "author": "shopware AG",
 
-    "currentVersion": "3.6.1",
+    "currentVersion": "3.6.2",
 
     "changelog": {
         "de": {
+            "3.6.2": "PT-10590 - Problem mit falscher HTTP Version behoben;",
             "3.6.1": "PT-10220 - Problem beim IPN Call behoben (Kompatibilität mit Shopware 5.5.7);",
             "3.6.0": "PT-9820 - Shopware 5.5 Kompatibilität;",
             "3.5.0": "PT-8229 - Template Vererbung verbessert; PT-8709 - Textbausteine für Fehlermeldungen überarbeitet; PT-8761 - Filter-Event für die Payment-Parameter hinzugefügt; PT-9028 - Express Checkout Button zur Login- und Registrierungsseite hinzugefügt;",
@@ -48,6 +49,7 @@
             "3.0.0": "Allgemeine Verbesserungen; API-Update"
         },
         "en": {
+            "3.6.2": "PT-10590 - Fix problem with wrong HTTP version;",
             "3.6.1": "PT-10220 - Fix problem with IPN call (Shopware 5.5.7 compatibility);",
             "3.6.0": "PT-9820 - Shopware 5.5 compatibility;",
             "3.5.0": "PT-8229 - Improve template inheritance; PT-8709 - Improve error snippets; PT-8761 - Add filter event for payment parameter; PT-9028 - Added Express Checkout Button to login and register page;",
@@ -87,7 +89,7 @@
 
     "compatibility": {
         "minimumVersion": "4.2.0",
-        "maximumVersion": null,
+        "maximumVersion": "5.5.99",
         "blacklist": [
         ]
     }

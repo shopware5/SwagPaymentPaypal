@@ -72,6 +72,7 @@ class Shopware_Components_Paypal_RestClient extends Zend_Http_Client
             }
 
             $adapter->setCurlOption(CURLOPT_TIMEOUT, $timeout);
+            $adapter->setCurlOption(CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
         } else {
             $adapter = new Zend_Http_Client_Adapter_Socket();
             $adapter->setConfig(array(

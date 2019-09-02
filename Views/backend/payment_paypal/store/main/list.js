@@ -6,11 +6,11 @@
  */
 
 Ext.define('Shopware.apps.PaymentPaypal.store.main.List', {
-	extend: 'Ext.data.Store',
-	model: 'Shopware.apps.PaymentPaypal.model.main.List',
-	proxy: {
+    extend: 'Ext.data.Store',
+    model: 'Shopware.apps.PaymentPaypal.model.main.List',
+    proxy: {
         type: 'ajax',
-        url : '{url action=getList}',
+        url: '{url action=getList}',
         reader: {
             type: 'json',
             root: 'data'

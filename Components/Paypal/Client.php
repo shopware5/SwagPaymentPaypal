@@ -83,8 +83,7 @@ class Shopware_Components_Paypal_Client extends Zend_Http_Client
     }
 
     /**
-     * @param $name
-     * @param array $args
+     * @param string $name
      *
      * @return array|bool
      */
@@ -99,12 +98,12 @@ class Shopware_Components_Paypal_Client extends Zend_Http_Client
             'USER' => $this->apiUsername,
             'SIGNATURE' => $this->apiSignature,
         ));
+
         if (!empty($args[0])) {
             $this->setParameterPost($args[0]);
         }
-        $response = $this->request('POST');
 
-        $body = $response->getBody();
+        $body = $this->request('POST')->getBody();
         $params = array();
         parse_str($body, $params);
 

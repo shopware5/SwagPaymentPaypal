@@ -16,18 +16,16 @@ use Symfony\Component\Validator\ConstraintViolationInterface;
 
 class AddressValidator implements AddressValidatorInterface
 {
-    /** @var AddressValidatorInterface */
+    /**
+     * @var AddressValidatorInterface
+     */
     private $innerValidator;
 
-    /** @var DIContainer $container */
+    /**
+     * @var DIContainer
+     */
     private $container;
 
-    /**
-     * PaypalAddressValidator constructor.
-     *
-     * @param AddressValidatorInterface $innerValidator
-     * @param DIContainer               $container
-     */
     public function __construct(AddressValidatorInterface $innerValidator, DIContainer $container)
     {
         $this->innerValidator = $innerValidator;
@@ -35,8 +33,6 @@ class AddressValidator implements AddressValidatorInterface
     }
 
     /**
-     * @param Address $address
-     *
      * @throws ValidationException
      */
     public function validate(Address $address)
@@ -62,7 +58,7 @@ class AddressValidator implements AddressValidatorInterface
             $violations = $exception->getViolations();
             $allowedViolations = array('state', 'phone', 'additionalAddressLine1', 'additionalAddressLine2');
 
-            /** @var $violation ConstraintViolationInterface */
+            /** @var ConstraintViolationInterface $violation */
             foreach ($violations->getIterator() as $violation) {
                 if (!in_array($violation->getPropertyPath(), $allowedViolations, true)) {
                     throw $exception;
@@ -74,8 +70,6 @@ class AddressValidator implements AddressValidatorInterface
     }
 
     /**
-     * @param Address $address
-     *
      * @return bool
      */
     public function isValid(Address $address)

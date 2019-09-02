@@ -5,8 +5,8 @@
  * file that was distributed with this source code.
  */
 
-//{namespace name=backend/payment_paypal/view/main}
-//{block name="backend/payment_paypal/controller/main"}
+// {namespace name=backend/payment_paypal/view/main}
+// {block name="backend/payment_paypal/controller/main"}
 Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
     extend: 'Enlight.app.Controller',
 
@@ -29,7 +29,7 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
         'main.Window', 'main.List', 'main.Detail', 'main.Action'
     ],
 
-    snippets:  {
+    snippets: {
         error: {
             title: '{s name="balanceErrorTitle"}Error{/s}',
             general: '{s name="errorMessageGeneral"}<b>Possible cause:</b><br>[0]<br><br><b>Actual error message:</b><br>[1]{/s}',
@@ -93,7 +93,7 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
             shopId = shopCombo.getValue(),
             first = shopCombo.store.first();
 
-        if (typeof(shopId) !== 'number') {
+        if (Ext.typeOf(shopId) !== 'number') {
             if (first && first.get('id')) {
                 return first.get('id');
             }
@@ -113,7 +113,7 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
             grid = me.getList(),
             store = grid.store;
 
-        if (typeof(shopId) !== 'number' && shopId != '' && shopId != null) {
+        if (Ext.typeOf(shopId) !== 'number' && shopId !== '' && shopId !== null) {
             return;
         }
         store.clearFilter(true);
@@ -135,11 +135,11 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
     onSearchForm: function(field, value) {
         var me = this;
         var store = me.getStore('main.List');
-        if (value.length === 0 ) {
+        if (value.length === 0) {
             store.load();
         } else {
             store.load({
-                filters : [{
+                filters: [{
                     property: 'search',
                     value: '%' + value + '%'
                 }]
@@ -167,7 +167,7 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
 
         action.on('destroy', function() {
             me.getList().getStore().load();
-        })
+        });
     },
 
     /**
@@ -183,15 +183,14 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
 
         var shopId = me.getSelectedShop();
 
-
-        if(record) {
+        if (record) {
             formPanel.setLoading(true);
             formPanel.loadRecord(record);
             me.detailStore.load({
                 extraParams: {
-                    'shopId': shopId
+                    shopId: shopId
                 },
-                filters : [{
+                filters: [{
                     property: 'transactionId',
                     value: record.get('transactionId')
                 }],
@@ -211,10 +210,10 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
      * @param message
      */
     showGrowlMessage: function(title, message) {
-        if (typeof Shopware.Notification.createStickyGrowlMessage === 'function') {
+        if (Ext.typeOf(Shopware.Notification.createStickyGrowlMessage) === 'function') {
             Shopware.Notification.createStickyGrowlMessage({
                 title: title,
-                text:  message
+                text: message
             });
         } else {
             Shopware.Notification.createGrowlMessage(title, message);
@@ -258,7 +257,7 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
             errorCode = operation.request.proxy.reader.rawData.errorCode;
 
             me.showPayPalErrorMessage(me.snippets.error.title, error, errorCode);
-        }else if(records.length) {
+        } else if (records.length) {
             var record = records[0];
             me.getBalance().setValue(record.get('balanceFormat'));
         }
@@ -278,8 +277,7 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
             status, pending, fields,
             error, errorCode;
 
-
-        if(!detail) {
+        if (!detail) {
             formPanel.disable();
             formPanel.setLoading(false);
             if (!success) {
@@ -299,7 +297,7 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
         Ext.each(fields, function(field) {
             field.hide();
         });
-        switch(status) {
+        switch (status) {
             case 'Expired':
                 formPanel.down('[action=auth]').show();
                 break;
@@ -310,7 +308,7 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
                 break;
             case 'Pending':
             case 'In-Progress':
-                if(pending === 'order') {
+                if (pending === 'order') {
                     formPanel.down('[action=book]').show();
                 } else {
                     formPanel.down('[action=capture]').show();
@@ -321,4 +319,4 @@ Ext.define('Shopware.apps.PaymentPaypal.controller.Main', {
         formPanel.setLoading(false);
     }
 });
-//{/block}
+// {/block}

@@ -3,10 +3,10 @@ var url = document.location.pathname + 'paymentPaypal/testClient';
 var els = pnl.query('[isFormField]'),
     vls = {};
 
-Ext.Array.each(els, function(el, i) {
+Ext.Array.each(els, function(el) {
     var v = el.getSubmitValue();
-    if(v === false) { v = 0; }
-    if(v === true) { v = 1; }
+    if (v === false) { v = 0; }
+    if (v === true) { v = 1; }
     vls[el.elementName] = v;
 });
 

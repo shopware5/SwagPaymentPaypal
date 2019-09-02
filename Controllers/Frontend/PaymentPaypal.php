@@ -6,12 +6,16 @@
  * file that was distributed with this source code.
  */
 
+use Shopware\Bundle\MediaBundle\MediaService;
+use Shopware\Components\CSRFWhitelistAware;
+use Shopware\Components\Logger;
 use Shopware\Components\Model\ModelManager;
+use Shopware\Models\Customer\Address;
 use Shopware\Models\Customer\Customer;
 
 require_once __DIR__ . '/../../Components/CSRFWhitelistAware.php';
 
-class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_Frontend_Payment implements \Shopware\Components\CSRFWhitelistAware
+class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_Frontend_Payment implements CSRFWhitelistAware
 {
     /**
      * @var Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap
@@ -93,7 +97,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $payPalResponse = $this->session->offsetGet('PaypalResponse');
         if (!empty($payPalResponse['TOKEN'])) {
             $this->forward('return');
-            // Paypal Basis || PayPal Express
+        // Paypal Basis || PayPal Express
         } elseif ($this->getPaymentShortName() === 'paypal') {
             $this->forward('gateway');
         } else {
@@ -131,7 +135,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $logoImage = $config->get('paypalLogoImage');
         if ($logoImage !== null) {
             if ($this->plugin->isShopware51() && !$this->plugin->isShopware52()) {
-                /** @var \Shopware\Bundle\MediaBundle\MediaService $mediaService */
+                /** @var MediaService $mediaService */
                 $mediaService = $this->get('shopware_media.media_service');
                 $logoImage = $mediaService->getUrl($logoImage);
             }
@@ -287,7 +291,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
 
         // Canceled payment
         if (isset($details['CHECKOUTSTATUS'])
-            && (!isset($details['PAYERID']) || !isset($details['PAYMENTREQUEST_0_ADDRESSSTATUS']))
+            && !isset($details['PAYERID'], $details['PAYMENTREQUEST_0_ADDRESSSTATUS'])
         ) {
             unset($this->session->PaypalResponse);
 
@@ -400,8 +404,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
     {
         $txnId = $this->Request()->get('parent_txn_id') ?: $this->Request()->get('txn_id');
         try {
-            $client = $this->get('paypalClient');
-            $details = $client->getTransactionDetails(array('TRANSACTIONID' => $txnId));
+            $details = $this->get('paypalClient')->getTransactionDetails(array('TRANSACTIONID' => $txnId));
         } catch (Exception $e) {
             $message = sprintf(
                 'PayPal-Notify: Exception %s',
@@ -426,17 +429,14 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
     }
 
     /**
-     * @param $details
-     *
      * @return array
      */
-    protected function finishCheckout($details)
+    protected function finishCheckout(array $details)
     {
         $client = $client = $this->get('paypalClient');
         $config = $this->plugin->Config();
 
-        $router = $this->Front()->Router();
-        $notifyUrl = $router->assemble(array('action' => 'notify', 'forceSecure' => true));
+        $notifyUrl = $this->Front()->Router()->assemble(array('action' => 'notify', 'forceSecure' => true));
 
         $params = array(
             'TOKEN' => $details['TOKEN'],
@@ -570,9 +570,6 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         return $result;
     }
 
-    /**
-     * @param array $details
-     */
     protected function createAccount(array $details)
     {
         /** @var sAdmin $module */
@@ -940,7 +937,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         /** @var Customer $customer */
         $customer = $em->getRepository('Shopware\Models\Customer\Customer')->findOneBy(array('id' => $userId));
 
-        /** @var \Shopware\Models\Customer\Address $address */
+        /** @var Address $address */
         $address = $customer->getDefaultShippingAddress();
 
         $form = $this->createForm('Shopware\Bundle\AccountBundle\Form\Account\AddressFormType', $address);
@@ -961,7 +958,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         }
 
         $message = '[' . $response['L_ERRORCODE0'] . '] - ' . $response['L_SHORTMESSAGE0'] . '. ' . $response['L_LONGMESSAGE0'];
-        /** @var \Shopware\Components\Logger $pluginLogger */
+        /** @var Logger $pluginLogger */
         $pluginLogger = Shopware()->Container()->get('pluginlogger');
         $pluginLogger->error($message);
     }

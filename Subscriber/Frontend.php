@@ -8,6 +8,7 @@
 
 namespace Shopware\SwagPaymentPaypal\Subscriber;
 
+use Shopware\Models\Shop\Shop;
 use Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap as Bootstrap;
 
 class Frontend
@@ -22,9 +23,6 @@ class Frontend
      */
     protected $config;
 
-    /**
-     * @param Bootstrap $bootstrap
-     */
     public function __construct(Bootstrap $bootstrap)
     {
         $this->bootstrap = $bootstrap;
@@ -41,12 +39,9 @@ class Frontend
         );
     }
 
-    /**
-     * @param \Enlight_Event_EventArgs $args
-     */
     public function onPostDispatch(\Enlight_Event_EventArgs $args)
     {
-        /** @var $action \Enlight_Controller_Action */
+        /** @var \Enlight_Controller_Action $action */
         $action = $args->get('subject');
         $request = $action->Request();
         $response = $action->Response();
@@ -66,7 +61,7 @@ class Frontend
         $controllerName = $request->getControllerName();
         $actionName = $request->getActionName();
 
-        /** @var $shopContext \Shopware\Models\Shop\Shop */
+        /** @var Shop $shopContext */
         $shopContext = $this->bootstrap->get('shop');
         $templateVersion = $shopContext->getTemplate()->getVersion();
 

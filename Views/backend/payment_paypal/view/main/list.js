@@ -5,7 +5,7 @@
  * file that was distributed with this source code.
  */
 
-//{namespace name=backend/payment_paypal/view/main}
+// {namespace name=backend/payment_paypal/view/main}
 
 Ext.define('Shopware.apps.PaymentPaypal.view.main.List', {
     extend: 'Ext.grid.Panel',
@@ -23,9 +23,7 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.List', {
             columns: me.getColumns()
         });
 
-
         me.addEvents('shopSelectionChanged');
-
 
         this.callParent();
         me.store.clearFilter(true);
@@ -39,54 +37,54 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.List', {
             xtype: 'datecolumn',
             format: Ext.Date.defaultFormat + ' H:i:s',
             dataIndex: 'orderDate'
-        },{
+        }, {
             text: '{s name=list/columns/order_number_text}Order number{/s}',
             flex: 2,
             dataIndex: 'orderNumber'
-        },{
+        }, {
             text: '{s name=list/columns/transaction_id_text}Transaction ID{/s}',
             flex: 3,
             dataIndex: 'transactionId'
-        },{
+        }, {
             text: '{s name=list/columns/payment_method_text}Payment method{/s}',
             flex: 2,
             dataIndex: 'paymentDescription'
-        },{
+        }, {
             text: '{s name=list/columns/customer_text}Customer{/s}',
             flex: 3,
             dataIndex: 'customer'
         }, {
             header: '{s name=list/columns/shop_text}Shop{/s}',
             dataIndex: 'shopName',
-            flex:2
-        },{
+            flex: 2
+        }, {
             text: '{s name=list/columns/currency_text}Currency{/s}',
             flex: 2,
             dataIndex: 'currency'
-        },{
+        }, {
             text: '{s name=list/columns/amount_text}Amount{/s}',
             flex: 2,
             align: 'right',
-            renderer : function(value, column, model) {
+            renderer: function(value, column, model) {
                 return model.data.amountFormat;
             },
             dataIndex: 'amount'
-        },{
+        }, {
             text: '{s name=list/columns/order_status_text}Order status{/s}',
             flex: 2,
             dataIndex: 'statusId',
-            renderer : function(value, column, model) {
+            renderer: function(value, column, model) {
                 return model.data.statusDescription;
             }
-        },{
+        }, {
             text: '{s name=list/columns/payment_status_text}Payment status{/s}',
             flex: 2,
             dataIndex: 'cleared',
-            renderer : function(value, column, model) {
+            renderer: function(value, column, model) {
                 return model.data.clearedDescription;
             }
-        },{
-            xtype:'actioncolumn',
+        }, {
+            xtype: 'actioncolumn',
             width: 70,
             sortable: false,
             items: [{
@@ -119,14 +117,14 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.List', {
                 iconCls: 'sprite-document-invoice',
                 tooltip: '{s name=list/actioncolumn/invoice_tooltip}Open invoice{/s}',
                 getClass: function(value, metadata, record) {
-                    if(!record.get('invoiceId')) {
+                    if (!record.get('invoiceId')) {
                         return 'x-hidden';
                     }
                 },
                 handler: function(grid, rowIndex) {
                     var record = grid.getStore().getAt(rowIndex),
-                        link = "{url controller=order action=openPdf}"
-                            + "?id=" + record.get('invoiceHash');
+                        link = '{url controller=order action=openPdf}' +
+                            '?id=' + record.get('invoiceHash');
                     window.open(link, '_blank');
                 }
             }]
@@ -154,7 +152,7 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.List', {
         };
     },
 
-    getTopBar:function () {
+    getTopBar: function () {
         var me = this,
             items = [],
             shopStore = Ext.create('Shopware.apps.Base.store.Shop');
@@ -186,14 +184,14 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.List', {
             }
         }, '->', {
             xtype: 'textfield',
-            name:'searchfield',
-            cls:'searchfield',
+            name: 'searchfield',
+            cls: 'searchfield',
             width: 100,
-            emptyText:'{s name=list/search/text}Search...{/s}',
-            enableKeyEvents:true,
-            checkChangeBuffer:500
+            emptyText: '{s name=list/search/text}Search...{/s}',
+            enableKeyEvents: true,
+            checkChangeBuffer: 500
         }, {
-            xtype:'tbspacer', width:6
+            xtype: 'tbspacer', width: 6
         });
         return items;
     }

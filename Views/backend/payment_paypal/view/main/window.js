@@ -5,9 +5,9 @@
  * file that was distributed with this source code.
  */
 
-//{namespace name=backend/payment_paypal/view/main}
+// {namespace name=backend/payment_paypal/view/main}
 
-//{block name="backend/config/view/main/window"}
+// {block name="backend/config/view/main/window"}
 Ext.define('Shopware.apps.PaymentPaypal.view.main.Window', {
     extend: 'Enlight.app.Window',
     alias: 'widget.paypal-main-window',
@@ -44,4 +44,4 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.Window', {
         }];
     }
 });
-//{/block}
+// {/block}

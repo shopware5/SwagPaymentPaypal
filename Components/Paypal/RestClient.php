@@ -184,7 +184,7 @@ class Shopware_Components_Paypal_RestClient extends Zend_Http_Client
     }
 
     /**
-     * @param \Zend_Http_Response $response
+     * @param Zend_Http_Response $response
      *
      * @return array
      */

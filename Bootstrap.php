@@ -5,7 +5,12 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
+use Doctrine\Common\Collections\ArrayCollection;
+use Shopware\Models\Payment\Payment;
 use Shopware\Plugins\SwagPaymentPaypal\Components\Paypal\AddressValidator;
+use Shopware\SwagPaymentPaypal\Subscriber\BackendIndex;
+use Shopware\SwagPaymentPaypal\Subscriber\Frontend;
 
 class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Components_Plugin_Bootstrap
 {
@@ -143,7 +148,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
      */
     public function get($name)
     {
-        if (version_compare(Shopware::VERSION, '4.2.0', '<') && Shopware::VERSION !== '___VERSION___') {
+        if (defined('Shopware::VERSION') && version_compare(Shopware::VERSION, '4.2.0', '<') && Shopware::VERSION !== '___VERSION___') {
             $name = ucfirst($name);
 
             return $this->Application()->Bootstrap()->getResource($name);
@@ -155,7 +160,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
     /**
      * Fetches and returns paypal payment row instance.
      *
-     * @return \Shopware\Models\Payment\Payment
+     * @return Payment
      */
     public function getPayment()
     {
@@ -262,7 +267,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
         static $subscriber;
         if ($subscriber === null) {
             require_once __DIR__ . '/Subscriber/Frontend.php';
-            $subscriber = new \Shopware\SwagPaymentPaypal\Subscriber\Frontend($this);
+            $subscriber = new Frontend($this);
         }
         $subscriber->onPostDispatch($args);
     }
@@ -275,7 +280,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
         static $subscriber;
         if ($subscriber === null) {
             require_once __DIR__ . '/Subscriber/BackendIndex.php';
-            $subscriber = new \Shopware\SwagPaymentPaypal\Subscriber\BackendIndex($this);
+            $subscriber = new BackendIndex($this);
         }
         $subscriber->onPostDispatchBackendIndex($args);
     }
@@ -283,7 +288,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
     /**
      * Provide the file collection for less
      *
-     * @return \Doctrine\Common\Collections\ArrayCollection
+     * @return ArrayCollection
      */
     public function addLessFiles()
     {
@@ -293,7 +298,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
             __DIR__
         );
 
-        return new Doctrine\Common\Collections\ArrayCollection(array($less));
+        return new ArrayCollection(array($less));
     }
 
     /**

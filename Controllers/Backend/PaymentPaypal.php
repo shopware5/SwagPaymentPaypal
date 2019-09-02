@@ -33,7 +33,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
      */
     public function get($name)
     {
-        if (version_compare(Shopware::VERSION, '4.2.0', '<') && Shopware::VERSION !== '___VERSION___') {
+        if (defined('Shopware::VERSION') && version_compare(Shopware::VERSION, '4.2.0', '<') && Shopware::VERSION !== '___VERSION___') {
             $name = ucfirst($name);
 
             return Shopware()->Bootstrap()->getResource($name);
@@ -517,7 +517,13 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             );
         }
 
-        $data['shopware_version'] = Shopware::VERSION;
+        if (defined('Shopware::VERSION')) {
+            $swVersion = Shopware::VERSION;
+        } else {
+            $swVersion = Shopware()->Container()->get('config')->get('version');
+        }
+
+        $data['shopware_version'] = $swVersion;
         $data['php_version'] = PHP_VERSION;
 
         if ($config->get('paypalCurl', true) && function_exists('curl_version')) {

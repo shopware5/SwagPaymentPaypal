@@ -54,7 +54,14 @@ class Shopware_Components_Paypal_RestClient extends Zend_Http_Client
     {
         $curl = $config->get('paypalCurl', true);
         $timeout = $config->get('paypalTimeout') ?: 60;
-        $userAgent = 'Shopware/' . Shopware::VERSION;
+
+        if (defined('Shopware::VERSION')) {
+            $swVersion = Shopware::VERSION;
+        } else {
+            $swVersion = Shopware()->Container()->get('config')->get('version');
+        }
+
+        $userAgent = 'Shopware/' . $swVersion;
 
         if ($curl && extension_loaded('curl')) {
             $adapter = new Zend_Http_Client_Adapter_Curl();

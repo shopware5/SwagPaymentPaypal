@@ -5,7 +5,7 @@
  * file that was distributed with this source code.
  */
 
-//{block name="backend/payment_paypal/application"}
+// {block name="backend/payment_paypal/application"}
 Ext.define('Shopware.apps.PaymentPaypal', {
 
     extend: 'Enlight.app.SubApplication',
@@ -15,7 +15,7 @@ Ext.define('Shopware.apps.PaymentPaypal', {
 
     params: {},
 
-    controllers: [ 'Main' ],
+    controllers: ['Main'],
 
     stores: [
         'main.List'
@@ -37,5 +37,4 @@ Ext.define('Shopware.apps.PaymentPaypal', {
         return me.controller.mainWindow;
     }
 });
-//{/block}
-
+// {/block}

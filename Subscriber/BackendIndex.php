@@ -17,11 +17,6 @@ class BackendIndex
      */
     protected $bootstrap;
 
-    /**
-     * BackendIndex constructor.
-     *
-     * @param Bootstrap $bootstrap
-     */
     public function __construct(Bootstrap $bootstrap)
     {
         $this->bootstrap = $bootstrap;

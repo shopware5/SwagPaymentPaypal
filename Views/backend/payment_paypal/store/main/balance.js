@@ -10,7 +10,7 @@ Ext.define('Shopware.apps.PaymentPaypal.store.main.Balance', {
     model: 'Shopware.apps.PaymentPaypal.model.main.Balance',
     proxy: {
         type: 'ajax',
-        url : '{url action=getBalance}',
+        url: '{url action=getBalance}',
         reader: {
             type: 'json',
             root: 'data'

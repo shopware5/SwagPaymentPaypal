@@ -5,9 +5,9 @@
  * file that was distributed with this source code.
  */
 
-//{namespace name=backend/payment_paypal/view/main}
+// {namespace name=backend/payment_paypal/view/main}
 
-//{block name="backend/payment_paypal/view/main/detail"}
+// {block name="backend/payment_paypal/view/main/detail"}
 Ext.define('Shopware.apps.PaymentPaypal.view.main.Detail', {
     extend: 'Ext.form.Panel',
     alias: 'widget.paypal-main-detail',
@@ -52,24 +52,24 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.Detail', {
     getButtons: function() {
         return [{
             text: '{s name=detail/button/void_text}Cancel booking{/s}',
-            cls: 'secondary', //DoVoid
+            cls: 'secondary', // DoVoid
             hidden: true,
             action: 'void'
-        },{
+        }, {
             text: '{s name=detail/button/auth_text}Extends booking{/s}',
             cls: 'primary',
             hidden: true,
             action: 'auth' // DoReauthorization
-        },{
+        }, {
             text: '{s name=detail/button/refund_text}Refund{/s}',
             cls: 'secondary',
             action: 'refund' // Refund
-        },{
+        }, {
             text: '{s name=detail/button/capture_text}Capture{/s}',
-            cls: 'primary', //DoCapture
+            cls: 'primary', // DoCapture
             hidden: true,
             action: 'capture'
-        },{
+        }, {
             text: '{s name=detail/button/book_text}Authorize{/s}',
             cls: 'primary',
             action: 'book' // DoAuthorization
@@ -109,7 +109,7 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.Detail', {
                 store: [[0, 'Normal'], [1, 'Express'], [2, 'Plus']],
                 xtype: 'combobox'
             }]
-        },{
+        }, {
             title: '{s name=detail/payment_data/title}Payment data{/s}',
             items: [{
                 name: 'transactionId',
@@ -177,17 +177,17 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.Detail', {
                 dataIndex: 'id',
                 hidden: true,
                 flex: 2
-            },{
+            }, {
                 xtype: 'datecolumn',
                 format: Ext.Date.defaultFormat + ' H:i:s',
                 header: '{s name=detail/transactions/date}Date{/s}',
                 dataIndex: 'date',
                 flex: 2
-            },{
+            }, {
                 header: '{s name=detail/transactions/type}Type{/s}',
                 dataIndex: 'type',
                 flex: 1
-            },{
+            }, {
                 header: '{s name=detail/transactions/status}Status{/s}',
                 dataIndex: 'status',
                 flex: 1
@@ -201,14 +201,14 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.Detail', {
                 align: 'right',
                 flex: 1
             }, {
-                xtype:'actioncolumn',
+                xtype: 'actioncolumn',
                 width: 35,
                 sortable: false,
                 items: [{
                     iconCls: 'sprite-minus-circle',
                     tooltip: '{s name=detail/button/refund_text}Refund{/s}',
                     getClass: function(value, metadata, record) {
-                        if(record.get('type') !== 'Payment' || record.get('status') === 'Refunded') {
+                        if (record.get('type') !== 'Payment' || record.get('status') === 'Refunded') {
                             return 'x-hidden';
                         }
                     },
@@ -225,4 +225,4 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.Detail', {
         }];
     }
 });
-//{/block}
+// {/block}

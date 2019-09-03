@@ -33,7 +33,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
      */
     public function get($name)
     {
-        if (version_compare(Shopware::VERSION, '4.2.0', '<') && Shopware::VERSION !== '___VERSION___') {
+        if (defined('Shopware::VERSION') && version_compare(Shopware::VERSION, '4.2.0', '<') && Shopware::VERSION !== '___VERSION___') {
             $name = ucfirst($name);
 
             return Shopware()->Bootstrap()->getResource($name);
@@ -52,6 +52,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         $limit = $this->Request()->getParam('limit', 20);
         $start = $this->Request()->getParam('start', 0);
         $filter = $this->Request()->getParam('filter', false);
+        $sort = $this->Request()->getParam('sort');
 
         $subShopFilter = null;
         if ($filter && !empty($filter)) {
@@ -61,7 +62,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             }
         }
 
-        if ($sort = $this->Request()->getParam('sort')) {
+        if ($sort) {
             $sort = current($sort);
         }
         $direction = empty($sort['direction']) || $sort['direction'] === 'DESC' ? 'DESC' : 'ASC';
@@ -169,7 +170,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
     /**
      * Will register the correct shop for a given transactionId.
      *
-     * @param $transactionId
+     * @param string $transactionId
      */
     public function registerShopByTransactionId($transactionId)
     {
@@ -194,8 +195,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         $shopId = (int) $this->Request()->getParam('shopId');
         $this->registerShopByShopId($shopId);
 
-        $client = $this->get('paypalClient');
-        $balance = $client->getBalance(array(
+        $balance = $this->get('paypalClient')->getBalance(array(
             'RETURNALLCURRENCIES' => 0,
         ));
 
@@ -478,7 +478,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         $this->get('paypalClient');
 
         $config = $this->Request()->getParams();
-        $config = new \Enlight_Config($config, true);
+        $config = new Enlight_Config($config, true);
 
         // Test timeout
         $timeout = (($config->get('paypalTimeout') ?: 20) * 0.25);
@@ -517,7 +517,13 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             );
         }
 
-        $data['shopware_version'] = Shopware::VERSION;
+        if (defined('Shopware::VERSION')) {
+            $swVersion = Shopware::VERSION;
+        } else {
+            $swVersion = Shopware()->Container()->get('config')->get('version');
+        }
+
+        $data['shopware_version'] = $swVersion;
         $data['php_version'] = PHP_VERSION;
 
         if ($config->get('paypalCurl', true) && function_exists('curl_version')) {
@@ -546,7 +552,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
     /**
      * Helper which registers a shop in order to use the PayPal API client within the context of the given shop
      *
-     * @param $shopId
+     * @param int $shopId
      *
      * @throws RuntimeException
      */
@@ -564,8 +570,18 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             }
         }
 
-        $bootstrap = Shopware()->Bootstrap();
-        $shop->registerResources($bootstrap);
+        if (defined('Shopware::VERSION')) {
+            $swVersion = Shopware::VERSION;
+        } else {
+            $swVersion = Shopware()->Container()->get('config')->get('version');
+        }
+
+        if (version_compare($swVersion, '5.6.0', '>=')) {
+            $this->get('shopware.components.shop_registration_service')->registerResources($shop);
+        } else {
+            $bootstrap = Shopware()->Bootstrap();
+            $shop->registerResources($bootstrap);
+        }
     }
 
     private function formatErrorMessage($data)

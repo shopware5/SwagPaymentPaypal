@@ -5,7 +5,18 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
+use Doctrine\Common\Collections\ArrayCollection;
+use Shopware\Bundle\AttributeBundle\Service\CrudService;
+use Shopware\Components\Model\ModelManager;
+use Shopware\Components\Theme\LessDefinition;
+use Shopware\Models\Config\Element;
+use Shopware\Models\Config\ElementTranslation;
+use Shopware\Models\Media\Repository as MediaRepository;
+use Shopware\Models\Payment\Payment;
 use Shopware\Plugins\SwagPaymentPaypal\Components\Paypal\AddressValidator;
+use Shopware\SwagPaymentPaypal\Subscriber\BackendIndex;
+use Shopware\SwagPaymentPaypal\Subscriber\Frontend;
 
 class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Components_Plugin_Bootstrap
 {
@@ -59,7 +70,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
         }
         if (strpos($version, '2.0.') === 0) {
             if ($this->get('service_container')->has('shopware_attribute.crud_service')) {
-                /** @var \Shopware\Bundle\AttributeBundle\Service\CrudService $service */
+                /** @var CrudService $service */
                 $service = $this->get('shopware_attribute.crud_service');
                 $service->delete('s_user_attributes', 'swag_payal_billing_agreement_id');
                 $service->update('s_order_attributes', 'swag_payal_billing_agreement_id', 'text');
@@ -138,12 +149,10 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
 
     /**
      * @param string $name
-     *
-     * @return mixed
      */
     public function get($name)
     {
-        if (version_compare(Shopware::VERSION, '4.2.0', '<') && Shopware::VERSION !== '___VERSION___') {
+        if (defined('Shopware::VERSION') && version_compare(Shopware::VERSION, '4.2.0', '<') && Shopware::VERSION !== '___VERSION___') {
             $name = ucfirst($name);
 
             return $this->Application()->Bootstrap()->getResource($name);
@@ -155,13 +164,16 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
     /**
      * Fetches and returns paypal payment row instance.
      *
-     * @return \Shopware\Models\Payment\Payment
+     * @return Payment
      */
     public function getPayment()
     {
-        return $this->Payments()->findOneBy(
+        /** @var Payment $paypalPayment */
+        $paypalPayment = $this->Payments()->findOneBy(
             array('name' => 'paypal')
         );
+
+        return $paypalPayment;
     }
 
     /**
@@ -254,28 +266,22 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
         return __DIR__ . '/Controllers/Backend/PaymentPaypal.php';
     }
 
-    /**
-     * @param Enlight_Event_EventArgs $args
-     */
     public function onPostDispatch(Enlight_Event_EventArgs $args)
     {
         static $subscriber;
         if ($subscriber === null) {
             require_once __DIR__ . '/Subscriber/Frontend.php';
-            $subscriber = new \Shopware\SwagPaymentPaypal\Subscriber\Frontend($this);
+            $subscriber = new Frontend($this);
         }
         $subscriber->onPostDispatch($args);
     }
 
-    /**
-     * @param $args
-     */
     public function onExtendBackendIndex($args)
     {
         static $subscriber;
         if ($subscriber === null) {
             require_once __DIR__ . '/Subscriber/BackendIndex.php';
-            $subscriber = new \Shopware\SwagPaymentPaypal\Subscriber\BackendIndex($this);
+            $subscriber = new BackendIndex($this);
         }
         $subscriber->onPostDispatchBackendIndex($args);
     }
@@ -283,17 +289,17 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
     /**
      * Provide the file collection for less
      *
-     * @return \Doctrine\Common\Collections\ArrayCollection
+     * @return ArrayCollection
      */
     public function addLessFiles()
     {
-        $less = new \Shopware\Components\Theme\LessDefinition(
+        $less = new LessDefinition(
             array(),
             array(__DIR__ . '/Views/responsive/frontend/_public/src/less/all.less'),
             __DIR__
         );
 
-        return new Doctrine\Common\Collections\ArrayCollection(array($less));
+        return new ArrayCollection(array($less));
     }
 
     /**
@@ -315,8 +321,6 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
                 $paymentStatusId = 18;
                 break; //In Bearbeitung > Reserviert
             case 'Refunded':
-                $paymentStatusId = 20;
-                break; //Wiedergutschrift
             case 'Partially-Refunded':
                 $paymentStatusId = 20;
                 break; //Wiedergutschrift
@@ -430,7 +434,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
     /**
      * Creates and returns the paypal client for an event.
      *
-     * @return \Shopware_Components_Paypal_Client
+     * @return Shopware_Components_Paypal_Client
      */
     public function onInitResourcePaypalClient()
     {
@@ -443,7 +447,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
     /**
      * Creates and returns the paypal rest client for an event.
      *
-     * @return \Shopware_Components_Paypal_RestClient
+     * @return Shopware_Components_Paypal_RestClient
      */
     public function onInitResourcePaypalRestClient()
     {
@@ -517,6 +521,7 @@ EOD;
         $logo = 'paypal_logo.png';
         $mediaPath = $this->Application()->DocPath() . 'media/image/' . $logo;
 
+        /** @var MediaRepository $mediaRepo */
         $mediaRepo = $this->get('models')->getRepository('Shopware\Models\Media\Media');
         $image = $mediaRepo->findOneBy(array('name' => 'paypal_logo'));
         if ($image) {
@@ -597,11 +602,7 @@ EOD;
             $this->Path() . 'Views/'
         );
 
-        return '<!-- PayPal Logo -->'
-        . '<a onclick="window.open(this.href, \'olcwhatispaypal\',\'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=yes, width=400, height=500\'); return false;"'
-        . ' href="https://www.paypal.com/de/cgi-bin/webscr?cmd=xpt/cps/popup/OLCWhatIsPayPal-outside" target="_blank">'
-        . '<img src="{link file=\'frontend/_resources/images/paypal_logo.png\' fullPath}" alt="Logo \'PayPal empfohlen\'">'
-        . '</a><br>' . '<!-- PayPal Logo -->';
+        return '<!-- PayPal Logo --><a onclick="window.open(this.href, \'olcwhatispaypal\',\'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=yes, width=400, height=500\'); return false;" href="https://www.paypal.com/de/cgi-bin/webscr?cmd=xpt/cps/popup/OLCWhatIsPayPal-outside" target="_blank"><img src="{link file=\'frontend/_resources/images/paypal_logo.png\' fullPath}" alt="Logo \'PayPal empfohlen\'"></a><br><!-- PayPal Logo -->';
     }
 
     /**
@@ -636,7 +637,7 @@ EOD;
             array(
                 'label' => 'API-Benutzername',
                 'required' => true,
-                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+                'scope' => Element::SCOPE_SHOP,
                 'stripCharsRe' => " \t",
             )
         );
@@ -646,7 +647,7 @@ EOD;
             array(
                 'label' => 'API-Passwort',
                 'required' => true,
-                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+                'scope' => Element::SCOPE_SHOP,
                 'stripCharsRe' => " \t",
             )
         );
@@ -656,7 +657,7 @@ EOD;
             array(
                 'label' => 'API-Unterschrift',
                 'required' => true,
-                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+                'scope' => Element::SCOPE_SHOP,
                 'stripCharsRe' => " \t",
             )
         );
@@ -682,7 +683,7 @@ EOD;
             'paypalClientId',
             array(
                 'label' => 'REST-API Client ID',
-                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+                'scope' => Element::SCOPE_SHOP,
                 'stripCharsRe' => " \t",
                 'description' => 'Hinweis: Diese Zugangsdaten werden nur benötigt, wenn sie PayPal PLUS installieren und einrichten wollen. Weitere Informationen dazu erhalten sie von Ihrem PayPal-Ansprechpartner.',
             )
@@ -692,7 +693,7 @@ EOD;
             'paypalSecret',
             array(
                 'label' => 'REST-API Secret',
-                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+                'scope' => Element::SCOPE_SHOP,
                 'stripCharsRe' => " \t",
             )
         );
@@ -713,7 +714,7 @@ EOD;
             'paypalSandbox',
             array(
                 'label' => 'Sandbox-Modus aktivieren',
-                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+                'scope' => Element::SCOPE_SHOP,
             )
         );
         $form->setElement(
@@ -752,7 +753,7 @@ EOD;
             'paypalErrorMode',
             array(
                 'label' => 'Fehlermeldungen ausgeben',
-                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+                'scope' => Element::SCOPE_SHOP,
             )
         );
 
@@ -762,7 +763,7 @@ EOD;
             'paypalBrandName',
             array(
                 'label' => 'Alternativer Shop-Name auf der PayPal-Seite',
-                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+                'scope' => Element::SCOPE_SHOP,
                 'maxLength' => 127,
                 'enforceMaxLength' => true,
             )
@@ -773,7 +774,7 @@ EOD;
             array(
                 'label' => 'Alternative Sprache (LocaleCode)',
                 'emptyText' => 'Beispiel: de_DE',
-                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+                'scope' => Element::SCOPE_SHOP,
             )
         );
         $form->setElement(
@@ -782,7 +783,7 @@ EOD;
             array(
                 'label' => 'Shop-Logo auf der PayPal-Seite',
                 'value' => null,
-                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+                'scope' => Element::SCOPE_SHOP,
                 'readOnly' => false,
             )
         );
@@ -792,7 +793,7 @@ EOD;
             array(
                 'label' => 'Farbe des Warenkorbs auf der PayPal-Seite',
                 'value' => '#E1540F',
-                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+                'scope' => Element::SCOPE_SHOP,
             )
         );
 
@@ -803,7 +804,7 @@ EOD;
             array(
                 'label' => 'Payment-Logo im Frontend ausgeben',
                 'value' => true,
-                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+                'scope' => Element::SCOPE_SHOP,
             )
         );
 
@@ -825,7 +826,7 @@ EOD;
                 'label' => 'Zahlungsabschluss',
                 'value' => 'Sale',
                 'store' => $store,
-                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+                'scope' => Element::SCOPE_SHOP,
             )
         );
         $form->setElement(
@@ -834,7 +835,7 @@ EOD;
             array(
                 'label' => 'Zahlungsvereinbarung treffen / „Sofort-Kaufen“ aktivieren',
                 'description' => 'Achtung: Diese Funktion muss erst für Ihren PayPal-Account von PayPal aktiviert werden.',
-                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+                'scope' => Element::SCOPE_SHOP,
             )
         );
         $form->setElement(
@@ -843,7 +844,7 @@ EOD;
             array(
                 'label' => 'Warenkorb an PayPal übertragen',
                 'value' => true,
-                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+                'scope' => Element::SCOPE_SHOP,
                 'description' => 'Hinweis: Die Anzahl der Positionen ist technisch auf 24 Stück beschränkt. Bei Netto-Bestellung werden teilweise keine Stückpreise übergeben, da diese mehr als zwei Nachkommastellen haben können.',
             )
         );
@@ -853,7 +854,7 @@ EOD;
             array(
                 'label' => '„Direkt zu PayPal Button“ im Warenkorb anzeigen',
                 'value' => true,
-                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+                'scope' => Element::SCOPE_SHOP,
             )
         );
         $form->setElement(
@@ -862,7 +863,7 @@ EOD;
             array(
                 'label' => '„Direkt zu PayPal Button“ auf Login Seite anzeigen',
                 'value' => true,
-                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+                'scope' => Element::SCOPE_SHOP,
             )
         );
         $form->setElement(
@@ -871,7 +872,7 @@ EOD;
             array(
                 'label' => '„Direkt zu PayPal Button“ in der Modal-Box anzeigen',
                 'value' => true,
-                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+                'scope' => Element::SCOPE_SHOP,
             )
         );
         $form->setElement(
@@ -883,7 +884,7 @@ EOD;
                 'store' => 'base.PaymentStatus',
                 'displayField' => 'description',
                 'valueField' => 'id',
-                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+                'scope' => Element::SCOPE_SHOP,
             )
         );
         $form->setElement(
@@ -895,7 +896,7 @@ EOD;
                 'store' => 'base.PaymentStatus',
                 'displayField' => 'description',
                 'valueField' => 'id',
-                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+                'scope' => Element::SCOPE_SHOP,
             )
         );
         $form->setElement(
@@ -905,7 +906,7 @@ EOD;
                 'label' => 'Bestellnummer an PayPal übertragen',
                 'description' => 'Achtung: Aktivieren Sie diese Option nur in Absprache mit ihrem Shopware-Partner oder dem Shopware-Support. Durch diese Option wird die Bestellung vor der Weiterleitung an PayPal erzeugt und kann daher Bestellungen ohne gültige Zahlungen erzeugen. Zusätzlich kann es zu Abbrüchen führen, wenn Sie die Bestellnummer schon einmal in ihrem PayPal-Account benutzt haben.',
                 'value' => false,
-                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+                'scope' => Element::SCOPE_SHOP,
             )
         );
         $form->setElement(
@@ -915,7 +916,7 @@ EOD;
                 'label' => 'Bestellnummer für PayPal mit einem Shop-Prefix versehen',
                 'description' => 'Wenn Sie Ihren PayPal-Account für mehrere Shops nutzen, können Sie vermeiden, dass es Überschneidungen bei den Bestellnummern gibt, indem Sie hier ein eindeutiges Prefix definieren.',
                 'emptyText' => 'MeinShop_',
-                'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+                'scope' => Element::SCOPE_SHOP,
                 'vtype' => 'alphanum',
             )
         );
@@ -976,7 +977,7 @@ EOD;
                 if ($elementModel === null) {
                     continue;
                 }
-                $translationModel = new \Shopware\Models\Config\ElementTranslation();
+                $translationModel = new ElementTranslation();
                 $translationModel->setLabel($snippet);
                 $translationModel->setLocale($localeModel);
                 if (isset($descriptionTranslations[$locale][$element])) {
@@ -990,7 +991,7 @@ EOD;
     private function createMyAttributes()
     {
         if ($this->get('service_container')->has('shopware_attribute.crud_service')) {
-            /** @var \Shopware\Bundle\AttributeBundle\Service\CrudService $service */
+            /** @var CrudService $service */
             $service = $this->get('shopware_attribute.crud_service');
             $service->update('s_order_attributes', 'swag_payal_billing_agreement_id', 'text');
             $service->update('s_order_attributes', 'swag_payal_express', 'integer');
@@ -1020,7 +1021,7 @@ EOD;
     private function removeMyAttributes()
     {
         if ($this->get('service_container')->has('shopware_attribute.crud_service')) {
-            /** @var \Shopware\Bundle\AttributeBundle\Service\CrudService $service */
+            /** @var CrudService $service */
             $service = $this->get('shopware_attribute.crud_service');
             $service->delete('s_order_attributes', 'swag_payal_billing_agreement_id');
             $service->delete('s_order_attributes', 'swag_payal_express');
@@ -1030,7 +1031,7 @@ EOD;
             return;
         }
 
-        /** @var $modelManager \Shopware\Components\Model\ModelManager */
+        /** @var ModelManager $modelManager */
         $modelManager = $this->get('models');
         try {
             $modelManager->removeAttribute('s_order_attributes', 'swag_payal', 'billing_agreement_id');

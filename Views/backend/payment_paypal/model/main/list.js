@@ -9,7 +9,7 @@ Ext.define('Shopware.apps.PaymentPaypal.model.main.List', {
     extend: 'Ext.data.Model',
     fields: [
         { name: 'id', type: 'int' },
-        { name: 'userId',  type: 'string' },
+        { name: 'userId', type: 'string' },
         { name: 'transactionId', type: 'string' },
 
         { name: 'clearedId', type: 'int' },
@@ -36,6 +36,6 @@ Ext.define('Shopware.apps.PaymentPaypal.model.main.List', {
         { name: 'trackingId', type: 'string' },
         { name: 'dispatchId', type: 'int' },
         { name: 'dispatchDescription', type: 'string' },
-        { name: 'express', type: 'int'}
+        { name: 'express', type: 'int' }
     ]
 });

@@ -6,9 +6,16 @@
  * file that was distributed with this source code.
  */
 
+use Shopware\Bundle\MediaBundle\MediaService;
+use Shopware\Components\CSRFWhitelistAware;
+use Shopware\Components\Logger;
+use Shopware\Components\Model\ModelManager;
+use Shopware\Models\Customer\Address;
+use Shopware\Models\Customer\Customer;
+
 require_once __DIR__ . '/../../Components/CSRFWhitelistAware.php';
 
-class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_Frontend_Payment implements \Shopware\Components\CSRFWhitelistAware
+class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_Frontend_Payment implements CSRFWhitelistAware
 {
     /**
      * @var Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap
@@ -45,7 +52,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
      */
     public function get($name)
     {
-        if (version_compare(Shopware::VERSION, '4.2.0', '<') && Shopware::VERSION !== '___VERSION___') {
+        if (defined('Shopware::VERSION') && version_compare(Shopware::VERSION, '4.2.0', '<') && Shopware::VERSION !== '___VERSION___') {
             if ($name === 'pluginlogger') {
                 $name = 'log';
             }
@@ -90,7 +97,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $payPalResponse = $this->session->offsetGet('PaypalResponse');
         if (!empty($payPalResponse['TOKEN'])) {
             $this->forward('return');
-            // Paypal Basis || PayPal Express
+        // Paypal Basis || PayPal Express
         } elseif ($this->getPaymentShortName() === 'paypal') {
             $this->forward('gateway');
         } else {
@@ -128,7 +135,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $logoImage = $config->get('paypalLogoImage');
         if ($logoImage !== null) {
             if ($this->plugin->isShopware51() && !$this->plugin->isShopware52()) {
-                /** @var \Shopware\Bundle\MediaBundle\MediaService $mediaService */
+                /** @var MediaService $mediaService */
                 $mediaService = $this->get('shopware_media.media_service');
                 $logoImage = $mediaService->getUrl($logoImage);
             }
@@ -186,6 +193,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         if ($response['ACK'] === 'SuccessWithWarning') {
             $response['ACK'] = 'Success';
         }
+
         if (!empty($response['ACK']) && $response['ACK'] === 'Success') {
             $gatewayUrl = 'https://www.paypal.com/cgi-bin/';
             if ((bool) $config->get('paypalSandbox')) {
@@ -283,7 +291,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
 
         // Canceled payment
         if (isset($details['CHECKOUTSTATUS'])
-            && (!isset($details['PAYERID']) || !isset($details['PAYMENTREQUEST_0_ADDRESSSTATUS']))
+            && !isset($details['PAYERID'], $details['PAYMENTREQUEST_0_ADDRESSSTATUS'])
         ) {
             unset($this->session->PaypalResponse);
 
@@ -396,8 +404,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
     {
         $txnId = $this->Request()->get('parent_txn_id') ?: $this->Request()->get('txn_id');
         try {
-            $client = $this->get('paypalClient');
-            $details = $client->getTransactionDetails(array('TRANSACTIONID' => $txnId));
+            $details = $this->get('paypalClient')->getTransactionDetails(array('TRANSACTIONID' => $txnId));
         } catch (Exception $e) {
             $message = sprintf(
                 'PayPal-Notify: Exception %s',
@@ -422,17 +429,14 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
     }
 
     /**
-     * @param $details
-     *
      * @return array
      */
-    protected function finishCheckout($details)
+    protected function finishCheckout(array $details)
     {
         $client = $client = $this->get('paypalClient');
         $config = $this->plugin->Config();
 
-        $router = $this->Front()->Router();
-        $notifyUrl = $router->assemble(array('action' => 'notify', 'forceSecure' => true));
+        $notifyUrl = $this->Front()->Router()->assemble(array('action' => 'notify', 'forceSecure' => true));
 
         $params = array(
             'TOKEN' => $details['TOKEN'],
@@ -451,7 +455,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             );
         }
 
-        if (Shopware::VERSION === '___VERSION___' || version_compare(Shopware::VERSION, '4.4.0') >= 0) {
+        if (!defined('Shopware::VERSION') || (Shopware::VERSION === '___VERSION___' || version_compare(Shopware::VERSION, '4.4.0') >= 0)) {
             $params['BUTTONSOURCE'] = 'Shopware_Cart_5';
         }
 
@@ -566,9 +570,6 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         return $result;
     }
 
-    /**
-     * @param array $details
-     */
     protected function createAccount(array $details)
     {
         /** @var sAdmin $module */
@@ -576,7 +577,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $session = $this->session;
         $encoderName = null;
 
-        if (Shopware::VERSION === '___VERSION___' || version_compare(Shopware::VERSION, '4.1.0', '>=')) {
+        if (!defined('Shopware::VERSION') || Shopware::VERSION === '___VERSION___' || version_compare(Shopware::VERSION, '4.1.0', '>=')) {
             $encoderName = $this->get('passwordEncoder')->getDefaultPasswordEncoderName();
         }
 
@@ -596,12 +597,18 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $data['billing']['firstname'] = $details['FIRSTNAME'];
         $data['billing']['lastname'] = $details['LASTNAME'];
 
-        if (version_compare(Shopware::VERSION, '4.4.0', '>=') && version_compare(Shopware::VERSION, '5.2.0', '<')) {
+        if (defined('Shopware::VERSION')) {
+            $swVersion = Shopware::VERSION;
+        } else {
+            $swVersion = Shopware()->Container()->get('config')->get('version');
+        }
+
+        if (version_compare($swVersion, '4.4.0', '>=') && version_compare($swVersion, '5.2.0', '<')) {
             $data['billing']['street'] = $details['PAYMENTREQUEST_0_SHIPTOSTREET'];
             if (!empty($details['PAYMENTREQUEST_0_SHIPTOSTREET2'])) {
                 $data['billing']['additional_address_line1'] = $details['PAYMENTREQUEST_0_SHIPTOSTREET2'];
             }
-        } elseif (Shopware::VERSION === '___VERSION___' || version_compare(Shopware::VERSION, '5.2.0', '>=')) {
+        } elseif ($swVersion === '___VERSION___' || version_compare($swVersion, '5.2.0', '>=')) {
             $data['billing']['street'] = $details['PAYMENTREQUEST_0_SHIPTOSTREET'];
             if (!empty($details['PAYMENTREQUEST_0_SHIPTOSTREET2'])) {
                 $data['billing']['additionalAddressLine1'] = $details['PAYMENTREQUEST_0_SHIPTOSTREET2'];
@@ -674,7 +681,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         // Check login status
         if ($module->sCheckUser()) {
             //Save the new address.
-            if (Shopware::VERSION === '___VERSION___' || version_compare(Shopware::VERSION, '5.2.0', '>=')) {
+            if ($swVersion === '___VERSION___' || version_compare($swVersion, '5.2.0', '>=')) {
                 $userId = $this->session->offsetGet('sUserId');
                 $this->updateShipping($userId, $data['shipping']);
             } else {
@@ -693,13 +700,13 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                 $data['auth']['password'] = md5($data['auth']['password']);
             }
             $session->offsetSet('sRegisterFinished', false);
-            if (version_compare(Shopware::VERSION, '4.3.0', '>=') && version_compare(Shopware::VERSION, '5.2.0', '<')) {
+            if (version_compare($swVersion, '4.3.0', '>=') && version_compare($swVersion, '5.2.0', '<')) {
                 $session->offsetSet('sRegister', $data);
-            } elseif (version_compare(Shopware::VERSION, '4.3.0', '<')) {
+            } elseif (version_compare($swVersion, '4.3.0', '<')) {
                 $session->offsetSet('sRegister', new ArrayObject($data, ArrayObject::ARRAY_AS_PROPS));
             }
 
-            if (Shopware::VERSION === '___VERSION___' || version_compare(Shopware::VERSION, '5.2.0', '>=')) {
+            if ($swVersion === '___VERSION___' || version_compare($swVersion, '5.2.0', '>=')) {
                 $this->saveUser($data);
                 $module->sSYSTEM->_POST = $data['auth'];
                 $module->sLogin(true);
@@ -831,22 +838,31 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
                 'LOCALECODE' => $this->plugin->getLocaleCode(true),
             );
         }
+
         $shipping = $user['shippingaddress'];
         $name = $shipping['firstname'] . ' ' . $shipping['lastname'];
         if (!empty($shipping['company'])) {
             $name = $shipping['company'] . ' - ' . $name;
         }
+
         if (!empty($shipping['streetnumber'])) {
             $shipping['street'] .= ' ' . $shipping['streetnumber'];
         }
-        if (version_compare(Shopware::VERSION, '4.4.0', '>=') && version_compare(Shopware::VERSION, '5.2.0', '<')) {
+
+        if (defined('Shopware::VERSION')) {
+            $swVersion = Shopware::VERSION;
+        } else {
+            $swVersion = Shopware()->Container()->get('config')->get('version');
+        }
+
+        if (version_compare($swVersion, '4.4.0', '>=') && version_compare($swVersion, '5.2.0', '<')) {
             if (!empty($shipping['additional_address_line1'])) {
                 $shipping['street2'] = $shipping['additional_address_line1'];
                 if (!empty($shipping['additional_address_line2'])) {
                     $shipping['street2'] .= ' ' . $shipping['additional_address_line2'];
                 }
             }
-        } elseif (Shopware::VERSION === '___VERSION___' || version_compare(Shopware::VERSION, '5.2.0', '>=')) {
+        } elseif ($swVersion === '___VERSION___' || version_compare($swVersion, '5.2.0', '>=')) {
             if (!empty($shipping['additionalAddressLine1'])) {
                 $shipping['street2'] = $shipping['additionalAddressLine1'];
                 if (!empty($shipping['additionalAddressLine2'])) {
@@ -856,6 +872,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         } else {
             $shipping['street2'] = '';
         }
+
         $customer = array(
             'CUSTOMERSERVICENUMBER' => $user['billingaddress']['customernumber'],
             //'gender' => $shipping['salutation'] == 'ms' ? 'f' : 'm',
@@ -869,6 +886,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             'PAYMENTREQUEST_0_SHIPTOPHONENUM' => $user['billingaddress']['phone'],
             'LOCALECODE' => $this->plugin->getLocaleCode(true),
         );
+
         if (!empty($user['additional']['stateShipping']['shortcode'])) {
             $customer['PAYMENTREQUEST_0_SHIPTOSTATE'] = $user['additional']['stateShipping']['shortcode'];
         }
@@ -913,13 +931,13 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
      */
     private function updateShipping($userId, $shippingData)
     {
-        /** @var \Shopware\Components\Model\ModelManager $em */
+        /** @var ModelManager $em */
         $em = $this->get('models');
 
-        /** @var \Shopware\Models\Customer\Customer $customer */
+        /** @var Customer $customer */
         $customer = $em->getRepository('Shopware\Models\Customer\Customer')->findOneBy(array('id' => $userId));
 
-        /** @var \Shopware\Models\Customer\Address $address */
+        /** @var Address $address */
         $address = $customer->getDefaultShippingAddress();
 
         $form = $this->createForm('Shopware\Bundle\AccountBundle\Form\Account\AddressFormType', $address);
@@ -940,7 +958,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         }
 
         $message = '[' . $response['L_ERRORCODE0'] . '] - ' . $response['L_SHORTMESSAGE0'] . '. ' . $response['L_LONGMESSAGE0'];
-        /** @var \Shopware\Components\Logger $pluginLogger */
+        /** @var Logger $pluginLogger */
         $pluginLogger = Shopware()->Container()->get('pluginlogger');
         $pluginLogger->error($message);
     }

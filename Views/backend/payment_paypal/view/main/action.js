@@ -5,9 +5,9 @@
  * file that was distributed with this source code.
  */
 
-//{namespace name=backend/payment_paypal/view/main}
+// {namespace name=backend/payment_paypal/view/main}
 
-//{block name="backend/payment_paypal/view/main/action"}
+// {block name="backend/payment_paypal/view/main/action"}
 Ext.define('Shopware.apps.PaymentPaypal.view.main.Action', {
     extend: 'Ext.window.Window',
     alias: 'widget.paypal-main-action',
@@ -102,7 +102,7 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.Action', {
             cls: 'primary',
             handler: function() {
                 var form = me.down('form');
-                if(!form.getForm().isValid()) {
+                if (!form.getForm().isValid()) {
                     return;
                 }
                 me.close();
@@ -136,4 +136,4 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.Action', {
         }
     }
 });
-//{/block}
+// {/block}

@@ -8,9 +8,9 @@
             {/if}
         </a>
         {if !$PaypalLocale || $PaypalLocale == 'de_DE'}
-            {s name=PaymentButtonDelimiterDe}<span class="paypal_button_delimiter">oder</span>{/s}
+            {s name="PaymentButtonDelimiterDe"}<span class="paypal_button_delimiter">oder</span>{/s}
         {else}
-            {s name=PaymentButtonDelimiter force}<span class="paypal_button_delimiter">or</span>{/s}
+            {s name="PaymentButtonDelimiter" force}<span class="paypal_button_delimiter">or</span>{/s}
         {/if}
     </div>
 {/if}

@@ -3,7 +3,7 @@
 {* Breadcrumb *}
 {block name='frontend_index_start'}
     {$smarty.block.parent}
-    {$sBreadcrumb = [['name'=>"{s name=PaymentTitle}Zahlung durchführen{/s}"]]}
+    {$sBreadcrumb = [['name'=>"{s name="PaymentTitle"}Zahlung durchführen{/s}"]]}
 {/block}
 
 {* Main content *}
@@ -25,11 +25,11 @@
         <br/>
 
         <div class="actions">
-            <a class="button-left large left" href="{url controller=checkout action=cart}" title="{s name=PaymentLinkChangeBasket}Warenkorb ändern{/s}">
-                {se name=PaymentLinkChangeBasket}{/se}
+            <a class="button-left large left" href="{url controller=checkout action=cart}" title="{s name="PaymentLinkChangeBasket"}Warenkorb ändern{/s}">
+                {se name="PaymentLinkChangeBasket"}{/se}
             </a>
-            <a class="button-right large right" href="{url controller=account action=payment sTarget=checkout sChange=1}" title="{s name=PaymentLinkChange}Zahlungsart ändern{/s}">
-                {se name=PaymentLinkChange}{/se}
+            <a class="button-right large right" href="{url controller=account action=payment sTarget=checkout sChange=1}" title="{s name="PaymentLinkChange"}Zahlungsart ändern{/s}">
+                {se name="PaymentLinkChange"}{/se}
             </a>
         </div>
 

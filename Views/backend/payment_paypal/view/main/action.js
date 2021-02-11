@@ -20,7 +20,7 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.Action', {
         var me = this;
 
         Ext.applyIf(me, {
-            title: '{s name=action/title}Payment action: {/s}' + me.paymentActionName,
+            title: '{s name="action/title"}Payment action: {/s}' + me.paymentActionName,
             items: me.getItems(),
             buttons: me.getButtons()
         });
@@ -51,21 +51,21 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.Action', {
             }, {
                 name: 'transactionId',
                 readOnly: true,
-                fieldLabel: '{s name=action/field/transaction_id}Transaction ID{/s}'
+                fieldLabel: '{s name="action/field/transaction_id"}Transaction ID{/s}'
             }, {
                 name: 'orderNumber',
                 readOnly: true,
-                fieldLabel: '{s name=action/field/order_number}Order number{/s}'
+                fieldLabel: '{s name="action/field/order_number"}Order number{/s}'
             }, {
                 name: 'paymentCurrency',
                 readOnly: true,
                 hidden: action === 'void',
-                fieldLabel: '{s name=action/field/currency}Currency{/s}'
+                fieldLabel: '{s name="action/field/currency"}Currency{/s}'
             }, {
                 xtype: 'base-element-number',
                 name: 'paymentAmount',
                 hidden: action === 'void',
-                fieldLabel: '{s name=action/field/amount}Book amount{/s}'
+                fieldLabel: '{s name="action/field/amount"}Book amount{/s}'
             }, {
                 xtype: 'base-element-boolean',
                 name: 'paymentFull',
@@ -74,17 +74,17 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.Action', {
                     var field = me.down('[name=paymentAmount]');
                     field[value ? 'hide' : 'show']();
                 },
-                fieldLabel: '{s name=action/field/complete_amount}Complete amount{/s}'
+                fieldLabel: '{s name="action/field/complete_amount"}Complete amount{/s}'
             }, {
                 xtype: 'base-element-boolean',
                 name: 'paymentLast',
                 hidden: action !== 'capture' && action !== 'book',
-                fieldLabel: '{s name=action/field/last}Last capture{/s}'
+                fieldLabel: '{s name="action/field/last"}Last capture{/s}'
             }, {
                 name: 'note',
                 xtype: 'textarea',
                 hidden: action === 'auth',
-                fieldLabel: '{s name=action/field/note}Note to the customer{/s}'
+                fieldLabel: '{s name="action/field/note"}Note to the customer{/s}'
             }]
         }];
     },
@@ -92,13 +92,13 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.Action', {
     getButtons: function() {
         var me = this;
         return [{
-            text: '{s name=action/abort_text}Abort{/s}',
+            text: '{s name="action/abort_text"}Abort{/s}',
             cls: 'secondary',
             handler: function() {
                 me.close();
             }
         }, {
-            text: '{s name=action/execute_text}Execute{/s}',
+            text: '{s name="action/execute_text"}Execute{/s}',
             cls: 'primary',
             handler: function() {
                 var form = me.down('form');
@@ -106,7 +106,7 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.Action', {
                     return;
                 }
                 me.close();
-                Ext.MessageBox.wait('{s name=action/wait_message}Processing ...{/s}', '{s name=action/wait_title}Perform the payment action{/s}');
+                Ext.MessageBox.wait('{s name="action/wait_message"}Processing ...{/s}', '{s name="action/wait_title"}Perform the payment action{/s}');
                 form.getForm().submit({
                     url: '{url action=doAction}',
                     success: me.onActionSuccess,
@@ -118,7 +118,7 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.Action', {
     },
 
     onActionSuccess: function() {
-        Ext.Msg.alert('{s name=action/success_title}Success{/s}', '{s name=action/success_message}The payment action completed successfully.{/s}');
+        Ext.Msg.alert('{s name="action/success_title"}Success{/s}', '{s name="action/success_message"}The payment action completed successfully.{/s}');
     },
 
     onActionFailure: function(form, action) {

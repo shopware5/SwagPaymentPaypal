@@ -16,7 +16,7 @@ Ext.define('Shopware.apps.PaymentPaypal.view.main.Window', {
     height: 500,
     layout: 'border',
 
-    title: '{s name=window/title}PayPal Payments{/s}',
+    title: '{s name="window/title"}PayPal Payments{/s}',
 
     /**
      *

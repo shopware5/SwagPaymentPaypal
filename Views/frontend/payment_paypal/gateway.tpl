@@ -5,7 +5,7 @@
 {* Breadcrumb *}
 {block name='frontend_index_start'}
     {$smarty.block.parent}
-    {$sBreadcrumb = [['name'=>"{s name=PaymentTitle}Zahlung mit PayPal{/s}"]]}
+    {$sBreadcrumb = [['name'=>"{s name="PaymentTitle"}Zahlung mit PayPal{/s}"]]}
 {/block}
 
 {* Main content *}

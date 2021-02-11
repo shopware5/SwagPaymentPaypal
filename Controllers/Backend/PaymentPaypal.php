@@ -72,7 +72,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             $this->Request()->setParam('search', $filter['value']);
         }
 
-        $dbalConnection = Shopware()->Container()->get('models')->getConnection();
+        $dbalConnection = $this->get('models')->getConnection();
         $query = $dbalConnection->createQueryBuilder();
 
         $invoiceIdQuery = $dbalConnection->createQueryBuilder()
@@ -96,7 +96,6 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             'customercomment as comment',
             'cleareddate as clearedDate',
             'trackingcode as trackingId',
-            'u.userID as customerId',
             '( ' . $invoiceIdQuery->getSQL() . ' ) as invoiceId',
             '( ' . $invoiceHashQuery->getSQL() . ' ) as invoiceHash',
             'shops.name as shopName',
@@ -104,10 +103,6 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             'so.description as statusDescription',
             'oa.swag_payal_express as express',
             'sc.description as clearedDescription',
-            'IF(b.id IS NULL,
-                IF(u.company=\'\', CONCAT(u.firstname, \' \', u.lastname), u.company),
-                IF(b.company=\'\', CONCAT(b.firstname, \' \', b.lastname), b.company)
-            ) as customer',
             'd.name as dispatchDescription',
         ))
             ->from('s_order', 'o')
@@ -116,33 +111,34 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             ->leftJoin('o', 's_core_states', 'so', 'so.id = o.status')
             ->leftJoin('o', 's_order_attributes', 'oa', 'o.id = oa.orderID')
             ->leftJoin('o', 's_core_states', 'sc', 'sc.id = o.cleared')
-            ->leftJoin('o', 's_user_billingaddress', 'u', 'u.userID = o.userID')
-            ->leftJoin('o', 's_order_billingaddress', 'b', 'b.orderID = o.id')
             ->leftJoin('o', 's_premium_dispatch', 'd', 'd.id = o.dispatchID')
-            ->where('p.name LIKE \'paypal\'')
+            ->where('p.name LIKE "paypal"')
             ->andWhere('o.status >= 0')
             ->setFirstResult($start)
             ->setMaxResults($limit);
+
+        $useLegacyTable = $this->useLegacyAddressTable();
+        $searchCriteria = null;
+        if ($useLegacyTable) {
+            $query->leftJoin('o', 's_user_billingaddress', 'u', 'u.userID = o.userID')
+                ->leftJoin('o', 's_order_billingaddress', 'b', 'b.orderID = o.id')
+                ->addSelect('u.userID as customerId')
+                ->addSelect('IF(b.id IS NULL,
+                    IF(u.company="" OR u.company IS NULL, CONCAT(u.firstname, " ", u.lastname), u.company),
+                    IF(b.company="" OR u.company IS NULL, CONCAT(b.firstname, " ", b.lastname), b.company)
+                ) as customer');
+        } else {
+            $query->leftJoin('o', 's_user_addresses', 'u', 'u.user_id = o.userID')
+                ->addSelect('u.user_id as customerId')
+                ->addSelect('IF(u.company="" OR u.company IS NULL, CONCAT(u.firstname, " ", u.lastname), u.company) as customer')
+                ->addGroupBy('o.id');
+        }
 
         if (in_array($property, $this->getColumnNameWhitelist(), true)) {
             $query->orderBy($property, $direction);
         }
 
-        if ($search = $this->Request()->getParam('search')) {
-            $search = trim($search);
-
-            $query->andWhere(
-                'o.transactionID LIKE :search' .
-                ' OR o.ordernumber LIKE :search' .
-                ' OR u.firstname LIKE :search' .
-                ' OR u.lastname LIKE :search' .
-                ' OR b.firstname LIKE :search' .
-                ' OR b.lastname LIKE :search' .
-                ' OR b.company LIKE :search' .
-                ' OR u.company LIKE :search'
-            );
-            $query->setParameter('search', trim($search));
-        }
+        $this->addSearch($query, $useLegacyTable, $this->Request()->getParam('search'));
 
         if ($subShopFilter) {
             $query->andWhere('o.subshopID = :subShopFilter');
@@ -152,6 +148,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         $rows = $query->execute()->fetchAll();
         $total = $dbalConnection->fetchColumn('SELECT FOUND_ROWS()');
 
+        $currencyService = $this->get('currency');
         foreach ($rows as &$row) {
             if ($row['clearedDate'] === '0000-00-00 00:00:00') {
                 $row['clearedDate'] = null;
@@ -160,7 +157,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
                 $row['clearedDate'] = new DateTime($row['clearedDate']);
             }
             $row['orderDate'] = new DateTime($row['orderDate']);
-            $row['amountFormat'] = Shopware()->Currency()->toCurrency($row['amount'], array('currency' => $row['currency']));
+            $row['amountFormat'] = $currencyService->toCurrency($row['amount'], array('currency' => $row['currency']));
         }
         unset($row);
 
@@ -201,13 +198,15 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
 
         if ($balance['ACK'] === 'Success') {
             $rows = array();
+            $currencyService = $this->get('currency');
             for ($i = 0; isset($balance['L_AMT' . $i]); ++$i) {
                 $data = array(
                     'default' => $i === 0,
                     'balance' => $balance['L_AMT' . $i],
                     'currency' => $balance['L_CURRENCYCODE' . $i],
                 );
-                $data['balanceFormat'] = Shopware()->Currency()->toCurrency(
+
+                $data['balanceFormat'] = $currencyService->toCurrency(
                     $data['balance'],
                     array('currency' => $data['currency'])
                 );
@@ -279,7 +278,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         );
         $sql = 'SELECT `countryname` FROM `s_core_countries` WHERE `countryiso` LIKE ?';
         $row['addressCountry'] = $this->get('db')->fetchOne($sql, array($row['addressCountry']));
-        $row['paymentAmountFormat'] = Shopware()->Currency()->toCurrency(
+        $row['paymentAmountFormat'] = $this->get('currency')->toCurrency(
             $row['paymentAmount'],
             array('currency' => $row['paymentCurrency'])
         );
@@ -315,7 +314,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
                 'amount' => $transactionsData['L_AMT' . $i],
                 'currency' => $transactionsData['L_CURRENCYCODE' . $i],
             );
-            $transaction['amountFormat'] = Shopware()->Currency()->toCurrency(
+            $transaction['amountFormat'] = $this->get('currency')->toCurrency(
                 $transaction['amount'],
                 array('currency' => $transaction['currency'])
             );
@@ -520,7 +519,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         if (defined('Shopware::VERSION')) {
             $swVersion = Shopware::VERSION;
         } else {
-            $swVersion = Shopware()->Container()->get('config')->get('version');
+            $swVersion = $this->get('config')->get('version');
         }
 
         $data['shopware_version'] = $swVersion;
@@ -550,6 +549,47 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
     }
 
     /**
+     * @param \Doctrine\DBAL\Query\QueryBuilder $queryBuilder
+     * @param bool                              $useLegacyTable
+     * @param string|null                       $search
+     */
+    private function addSearch($queryBuilder, $useLegacyTable, $search = null)
+    {
+        if ($search === null) {
+            return;
+        }
+
+        $whereString = 'o.transactionID LIKE :search' .
+            ' OR o.ordernumber LIKE :search' .
+            ' OR u.firstname LIKE :search' .
+            ' OR u.lastname LIKE :search' .
+            ' OR u.company LIKE :search';
+
+        if ($useLegacyTable) {
+            $whereString .= ' OR b.firstname LIKE :search' .
+                ' OR b.lastname LIKE :search' .
+                ' OR b.company LIKE :search';
+        }
+
+        $queryBuilder->andWhere(
+            $whereString
+        )->setParameter('search', trim($search));
+    }
+
+    /**
+     * @return bool
+     */
+    private function useLegacyAddressTable()
+    {
+        $shopwareVersion = $this->get('config')->get('version');
+        if ($shopwareVersion === '___VERSION___') {
+            return false;
+        }
+
+        return (bool) \version_compare('5.2.0', $shopwareVersion, '>');
+    }
+
+    /**
      * Helper which registers a shop in order to use the PayPal API client within the context of the given shop
      *
      * @param int $shopId
@@ -573,7 +613,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
         if (defined('Shopware::VERSION')) {
             $swVersion = Shopware::VERSION;
         } else {
-            $swVersion = Shopware()->Container()->get('config')->get('version');
+            $swVersion = $this->get('config')->get('version');
         }
 
         if (version_compare($swVersion, '5.6.0', '>=')) {

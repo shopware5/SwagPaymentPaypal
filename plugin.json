@@ -8,10 +8,11 @@
     "link": "http://store.shopware.com",
     "author": "shopware AG",
 
-    "currentVersion": "3.7.0",
+    "currentVersion": "3.7.1",
 
     "changelog": {
         "de": {
+            "3.7.1": "PT-12262 - Shopware 5.7 und PHP8 Kompatibilität;",
             "3.7.0": "PT-10692 - Shopware 5.6 Kompatibilität;",
             "3.6.2": "PT-10590 - Problem mit falscher HTTP Version behoben;",
             "3.6.1": "PT-10220 - Problem beim IPN Call behoben (Kompatibilität mit Shopware 5.5.7);",
@@ -50,6 +51,7 @@
             "3.0.0": "Allgemeine Verbesserungen; API-Update"
         },
         "en": {
+            "3.7.1": "PT-12262 - Shopware 5.7 and PHP8 compatibility;",
             "3.7.0": "PT-10692 - Shopware 5.6 compatibility;",
             "3.6.2": "PT-10590 - Fix problem with wrong HTTP version;",
             "3.6.1": "PT-10220 - Fix problem with IPN call (Shopware 5.5.7 compatibility);",

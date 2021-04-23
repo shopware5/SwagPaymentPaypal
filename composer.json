@@ -1,5 +1,5 @@
 {
-    "name": "shopwareLabs/swag-payment-paypal",
+    "name": "shopware-labs/swag-payment-paypal",
     "type": "shopware-frontend-plugin",
     "description": "A PayPal integration for Shopware",
     "license": "MIT",

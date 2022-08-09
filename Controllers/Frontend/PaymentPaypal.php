@@ -172,8 +172,9 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             'CARTBORDERCOLOR' => $borderColor,
             'PAYMENTREQUEST_0_CUSTOM' => $this->createPaymentUniqueId(),
             'TOTALTYPE' => $user !== null ? 'Total' : 'EstimatedTotal',
-        );
-        if ($config->get('paypalBillingAgreement') && $user !== null) {
+            );
+
+        if ($config->get('paypalBillingAgreement')) {
             $params['BILLINGTYPE'] = 'MerchantInitiatedBilling';
         }
 

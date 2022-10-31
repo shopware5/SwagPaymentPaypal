@@ -95,7 +95,7 @@
 
     "compatibility": {
         "minimumVersion": "4.2.0",
-        "maximumVersion": "5.6.99",
+        "maximumVersion": "5.7.99",
         "blacklist": [
         ]
     }

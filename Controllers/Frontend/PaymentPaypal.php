@@ -97,7 +97,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $payPalResponse = $this->session->offsetGet('PaypalResponse');
         if (!empty($payPalResponse['TOKEN'])) {
             $this->forward('return');
-        // Paypal Basis || PayPal Express
+            // Paypal Basis || PayPal Express
         } elseif ($this->getPaymentShortName() === 'paypal') {
             $this->forward('gateway');
         } else {
@@ -484,7 +484,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             }
         }
 
-        //$params['SOFTDESCRIPTOR'] = $orderNumber;
+        // $params['SOFTDESCRIPTOR'] = $orderNumber;
 
         if (!empty($params['REFERENCEID'])) {
             foreach ($params as $key => $param) {
@@ -562,7 +562,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
         $ppAmount = (float) $result['PAYMENTINFO_0_AMT'];
         $swAmount = $this->getAmount();
         if (abs($swAmount - $ppAmount) >= 0.01) {
-            $paymentStatus = 'AmountMissMatch'; //Überprüfung notwendig
+            $paymentStatus = 'AmountMissMatch'; // Überprüfung notwendig
         }
         $this->plugin->setPaymentStatus($result['PAYMENTINFO_0_TRANSACTIONID'], $paymentStatus);
 
@@ -670,8 +670,8 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
             $sql .= "AND `subshopID` = {$shop->getId()} ";
         }
 
-        //Always use the latest account. It is possible, that the account already exists but the password may be invalid.
-        //The plugin then creates a new account and uses that one instead.
+        // Always use the latest account. It is possible, that the account already exists but the password may be invalid.
+        // The plugin then creates a new account and uses that one instead.
         $sql .= 'ORDER BY `id` DESC';
         $data['auth']['passwordMD5'] = $this->get('db')->fetchOne($sql, array($data['auth']['email']));
 
@@ -681,7 +681,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
 
         // Check login status
         if ($module->sCheckUser()) {
-            //Save the new address.
+            // Save the new address.
             if ($swVersion === '___VERSION___' || version_compare($swVersion, '5.2.0', '>=')) {
                 $userId = $this->session->offsetGet('sUserId');
                 $this->updateShipping($userId, $data['shipping']);
@@ -876,7 +876,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
 
         $customer = array(
             'CUSTOMERSERVICENUMBER' => $user['billingaddress']['customernumber'],
-            //'gender' => $shipping['salutation'] == 'ms' ? 'f' : 'm',
+            // 'gender' => $shipping['salutation'] == 'ms' ? 'f' : 'm',
             'PAYMENTREQUEST_0_SHIPTONAME' => $name,
             'PAYMENTREQUEST_0_SHIPTOSTREET' => $shipping['street'],
             'PAYMENTREQUEST_0_SHIPTOSTREET2' => $shipping['street2'],
@@ -904,7 +904,7 @@ class Shopware_Controllers_Frontend_PaymentPaypal extends Shopware_Controllers_F
     {
         $plain = array_merge($data['auth'], $data['shipping']);
 
-        //Create forms and validate the input
+        // Create forms and validate the input
         $customer = new Shopware\Models\Customer\Customer();
         $form = $this->createForm('Shopware\Bundle\AccountBundle\Form\Account\PersonalFormType', $customer);
         $form->submit($plain);

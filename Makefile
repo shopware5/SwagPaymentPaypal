@@ -34,7 +34,4 @@ check-eslint-backend:
 	./../../../../../../themes/node_modules/eslint/bin/eslint.js --ignore-path .eslintignore -c ./../../../../../../themes/Backend/.eslintrc.js Views/backend $(ESLINT_FIX)
 
 fix-eslint-backend: ESLINT_FIX= --fix
-fix-eslint-backend: check-eslint-backend # TODO: remove comment tests12345678
-
-composer-install: ## Install composer requirements
-	@echo "Install composer requirements"
+fix-eslint-backend: check-eslint-backend

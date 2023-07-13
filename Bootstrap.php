@@ -116,7 +116,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
             $this->get('db')->exec($sql);
         }
         if (version_compare($version, '3.3.2', '<=')) {
-            //always remove unneeded settings
+            // always remove unneeded settings
             $em = $this->get('models');
             $form = $this->Form();
             $paypalLogInApi = $form->getElement('paypalLogInApi');
@@ -137,7 +137,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
             $this->Form()->removeElement('paypalVersion');
         }
 
-        //Update form
+        // Update form
         $this->createMyForm();
         $this->createMyEvents();
 
@@ -316,14 +316,14 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
             case 'Pending':
             case 'In-Progress':
                 $paymentStatusId = (int) $this->Config()->get('paypalPendingStatusId', 18);
-                break; //Reserviert
+                break; // Reserviert
             case 'Processed':
                 $paymentStatusId = 18;
-                break; //In Bearbeitung > Reserviert
+                break; // In Bearbeitung > Reserviert
             case 'Refunded':
             case 'Partially-Refunded':
                 $paymentStatusId = 20;
-                break; //Wiedergutschrift
+                break; // Wiedergutschrift
             case 'Cancelled-Reversal':
                 $paymentStatusId = 12;
                 break;
@@ -331,7 +331,7 @@ class Shopware_Plugins_Frontend_SwagPaymentPaypal_Bootstrap extends Shopware_Com
             case 'Denied':
             case 'Voided':
                 $paymentStatusId = 17;
-                break; //Offen
+                break; // Offen
             case 'Reversed':
             default:
                 $paymentStatusId = 21;
@@ -529,7 +529,7 @@ EOD;
             $this->get('models')->flush();
         }
 
-        //Remove file if don't have it in media manager but we have it under media/image folder
+        // Remove file if don't have it in media manager but we have it under media/image folder
         if (file_exists($mediaPath)) {
             unlink($mediaPath);
         }

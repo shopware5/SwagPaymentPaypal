@@ -265,16 +265,16 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             'addressCountry' => $details['SHIPTOCOUNTRYCODE'],
             'addressPhone' => $details['SHIPTOPHONENUM'],
 
-            'protectionStatus' => $details['PROTECTIONELIGIBILITY'], //Eligible, ItemNotReceivedEligible, UnauthorizedPaymentEligible, Ineligible
+            'protectionStatus' => $details['PROTECTIONELIGIBILITY'], // Eligible, ItemNotReceivedEligible, UnauthorizedPaymentEligible, Ineligible
             'paymentStatus' => $details['PAYMENTSTATUS'],
             'pendingReason' => $details['PENDINGREASON'],
             'paymentDate' => new DateTime($details['ORDERTIME']),
-            'paymentType' => $details['PAYMENTTYPE'], //none, echeck, instant
+            'paymentType' => $details['PAYMENTTYPE'], // none, echeck, instant
             'paymentAmount' => $details['AMT'],
             'paymentCurrency' => $details['CURRENCYCODE'],
 
             'transactionId' => $details['TRANSACTIONID'],
-            //'orderNumber' => $details['INVNUM'],
+            // 'orderNumber' => $details['INVNUM'],
         );
         $sql = 'SELECT `countryname` FROM `s_core_countries` WHERE `countryiso` LIKE ?';
         $row['addressCountry'] = $this->get('db')->fetchOne($sql, array($row['addressCountry']));
@@ -424,10 +424,7 @@ class Shopware_Controllers_Backend_PaymentPaypal extends Shopware_Controllers_Ba
             }
 
             if ($result['ACK'] !== 'Success') {
-                throw new RuntimeException(
-                    '[' . $result['L_SEVERITYCODE0'] . '] ' .
-                    $result['L_SHORTMESSAGE0'] . ' ' . $result['L_LONGMESSAGE0'] . "<br>\n"
-                );
+                throw new RuntimeException('[' . $result['L_SEVERITYCODE0'] . '] ' . $result['L_SHORTMESSAGE0'] . ' ' . $result['L_LONGMESSAGE0'] . "<br>\n");
             }
 
             // Switch transaction id
